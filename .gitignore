@@ -3,5 +3,5 @@
 .git
 build
 out
-.lib
-.dll
+*.lib
+*.dll
