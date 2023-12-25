@@ -1,10 +1,16 @@
 ﻿#include "CocosHeadersOnlyHookExample.hpp"
+#include "CustomLayer.hpp"
 
 //and also MappedHooks lol
 
 /*
 *  here I'll show you how to write a layer hook without gd.h
 */
+
+//if u want, u cant make extension of CCMenuItemLabel to add animations ant other stuff
+//i created copy of robtop's CCMenuItemSpriteExtra that have same behavior
+//i put it to CCMenuItemLabelExt.cpp so lets include its header
+#include "../CCMenuItemLabelExt.hpp"
 
 //for jump to document in ide and other view triks
 #include <gd.h_2.113/layers_scenes_transitions_nodes/CreatorLayer.h>
@@ -24,14 +30,18 @@ public:
 bool __fastcall MenuLayer_init(MenuLayerSkit* self) {
     MappedHooks::getOriginal(MenuLayer_init)(self);
     self->me = self;
-    twoTimesBoolCallEscapeByParrentNode(self);//for geode loader
-
+    twoTimesBoolCallEscapeByParrentNode(self);//for geode loader-
+    
     //snow.
     CCParticleSnow* pCCParticleSnow = CCParticleSnow::create();
+    //pCCParticleSnow->setBlendAdditive(true); still no
+    pCCParticleSnow->setBlendFunc({ GL_SRC_ALPHA, GL_ONE }/*that is additive blend*/);//but this works :D
     self->addChild(pCCParticleSnow, 101, 2024);
 
     CCSprite* spr = ModUtils::createSprite("tutorial_01.png");
     spr->setPosition(ModUtils::getCenterPoint());
+    spr->setOpacity(120);
+    spr->setBlendFunc({ GL_SRC_ALPHA, GL_ONE }/*that is additive blend*/);
     self->addChild(spr, 0, 666);
 
     CCMenu* Menu = CCMenu::create();
@@ -40,7 +50,8 @@ bool __fastcall MenuLayer_init(MenuLayerSkit* self) {
 
     //CreatorLayerSkit::sus_70330
     //we don't have robtop addons, so take CCMenuItemLabel because it have some animation at least
-    CCMenuItemLabel* btn_chatHistory_001 = CCMenuItemLabel::create(
+    //but we have CCMenuItemLabelExt that have similar anims from gd so use it
+    CCMenuItemLabelExt* btn_chatHistory_001 = CCMenuItemLabelExt::create(
         ModUtils::createSprite("btn_chatHistory_001.png"),
         self,
         menu_selector(CreatorLayerSkit::sus_70330)
@@ -49,15 +60,28 @@ bool __fastcall MenuLayer_init(MenuLayerSkit* self) {
     btn_chatHistory_001->setPositionY(48.000f);
     Menu->addChild(btn_chatHistory_001);
 
+    //CreatorLayerSkit::sus_70330
+    //we don't have robtop addons, so take CCMenuItemLabel because it have some animation at least
+    //but we have CCMenuItemLabelExt that have similar anims from gd so use it
+    CCMenuItemLabelExt* GJ_everyplayBtn_001 = CCMenuItemLabelExt::create(
+        ModUtils::createSprite("GJ_everyplayBtn_001.png"),
+        self,
+        menu_selector(CustomLayer::pushToMe)
+    );
+    GJ_everyplayBtn_001->setPositionX(CCDirector::sharedDirector()->getWinSize().width - 32);
+    GJ_everyplayBtn_001->setPositionY(88.000f);
+    Menu->addChild(GJ_everyplayBtn_001);
+
     //CreatorLayerSkit::sus_6FE90
     //we don't have robtop addons, so take CCMenuItemLabel because it have some animation at least
-    CCMenuItemLabel* dialogIcon_052 = CCMenuItemLabel::create(
+    //but we have CCMenuItemLabelExt that have similar anims from gd so use it
+    CCMenuItemLabelExt* dialogIcon_052 = CCMenuItemLabelExt::create(
         ModUtils::createSprite("dialogIcon_052.png"),
         self,
         menu_selector(CreatorLayerSkit::sus_6FE90)
     );
-    dialogIcon_052->setPositionX(CCDirector::sharedDirector()->getWinSize().width - 62);
-    dialogIcon_052->setPositionY(128.000f);
+    dialogIcon_052->setPositionX(CCDirector::sharedDirector()->getWinSize().width - 110);
+    dialogIcon_052->setPositionY(80.000f);
     Menu->addChild(dialogIcon_052);
 
     return true;
