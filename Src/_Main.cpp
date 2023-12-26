@@ -2,6 +2,7 @@
 #include "HooksUtils.hpp"
 using namespace cocos2d;
 using namespace cocos2d::extension;
+using namespace gd;
 
 #include "Layers/CocosHeadersOnlyHookExample.hpp"
 
@@ -15,7 +16,10 @@ DWORD WINAPI ModThread(void* hModule) {
     //othher stuff
     MH_Initialize();
     MenuLayerSkit::CreateHooks();
-    SetWindowTextA(hWnd, ("Geometry Das.. h: Modded by " + ModUtils::GetModDev()).c_str());
+    SetWindowTextA(hWnd, (
+        "Geometry Das.. h: Modded by " + 
+        ModUtils::GetModDev()
+        ).c_str());
     return 0;
 }
 

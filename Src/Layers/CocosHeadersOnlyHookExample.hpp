@@ -8,7 +8,6 @@ class MenuLayerSkit : public CCLayer {//you should use the class that your targe
 public:
     inline static MenuLayerSkit* me;
     static void CreateHooks();
-    void onChilipizdrik(CCObject* pSender);
-    void onOptionBtn(CCObject* pSender);
+    void onSomeBtn(CCObject* pSender);
 };
 

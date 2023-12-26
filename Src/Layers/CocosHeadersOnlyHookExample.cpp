@@ -27,11 +27,25 @@ public:
     }
 };
 
+void MenuLayerSkit::onSomeBtn(CCObject* pSender) {
+    FLAlertLayer* alert = FLAlertLayer::create(nullptr, "some text", "Oh ok", nullptr, 490.000f, std::string("Just for example)\n<cr>My lady came down, she was thinking no harm Long Lankin stood ready to catch her in his arm There's blood in the kitchen. There's blood in the hall There's blood in the parlour where my lady did fall You might also like Long Lankin Steeleye Span Immolation of Night Invent Animate Without a Whisper Invent Animate -O master, O master, don't lay the blame on me 'Twas the false nurse and Lankin that killed your lady. Long Lankin was hung on a gibbet so high And the false nurse was burnt in a fire close by</c>"));
+    alert->getLayer()->runAction(
+        CCRepeatForever::create(
+            CCSequence::create(
+                CCEaseSineInOut::create(CCMoveBy::create(1.000f, CCPoint(0.000f, 3.000f))),
+                CCEaseSineInOut::create(CCMoveBy::create(2.000f, CCPoint(0.000f, -3.000f))),
+                nullptr
+            )
+        )
+    ); //for fun xdd
+    alert->show();
+}
+
 bool __fastcall MenuLayer_init(MenuLayerSkit* self) {
     MappedHooks::getOriginal(MenuLayer_init)(self);
     self->me = self;
-    twoTimesBoolCallEscapeByParrentNode(self);//for geode loader-
-    
+    twoTimesBoolCallEscapeByParrentNode(self);//for geode loader
+
     //snow.
     CCParticleSnow* pCCParticleSnow = CCParticleSnow::create();
     //pCCParticleSnow->setBlendAdditive(true); still no
@@ -48,22 +62,20 @@ bool __fastcall MenuLayer_init(MenuLayerSkit* self) {
     Menu->setPosition(CCPoint());
     self->addChild(Menu, 10, 5940);//do u know that exists addChild(node, index) and addChild(node, index, tag)???
 
-    //CreatorLayerSkit::sus_70330
+    //MenuLayerSkit::onSomeBtn
     //we don't have robtop addons, so take CCMenuItemLabel because it have some animation at least
     //but we have CCMenuItemLabelExt that have similar anims from gd so use it
-    CCMenuItemLabelExt* btn_chatHistory_001 = CCMenuItemLabelExt::create(
+    CCMenuItemSpriteExtra* btn_chatHistory_001 = CCMenuItemSpriteExtra::create(
         ModUtils::createSprite("btn_chatHistory_001.png"),
         self,
-        menu_selector(CreatorLayerSkit::sus_70330)
+        menu_selector(MenuLayerSkit::onSomeBtn)
     );
     btn_chatHistory_001->setPositionX(CCDirector::sharedDirector()->getWinSize().width - 42);
     btn_chatHistory_001->setPositionY(48.000f);
     Menu->addChild(btn_chatHistory_001);
 
     //CreatorLayerSkit::sus_70330
-    //we don't have robtop addons, so take CCMenuItemLabel because it have some animation at least
-    //but we have CCMenuItemLabelExt that have similar anims from gd so use it
-    CCMenuItemLabelExt* GJ_everyplayBtn_001 = CCMenuItemLabelExt::create(
+    CCMenuItemSpriteExtra* GJ_everyplayBtn_001 = CCMenuItemSpriteExtra::create(
         ModUtils::createSprite("GJ_everyplayBtn_001.png"),
         self,
         menu_selector(CustomLayer::pushToMe)
@@ -73,9 +85,7 @@ bool __fastcall MenuLayer_init(MenuLayerSkit* self) {
     Menu->addChild(GJ_everyplayBtn_001);
 
     //CreatorLayerSkit::sus_6FE90
-    //we don't have robtop addons, so take CCMenuItemLabel because it have some animation at least
-    //but we have CCMenuItemLabelExt that have similar anims from gd so use it
-    CCMenuItemLabelExt* dialogIcon_052 = CCMenuItemLabelExt::create(
+    CCMenuItemSpriteExtra* dialogIcon_052 = CCMenuItemSpriteExtra::create(
         ModUtils::createSprite("dialogIcon_052.png"),
         self,
         menu_selector(CreatorLayerSkit::sus_6FE90)

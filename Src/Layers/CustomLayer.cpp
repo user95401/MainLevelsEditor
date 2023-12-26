@@ -1,7 +1,7 @@
 ﻿#include "CustomLayer.hpp"
+#include "../CCMenuItemLabelExt.hpp"
 
 //custom button that similar to CCMenuItemSpriteExtra
-#include "../CCMenuItemLabelExt.hpp"
 
 bool CustomLayer::init() {
     //allow keypad for layer

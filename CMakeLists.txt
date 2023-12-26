@@ -9,7 +9,7 @@ cmake_policy(SET CMP0057 NEW)
 project ("mod")
 set(developer "user95401")
 set(description "mod made for gd 2.2!!! asd")
-set(lib_output "D:/Games/user666/2.2 PC GDPS but actually that is lol/_the mods/") # post build copy
+set(lib_output "D:/Games/user666/2.2 PC GDPS but actually that is lol/fif issue/") # post build copy
 
 #curly-eureka
 set(GAME_VERSION "2.200")
