@@ -41,10 +41,15 @@ public:
 
 void MenuLayerSkit::onSomeBtn(CCObject* pSender) {
     //asdsed
-    FLAlertLayer* alert = FLAlertLayer::create(nullptr, 
-        "some text", 
-        std::string("Just for example)\n<cr>My lady came down, she was thinking no harm Long Lankin stood ready to catch her in his arm There's blood in the kitchen. There's blood in the hall There's blood in the parlour where my lady did fall You might also like Long Lankin Steeleye Span Immolation of Night Invent Animate Without a Whisper Invent Animate -O master, O master, don't lay the blame on me 'Twas the false nurse and Lankin that killed your lady. Long Lankin was hung on a gibbet so high And the false nurse was burnt in a fire close by</c>"),
-        "Oh ok", nullptr);
+    auto str = std::string("Just for example)\n<cr>My lady came down, she was thinking no harm Long Lankin stood ready to catch her in his arm There's blood in the kitchen. There's blood in the hall There's blood in the parlour where my lady did fall You might also like Long Lankin Steeleye Span Immolation of Night Invent Animate Without a Whisper Invent Animate -O master, O master, don't lay the blame on me 'Twas the false nurse and Lankin that killed your lady. Long Lankin was hung on a gibbet so high And the false nurse was burnt in a fire close by</c>");
+    FLAlertLayer* alert = FLAlertLayer::create(
+        nullptr, //pFLAlertLayerProtocol
+        "some little text", //Title
+        "asd", //Btn1Text
+        nullptr, //Btn2Text
+        410.f, //Width
+        str //TextAreaContent
+    );
     alert->show();
 }
 bool __fastcall MenuLayer_init(MenuLayerSkit* self) {
