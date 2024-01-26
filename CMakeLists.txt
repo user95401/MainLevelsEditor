@@ -9,10 +9,10 @@ cmake_policy(SET CMP0057 NEW)
 project ("mod")
 set(developer "user95401")
 set(description "mod made for gd 2.2!!! asd")
-set(lib_output "D:/Games/user666/2.2 PC GDPS but actually that is lol/fif issue/") # post build copy
+set(lib_output "D:\\Games\\user666\\Geometry Dash 2.204 PC [modloader]\\openhack\\dll") # post build copy
 
 #curly-eureka
-set(GAME_VERSION "2.200")
+set(GAME_VERSION "2.2")
 include("C:\\Users\\Lenovo\\source\\curly-eureka\\CURLY-EUREKA-INCL.cmake")# "\" must be escaped by \\
 
 #version

@@ -13,34 +13,40 @@
 #include "../CCMenuItemLabelExt.hpp"
 
 //for jump to document in ide and other view triks
-#include <gd.h_2.113/layers_scenes_transitions_nodes/CreatorLayer.h>
+#include <gd.h_2.1/layers_scenes_transitions_nodes/CreatorLayer.h>
 //class for getting functions from that
 class CreatorLayerSkit : public CCLayer {
 public:
     //gd::CreatorLayer::create()->onChallenge()
     //https://github.com/geode-sdk/bindings/blob/eefa76cafa4c1d637325f5f5866ddd55b9fac64c/bindings/2.200/GeometryDash.bro#L162
     void sus_70330(CCObject* pSender) {//onMultiplayer
-        reinterpret_cast<void(__thiscall*)(void*, CCObject*)>(gd::base + 0x70330)(this, pSender);
+        //55 8b ec 83 e4 f8 6a ff 68 88 c2
+        uintptr_t addr = patterns::find_pattern("????? f8 6a ff 68 88 c2");
+        //addr = gd::base + 0x707f0; //2.204
+        //ModUtils::OpenConsole();
+        //ModUtils::log((ModUtils::ReadProcMemAsStr(addr, 26)).c_str());
+        if (!addr) return;
+        reinterpret_cast<void(__thiscall*)(void*, CCObject*)>(addr)(this, pSender);
     }
     void sus_6FE90(CCObject* pSender) {//onMyLevels
-        reinterpret_cast<void(__thiscall*)(void*, CCObject*)>(gd::base + 0x6FE90)(this, pSender);
+        //55 8b ec 83 e4 f8 56 57 e8 e3 11 b 0 8b b0 cc
+        uintptr_t addr = patterns::find_pattern("^ ? ? ? ? ? f8 56 57 e8 e3 11 b 0 8b b0 cc");
+        //addr = gd::base + 0x70350; //2.204
+        //ModUtils::OpenConsole();
+        //ModUtils::log((ModUtils::ReadProcMemAsStr(addr, 16)).c_str());
+        if (!addr) return;
+        reinterpret_cast<void(__thiscall*)(void*, CCObject*)>(addr)(this, pSender);
     }
 };
 
 void MenuLayerSkit::onSomeBtn(CCObject* pSender) {
-    FLAlertLayer* alert = FLAlertLayer::create(nullptr, "some text", "Oh ok", nullptr, 490.000f, std::string("Just for example)\n<cr>My lady came down, she was thinking no harm Long Lankin stood ready to catch her in his arm There's blood in the kitchen. There's blood in the hall There's blood in the parlour where my lady did fall You might also like Long Lankin Steeleye Span Immolation of Night Invent Animate Without a Whisper Invent Animate -O master, O master, don't lay the blame on me 'Twas the false nurse and Lankin that killed your lady. Long Lankin was hung on a gibbet so high And the false nurse was burnt in a fire close by</c>"));
-    alert->getLayer()->runAction(
-        CCRepeatForever::create(
-            CCSequence::create(
-                CCEaseSineInOut::create(CCMoveBy::create(1.000f, CCPoint(0.000f, 3.000f))),
-                CCEaseSineInOut::create(CCMoveBy::create(2.000f, CCPoint(0.000f, -3.000f))),
-                nullptr
-            )
-        )
-    ); //for fun xdd
+    //asdsed
+    FLAlertLayer* alert = FLAlertLayer::create(nullptr, 
+        "some text", 
+        std::string("Just for example)\n<cr>My lady came down, she was thinking no harm Long Lankin stood ready to catch her in his arm There's blood in the kitchen. There's blood in the hall There's blood in the parlour where my lady did fall You might also like Long Lankin Steeleye Span Immolation of Night Invent Animate Without a Whisper Invent Animate -O master, O master, don't lay the blame on me 'Twas the false nurse and Lankin that killed your lady. Long Lankin was hung on a gibbet so high And the false nurse was burnt in a fire close by</c>"),
+        "Oh ok", nullptr);
     alert->show();
 }
-
 bool __fastcall MenuLayer_init(MenuLayerSkit* self) {
     MappedHooks::getOriginal(MenuLayer_init)(self);
     self->me = self;
@@ -51,6 +57,11 @@ bool __fastcall MenuLayer_init(MenuLayerSkit* self) {
     //pCCParticleSnow->setBlendAdditive(true); still no
     pCCParticleSnow->setBlendFunc({ GL_SRC_ALPHA, GL_ONE }/*that is additive blend*/);//but this works :D
     self->addChild(pCCParticleSnow, 101, 2024);
+    
+    //CCLayerGradient for idk
+    CCLayerGradient* pCCLayerGradient = CCLayerGradient::create({ 90,190,255,110 }, { 0,0,0,0 });
+    pCCLayerGradient->setBlendFunc({ GL_SRC_ALPHA, GL_ONE });//additive
+    self->addChild(pCCLayerGradient, 100);
 
     CCSprite* spr = ModUtils::createSprite("tutorial_01.png");
     spr->setPosition(ModUtils::getCenterPoint());
@@ -65,7 +76,7 @@ bool __fastcall MenuLayer_init(MenuLayerSkit* self) {
     //MenuLayerSkit::onSomeBtn
     //we don't have robtop addons, so take CCMenuItemLabel because it have some animation at least
     //but we have CCMenuItemLabelExt that have similar anims from gd so use it
-    CCMenuItemSpriteExtra* btn_chatHistory_001 = CCMenuItemSpriteExtra::create(
+    CCMenuItemLabelExt* btn_chatHistory_001 = CCMenuItemLabelExt::create(
         ModUtils::createSprite("btn_chatHistory_001.png"),
         self,
         menu_selector(MenuLayerSkit::onSomeBtn)
@@ -75,17 +86,28 @@ bool __fastcall MenuLayer_init(MenuLayerSkit* self) {
     Menu->addChild(btn_chatHistory_001);
 
     //CreatorLayerSkit::sus_70330
-    CCMenuItemSpriteExtra* GJ_everyplayBtn_001 = CCMenuItemSpriteExtra::create(
+    CCMenuItemLabelExt* versus = CCMenuItemLabelExt::create(
+        CCLabelBMFont::create("sus", "gjFont30.fnt"),
+        self,
+        menu_selector(CreatorLayerSkit::sus_70330)
+    );
+    versus->setPositionX(CCDirector::sharedDirector()->getWinSize().width - 32);
+    versus->setPositionY(88.000f);
+    versus->setScale(0.600f);//yo
+    Menu->addChild(versus);
+
+    //CustomLayer::pushToMe
+    CCMenuItemLabelExt* GJ_everyplayBtn_001 = CCMenuItemLabelExt::create(
         ModUtils::createSprite("GJ_everyplayBtn_001.png"),
         self,
         menu_selector(CustomLayer::pushToMe)
     );
     GJ_everyplayBtn_001->setPositionX(CCDirector::sharedDirector()->getWinSize().width - 32);
-    GJ_everyplayBtn_001->setPositionY(88.000f);
+    GJ_everyplayBtn_001->setPositionY(128.000f);
     Menu->addChild(GJ_everyplayBtn_001);
 
     //CreatorLayerSkit::sus_6FE90
-    CCMenuItemSpriteExtra* dialogIcon_052 = CCMenuItemSpriteExtra::create(
+    CCMenuItemLabelExt* dialogIcon_052 = CCMenuItemLabelExt::create(
         ModUtils::createSprite("dialogIcon_052.png"),
         self,
         menu_selector(CreatorLayerSkit::sus_6FE90)
@@ -98,6 +120,17 @@ bool __fastcall MenuLayer_init(MenuLayerSkit* self) {
 }
 
 void MenuLayerSkit::CreateHooks() {
-    //gd::base it is reinterpret_cast<uintptr_t>(GetModuleHandle(0))
-    MappedHooks::registerHook((DWORD)GetModuleHandle(0) + 0x276700, MenuLayer_init);
+
+    //as i see hooking rewrites bytes up to e4
+    //and before functoin must be debuger trap cc sometimes
+    
+    //asd22:07:58 CE [mod]: oldfncinstruction:  55 8b ec 83 e4 f8 83 ec 74 53 56 8b d9 57 89 5c
+    //22:07:58 CE [mod]: 12825680 [hook]: MH_OK
+    //22:07:58 CE [mod]: hookedfncinstruction:  e9 73 5b 2d 02 f8 83 ec 74 53 56 8b d9 57 89 5c
+    uintptr_t addr = patterns::find_pattern("cc^?  ?  ?  ?  ?  F8 83 EC 74 53 56 8b d9 57 89 5c");
+    //addr = gd::base + 0x27b450; //2.204
+    //ModUtils::OpenConsole();
+    //ModUtils::log(("oldfncinstruction: " + ModUtils::ReadProcMemAsStr(addr, 16)).c_str());
+    MappedHooks::registerHook(addr, MenuLayer_init);
+    //ModUtils::log(("hookedfncinstruction: " + ModUtils::ReadProcMemAsStr(addr, 16)).c_str());
 }

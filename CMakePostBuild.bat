@@ -8,9 +8,6 @@
 @echo "working at LIBRARY_OUTPUT_PATH: %3"
 @cd "%3"
 
-@echo "remove minhook built static lib because who needs it even"
-@if exist "minhook.x32.lib" del "minhook.x32.lib"
-
 @echo "remove old renamed dll (to leave rename new): %1.%2.dll"
 @if exist "%1.%2.dll" del "%1.%2.dll"
 @echo "rename dll: %2.dll"
