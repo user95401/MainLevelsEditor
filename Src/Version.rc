@@ -8,11 +8,11 @@ FILETYPE 0x2
 	{
 		BLOCK "040904B0"
 		{
-			VALUE "ProductName", "mod"
+			VALUE "ProductName", "MainLevelsEditor"
 			VALUE "CompanyName", "user95401"
 			VALUE "LegalCopyright", "user666's original"
-			VALUE "FileDescription", "mod made for gd 2.2!!! asd"
-			VALUE "OriginalFilename", "mod.dll"
+			VALUE "FileDescription", "Main Levels Editor for GD 2.2"
+			VALUE "OriginalFilename", "MainLevelsEditor.dll"
 		}
 	}
 

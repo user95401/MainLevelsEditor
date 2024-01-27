@@ -6,10 +6,11 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
 set(LIBRARY_OUTPUT_PATH "${CMAKE_CURRENT_LIST_DIR}")
 cmake_policy(SET CMP0057 NEW)
 
-project ("mod")
+project ("MainLevelsEditor")
 set(developer "user95401")
-set(description "mod made for gd 2.2!!! asd")
-set(lib_output "D:\\Games\\user666\\Geometry Dash 2.204 PC [modloader]\\openhack\\dll") # post build copy
+set(description "Main Levels Editor for GD 2.2")
+set(lib_output "D:\\Games\\user666\\Geometry Dash v2.2a") # post build copy
+set(lib_output "D:\\Games\\user666\\Geometry Dash 2.204 PC [modloader]\\_Mods") # post build copy
 
 #curly-eureka
 set(GAME_VERSION "2.2")
