@@ -265,7 +265,7 @@ DWORD WINAPI ModThread(void* hModule) {
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
     if (ul_reason_for_call != DLL_PROCESS_ATTACH) return TRUE;
-    //ModUtils::OpenConsole();
+    ModUtils::OpenConsole();
     DisableThreadLibraryCalls(hModule);
     CreateThread(0, 0, ModThread, hModule, 0, 0);
     return TRUE;
