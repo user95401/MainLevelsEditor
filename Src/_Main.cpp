@@ -221,25 +221,36 @@ DWORD WINAPI ModThread(void* hModule) {
     //Hooks
     MH_Initialize();
     {
+        //
         //55 8b ec 6a ff 68 58 cc b9 0 64 a1 0 0 0 0 50 83 ec 54 53 56//2.204
         //55 8b ec 6a ff 68 58 cc 91 0 64 a1 0 0 0 0 50 83 ec 54 53 56//2.204 after day...
+        //55 8b ec 6a ff 68 58 cc 2e 1 64 a1 0 0 0 0 50 83 ec 54 53 56//2.204 after other day...
+        //55 8b ec 6a ff 68 58 cc 2e 1 64 a1 0 0 0 0 50 83 ec 54 53 56 57 a1 0 a0 3f 1 33 c5 50 8d//2.204 after other day but more...
+        //e9 f3 e9 9e 2  68 58 cc 2e 1 64 a1 0 0 0 0 50 83 ec 54 53 56 57 a1 0 a0 3f 1 33 c5 50 8d//2.204 hooked
+        // 
+        // geod
+        // 55 8b ec 6a ff 68 58 cc 15 1 64 a1 0 0 0 0 50 83 ec 54 53 56 57 a1 0 a0 26 1 33 c5 50 8d
+        // e9 f3 e9 5e 3  68 58 cc 15 1 64 a1 0 0 0 0 50 83 ec 54 53 56 57 a1 0 a0 26 1 33 c5 50 8d//hooked
+        // 
         //55 8b ec 6a ff 68 38 5f b2 0 64 a1 0 0 0 0 50 83 ec 54 53 56//2.200
-        uintptr_t addr = patterns::find_patterns("??????? cc ? 0 64 a1 0 0 0 0 50 83 ec 54 53 56")[0];
+
+        uintptr_t addr = patterns::find_pattern("? ? ? ? ? 68 58 cc ? ? 64 a1 0 0 0 0 50 83 ec 54 53 56 57 a1 0");
         //addr = gd::base + 0x2725d0; //2.204
         //addr = gd::base + 0x26DDA0; //2.200
-        //ModUtils::log((ModUtils::ReadProcMemAsStr(addr, 22)).c_str());
+        //ModUtils::log((ModUtils::ReadProcMemAsStr(addr, 32)).c_str());
         MappedHooks::registerHook(addr, getLevel);
+        //ModUtils::log((ModUtils::ReadProcMemAsStr(addr, 32)).c_str());
     };
     {
         //55 8b ec 56 8b 75 c 57 8b f9 85 f6 74 35 b8 e9 a2 8b 2e 8b ce f7//2.204
-        uintptr_t addr = patterns::find_patterns("?????? c 57 8b f9 85 f6 74 35")[0];
+        uintptr_t addr = patterns::find_pattern("?????? c 57 8b f9 85 f6 74 35");
         //addr = gd::base + 0x268AC0; //2.204
         //ModUtils::log((ModUtils::ReadProcMemAsStr(addr, 22)).c_str());
         MappedHooks::registerHook(addr, colorForPage);
     };
     {
         //55 8b ec 51 c7 45 fc 0 0 0 0 56 8b f1 83 fa 27 f 87 af 2 0//2.204
-        uintptr_t addr = patterns::find_patterns("?????? fc 0 0 0 0 56 8b f1 83 fa 27 f 87 af 2 0")[0];
+        uintptr_t addr = patterns::find_pattern("?????? fc 0 0 0 0 56 8b f1 83 fa 27 f 87 af 2 0");
         //addr = gd::base + 0x273430; //2.204
         //ModUtils::log((ModUtils::ReadProcMemAsStr(addr, 22)).c_str());
         MappedHooks::registerHook(addr, getAudioFilename);

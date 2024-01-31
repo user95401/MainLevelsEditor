@@ -9,7 +9,6 @@ cmake_policy(SET CMP0057 NEW)
 project ("MainLevelsEditor")
 set(developer "user95401")
 set(description "Main Levels Editor for GD 2.2")
-set(lib_output "D:\\Games\\user666\\Geometry Dash v2.2a") # post build copy
 set(lib_output "D:\\Games\\user666\\Geometry Dash 2.204 PC [modloader]\\_Mods") # post build copy
 
 #curly-eureka
@@ -17,7 +16,7 @@ set(GAME_VERSION "2.2")
 include("C:\\Users\\Lenovo\\source\\curly-eureka\\CURLY-EUREKA-INCL.cmake")# "\" must be escaped by \\
 
 #version
-set(FILEVERSION "1, 0, 0, 0")
+set(FILEVERSION "2, 0, 0, 0")
 set(LegalCopyright "user666's original")
 configure_file("Version.rc" "../../../src/Version.rc")
 
