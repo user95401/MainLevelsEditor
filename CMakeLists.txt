@@ -1,33 +1,23 @@
-﻿cmake_minimum_required(VERSION 3.10.0)
+cmake_minimum_required(VERSION 3.21)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
-set(LIBRARY_OUTPUT_PATH "${CMAKE_CURRENT_LIST_DIR}")
-cmake_policy(SET CMP0057 NEW)
+set(CMAKE_OSX_ARCHITECTURES "x86_64")
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
-project ("MainLevelsEditor")
-set(developer "user95401")
-set(description "Main Levels Editor for GD 2.2")
-set(lib_output "D:\\Games\\user666\\Geometry Dash 2.204 PC [modloader]\\_Mods") # post build copy
-
-#curly-eureka
-set(GAME_VERSION "2.2")
-include("C:\\Users\\Lenovo\\source\\curly-eureka\\CURLY-EUREKA-INCL.cmake")# "\" must be escaped by \\
-
-#version
-set(FILEVERSION "2, 0, 0, 0")
-set(LegalCopyright "user666's original")
-configure_file("Version.rc" "../../../src/Version.rc")
+project(MainLevelsEditor VERSION 3.0.0)
 
 #mod
-file(GLOB_RECURSE SRC
-Src/*
-Src/Layers/*
-#${CURLY_EUREKA_DIR} to include other stuff
-)
-add_library(${PROJECT_NAME} SHARED ${SRC} ${CURLY_EUREKA_SRC})
+file(GLOB_RECURSE SRC ${CMAKE_CURRENT_LIST_DIR}/_Src/*)
+add_library(${PROJECT_NAME} SHARED ${SRC})
+message("SRC: ${SRC}")
+include_directories(_Headers)
 
-#POST_BUILD
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND #POST_BUILD UPDATE USES POWERSHELL!
-"${CMAKE_CURRENT_LIST_DIR}/CMakePostBuild.bat" ${developer} ${PROJECT_NAME} ${LIBRARY_OUTPUT_PATH} ${lib_output})
+if (NOT DEFINED ENV{GEODE_SDK})
+    message(FATAL_ERROR "Unable to find Geode SDK! Please define GEODE_SDK environment variable to point to Geode")
+else()
+    message(STATUS "Found Geode: $ENV{GEODE_SDK}")
+endif()
+
+add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
+
+setup_geode_mod(${PROJECT_NAME})
