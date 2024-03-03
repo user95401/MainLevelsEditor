@@ -7,6 +7,38 @@ using namespace geode::prelude;
 #include "patterns.hpp"
 #include "ModUtils.hpp"
 
+//they force me
+
+//mindblowing shit 
+/////AAAAAAAAAAAAAA I HATE SO MUCHH THAT FU FUCKING GUIDLINES
+std::string FilePathFromModFolder(std::string fname) {
+    std::filesystem::path path = ("geode/config/user95401.mainlevelseditor/" + fname);
+    auto rtn = path.string();
+    //create folder
+    std::filesystem::create_directories(path.parent_path());
+    //CCTexturePack huh
+    /*CCTexturePack huh;
+    huh.m_id = "user95401.mainlevelseditor.levels";
+    huh.m_paths.insert(huh.m_paths.begin(), path.parent_path().string());
+    CCFileUtils::sharedFileUtils()->addTexturePack(huh);*/
+    return rtn;
+}
+auto read_file(std::string_view path) -> std::string {
+    constexpr auto read_size = std::size_t(4096);
+    auto stream = std::ifstream(path.data());
+    stream.exceptions(std::ios_base::badbit);
+    if (not stream) {
+        throw std::ios_base::failure("file does not exist");
+    }
+    auto out = std::string();
+    auto buf = std::string(read_size, '\0');
+    while (stream.read(&buf[0], read_size)) {
+        out.append(buf, 0, stream.gcount());
+    }
+    out.append(buf, 0, stream.gcount());
+    return out;
+}
+
 void UpdatePagesSetup() {
     log::debug("{}", __FUNCTION__);
 
@@ -14,8 +46,7 @@ void UpdatePagesSetup() {
     int start_from = 1;
 
     std::string MainSection = std::format("UpdatePagesSetup");
-    std::string IniPath = "Resources/levels/settings/_PagesSetupPatch.ini";
-    std::filesystem::create_directories("Resources/levels/settings/");
+    std::string IniPath = FilePathFromModFolder("_PagesSetupPatch.ini");
 
     CSimpleIni Ini;
     Ini.LoadFile(IniPath.c_str());
@@ -78,11 +109,31 @@ void UpdatePagesSetup() {
     }
 
 }
-$execute{
-    UpdatePagesSetup();
-    //break level str check
-    WriteProcMem(patterns::find_pattern("8a c3 5b 5d c3", ""), { 0xB0, 0x01 });
-}
+
+//huh
+#include <Geode/modify/PlayLayer.hpp>
+class $modify(PlayLayer) {
+    static PlayLayer* create(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
+        if (level->m_levelType == GJLevelType::Local) {
+            auto levelDataPath = FilePathFromModFolder(std::format("levels/{}.txt", level->m_levelID.value()));
+            if (std::filesystem::exists(levelDataPath)) {
+                level->m_levelString = read_file(levelDataPath);
+            };
+        };
+        return PlayLayer::create(level, useReplay, dontCreateObjects);
+    }
+};
+
+#include <Geode/modify/LoadingLayer.hpp>
+class $modify(LoadingLayer) {
+    TodoReturn loadingFinished() {
+        //create some inis
+        LevelSelectLayer::create(0);
+        //break level str check
+        WriteProcMem(patterns::find_pattern("8a c3 5b 5d c3", ""), { 0xB0, 0x01 });
+        LoadingLayer::loadingFinished();
+    };
+};
 
 #include <Geode/modify/LevelSelectLayer.hpp>
 class $modify(LevelSelectLayer) {
@@ -95,8 +146,7 @@ class $modify(LevelSelectLayer) {
         
         std::string MainSection = std::format("colorForPage");
         std::string MainVal = std::format("{}", page);
-        std::string IniPath = "Resources/levels/settings/_PageColors.ini";
-        std::filesystem::create_directories("Resources/levels/settings/");
+        std::string IniPath = FilePathFromModFolder("_PageColors.ini");
 
         CSimpleIni Ini;
         Ini.LoadFile(IniPath.c_str());
@@ -126,7 +176,6 @@ class $modify(LevelSelectLayer) {
 std::string MainSection = std::format("{}", p0); \
 std::string MainVal = std::format("{}", MainValaa); \
 std::string IniPath = IniName; \
-std::filesystem::create_directories("Resources/levels/settings/"); \
 CSimpleIni Ini; \
 Ini.LoadFile(IniPath.c_str()); \
 if (!(Ini.KeyExists(MainSection.c_str(), MainVal.c_str()))) \
@@ -140,59 +189,62 @@ Ini.SaveFile(IniPath.c_str());
 class $modify(LevelTools) {
     static gd::string getAudioFileName(int p0) {
         std::string crRet = LevelTools::getAudioFileName(p0);
-        crRetAAAsdp0("Filename","Resources/levels/settings/_AudioTracks.ini");
+        crRetAAAsdp0("Filename", FilePathFromModFolder("_AudioTracks.ini"));
         return crRet;
     }
     static gd::string getAudioTitle(int p0) {
         gd::string crRet = LevelTools::getAudioTitle(p0);
-        crRetAAAsdp0("Title", "Resources/levels/settings/_AudioTracks.ini");
+        crRetAAAsdp0("Title", FilePathFromModFolder("_AudioTracks.ini"));
         return crRet;
     }
     static gd::string nameForArtist(int p0) {
         gd::string crRet = LevelTools::nameForArtist(p0);
-        crRetAAAsdp0("name", "Resources/levels/settings/_Artists.ini");
+        crRetAAAsdp0("name", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
     static gd::string fbURLForArtist(int p0) {
         gd::string crRet = LevelTools::fbURLForArtist(p0);
-        crRetAAAsdp0("fbURL", "Resources/levels/settings/_Artists.ini");
+        crRetAAAsdp0("fbURL", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
     static gd::string ngURLForArtist(int p0) {
         gd::string crRet = LevelTools::ngURLForArtist(p0);
-        crRetAAAsdp0("ngURL", "Resources/levels/settings/_Artists.ini");
+        crRetAAAsdp0("ngURL", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
     static gd::string ytURLForArtist(int p0) {
         gd::string crRet = LevelTools::ytURLForArtist(p0);
-        crRetAAAsdp0("ytURL", "Resources/levels/settings/_Artists.ini");
+        crRetAAAsdp0("ytURL", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
     static GJGameLevel* getLevel(int p0, bool p1) {
         GJGameLevel* pGJGameLevel = LevelTools::getLevel(p0, p1);
-
+        //mindblowing shit 
+        /*if (pGJGameLevel->m_levelString == LevelTools::getLevel(1, p1)->m_levelString) {
+            log::debug("{}: levelstr same as 1", p0);
+            return pGJGameLevel;
+        }*/
         std::string MainSection = std::format("Level Setup");
-        std::string IniPath = std::format("Resources/levels/settings/{}.ini", p0);
-        std::filesystem::create_directories("Resources/levels/settings/");
+        std::string IniPath = FilePathFromModFolder(std::format("levels/setup/{}.ini", p0));
 
         CSimpleIni Ini;
         Ini.LoadFile(IniPath.c_str());
 
         //m_sLevelName
-        if (!(Ini.KeyExists(MainSection.c_str(), "m_sLevelName")))
+        if (!(Ini.KeyExists(MainSection.c_str(), "LevelName")))
             Ini.SetValue(
                 MainSection.c_str(),
-                "m_sLevelName",
+                "LevelName",
                 pGJGameLevel->m_levelName.c_str(),
                 "; Level Name"
             );
-        else pGJGameLevel->m_levelName = Ini.GetValue(MainSection.c_str(), "m_sLevelName");
+        else pGJGameLevel->m_levelName = Ini.GetValue(MainSection.c_str(), "LevelName");
 
         //m_difficulty
-        if (!(Ini.KeyExists(MainSection.c_str(), "m_difficulty")))
+        if (!(Ini.KeyExists(MainSection.c_str(), "difficulty")))
             Ini.SetLongValue(
                 MainSection.c_str(),
-                "m_difficulty",
+                "difficulty",
                 (int)pGJGameLevel->m_difficulty,
                 "; Difficulties that LevelPage layer supports:\n"
                 "; undef = 0,\n"
@@ -203,40 +255,60 @@ class $modify(LevelTools) {
                 "; Insane = 5,\n"
                 "; Demon = 6"
             );
-        else pGJGameLevel->m_difficulty = (GJDifficulty)Ini.GetLongValue(MainSection.c_str(), "m_difficulty");
+        else pGJGameLevel->m_difficulty = (GJDifficulty)Ini.GetLongValue(MainSection.c_str(), "difficulty");
 
         //m_stars
-        if (!(Ini.KeyExists(MainSection.c_str(), "m_stars")))
+        if (!(Ini.KeyExists(MainSection.c_str(), "stars")))
             Ini.SetLongValue(
                 MainSection.c_str(),
-                "m_stars",
+                "stars",
                 pGJGameLevel->m_stars.value(),
                 "; Stars"
             );
         else {
-            int stars = Ini.GetLongValue(MainSection.c_str(), "m_stars");
+            int stars = Ini.GetLongValue(MainSection.c_str(), "stars");
             pGJGameLevel->m_stars = stars;
         }
 
         //m_audioTrack
-        if (!(Ini.KeyExists(MainSection.c_str(), "m_audioTrack")))
+        if (!(Ini.KeyExists(MainSection.c_str(), "audioTrack")))
             Ini.SetLongValue(
                 MainSection.c_str(),
-                "m_audioTrack",
+                "audioTrack",
                 pGJGameLevel->m_audioTrack,
                 "; Audio Track ID"
             );
-        else pGJGameLevel->m_audioTrack = Ini.GetLongValue(MainSection.c_str(), "m_audioTrack");
+        else pGJGameLevel->m_audioTrack = Ini.GetLongValue(MainSection.c_str(), "audioTrack");
 
         //m_capacityString
-        if (!(Ini.KeyExists(MainSection.c_str(), "m_capacityString")))
+        if (!(Ini.KeyExists(MainSection.c_str(), "capacityString")))
             Ini.SetValue(
                 MainSection.c_str(),
-                "m_capacityString",
+                "capacityString",
                 pGJGameLevel->m_capacityString.c_str(),
                 "; Capacity String"
             );
-        else pGJGameLevel->m_capacityString = Ini.GetValue(MainSection.c_str(), "m_capacityString");
+        else pGJGameLevel->m_capacityString = Ini.GetValue(MainSection.c_str(), "capacityString");
+
+        //m_levelDesc
+        if (!(Ini.KeyExists(MainSection.c_str(), "levelDesc")))
+            Ini.SetValue(
+                MainSection.c_str(),
+                "levelDesc",
+                pGJGameLevel->m_levelDesc.c_str(),
+                "; m_levelDesc (useless)"
+            );
+        else pGJGameLevel->m_levelDesc = Ini.GetValue(MainSection.c_str(), "levelDesc");
+
+        //m_creatorName
+        if (!(Ini.KeyExists(MainSection.c_str(), "creatorName")))
+            Ini.SetValue(
+                MainSection.c_str(),
+                "creatorName",
+                pGJGameLevel->m_creatorName.c_str(),
+                "; m_creatorName (useless)"
+            );
+        else pGJGameLevel->m_creatorName = Ini.GetValue(MainSection.c_str(), "creatorName");
 
         Ini.SaveFile(IniPath.c_str());
 

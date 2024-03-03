@@ -6,19 +6,25 @@ u can edit:
 - bg color for page
 - songs
 
-and "Load Failed!" bypass here
+and <cr>"Load Failed!"</c> <cl>bypass</c> here
 
-summary u can add ur own level in level select layer
+<cg>summary u can add ur own level in level select layer</c>
 
 settings here is generating per hooked functions call 
 so play stereo madness to generate all config structure
 
-[level data](Resources\levels)
-[level settings](Resources\levels\settings)
-[_PagesSetupPatch.ini](Resources\levels\settings\\_PagesSetupPatch.ini)
-[_PageColors.ini](Resources\levels\settings\\_PageColors.ini)
-[_AudioTracks.ini](Resources\levels\settings\\_AudioTracks.ini)
-[_Artists.ini](Resources\levels\settings\\_Artists.ini)
+\- [level data](geode\config\user95401.mainlevelseditor\levels) -
+\- [level settings](geode\config\user95401.mainlevelseditor\levels\settings) -
+\- [_PagesSetupPatch.ini](geode\config\user95401.mainlevelseditor\\_PagesSetupPatch.ini) -
+\- [_PageColors.ini](geode\config\user95401.mainlevelseditor\\_PageColors.ini) -
+\- [_AudioTracks.ini](geode\config\user95401.mainlevelseditor\\_AudioTracks.ini) -
+\- [_Artists.ini](geode\config\user95401.mainlevelseditor\\_Artists.ini) -
 
-### helpers:
-hold `CTRL + G` while push play button to automatically setup level into main level
+### Copy Online Level Helper:
+Open level page and push `Insert` key.
+U can select stars in rate stars popup.
+### Copy Editor Level Helper:
+open open share level layer and push `Insert` key 
+U can select stars yea.
+### Delete Main Level Helper:
+select level and push `Delete` key

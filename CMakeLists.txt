@@ -7,7 +7,7 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 project(MainLevelsEditor VERSION 3.0.0)
 
 #mod
-file(GLOB_RECURSE SRC ${CMAKE_CURRENT_LIST_DIR}/_Src/*)
+file(GLOB_RECURSE SRC ${CMAKE_CURRENT_LIST_DIR}/_Src/*.cpp)
 add_library(${PROJECT_NAME} SHARED ${SRC})
 message("SRC: ${SRC}")
 include_directories(_Headers)
