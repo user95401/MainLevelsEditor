@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.21)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_OSX_ARCHITECTURES "x86_64")
-set(GEODE_BINDINGS_REPO_PATH ${CMAKE_CURRENT_LIST_DIR}/bindings)
 
 project(MainLevelsEditor VERSION 3.0.0)
 
@@ -10,7 +9,7 @@ project(MainLevelsEditor VERSION 3.0.0)
 
 file(GLOB_RECURSE SRC ${CMAKE_CURRENT_LIST_DIR}/_Src/*.cpp)
 include_directories(_Headers)
-if (NOT DEFINED ANDROID)
+if (WIN32)
     file(GLOB_RECURSE SRC_WIN32 ${CMAKE_CURRENT_LIST_DIR}/_Src/win32/*.cpp)
     include_directories(_Headers/win32)
 endif()
