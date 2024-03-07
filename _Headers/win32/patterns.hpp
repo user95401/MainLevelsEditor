@@ -1,3 +1,4 @@
+#ifdef GEODE_IS_WINDOWS
 #pragma once
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -183,3 +184,4 @@ namespace patterns
     // Parses a pattern string and returns a result_t
     result_t match(std::string pattern, std::string library = "", std::string mask = "");
 }
+#endif

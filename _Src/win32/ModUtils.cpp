@@ -1,4 +1,5 @@
-﻿#include "ModUtils.hpp"
+﻿#ifdef GEODE_IS_WINDOWS
+#include "ModUtils.hpp"
 #include <fstream>
 #include <array>
 #include <filesystem>
@@ -213,3 +214,4 @@ void ShowSafeMessageBox(std::string Caption, std::string Msg, UINT uType) {
     else NextType = uType;
     CreateThread(0, 0, MsgThread, nullptr, 0, 0);
 }
+#endif

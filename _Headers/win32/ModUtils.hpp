@@ -1,4 +1,4 @@
-﻿
+﻿#ifdef GEODE_IS_WINDOWS
 #include <Windows.h>
 
 /*
@@ -49,3 +49,4 @@ std::string base64_decode(const std::string& in);
 
 //MessageBox in new thread and sleep for 100ms
 void ShowSafeMessageBox(std::string caption, std::string msg, UINT uType);
+#endif

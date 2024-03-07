@@ -1,3 +1,4 @@
+#ifdef GEODE_IS_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <Psapi.h>
@@ -414,3 +415,4 @@ namespace patterns
         return result;
     }
 }
+#endif
