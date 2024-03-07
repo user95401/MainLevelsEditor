@@ -43,7 +43,7 @@ void UpdatePagesSetup() {
     int cmp_amount = 23;
     int start_from = 1;
 
-    std::string MainSection = std::format("UpdatePagesSetup");
+    std::string MainSection = fmt::format("UpdatePagesSetup");
     std::string IniPath = FilePathFromModFolder("_PagesSetupPatch.ini");
 
     CSimpleIni Ini;
@@ -113,7 +113,7 @@ void UpdatePagesSetup() {
 class $modify(PlayLayer) {
     static PlayLayer* create(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
         if (level->m_levelType == GJLevelType::Local) {
-            auto levelDataPath = FilePathFromModFolder(std::format("levels/{}.txt", level->m_levelID.value()));
+            auto levelDataPath = FilePathFromModFolder(fmt::format("levels/{}.txt", level->m_levelID.value()));
             if (std::filesystem::exists(levelDataPath)) {
                 level->m_levelString = read_file(levelDataPath);
             };
@@ -143,8 +143,8 @@ class $modify(LevelSelectLayer) {
     ccColor3B colorForPage(int page) {
         ccColor3B _ccColor3B = LevelSelectLayer::colorForPage(page);
         
-        std::string MainSection = std::format("colorForPage");
-        std::string MainVal = std::format("{}", page);
+        std::string MainSection = fmt::format("colorForPage");
+        std::string MainVal = fmt::format("{}", page);
         std::string IniPath = FilePathFromModFolder("_PageColors.ini");
 
         CSimpleIni Ini;
@@ -155,7 +155,7 @@ class $modify(LevelSelectLayer) {
             Ini.SetValue(
                 MainSection.c_str(),
                 MainVal.c_str(),
-                std::format("{},{},{}", _ccColor3B.r, _ccColor3B.g, _ccColor3B.b).c_str()
+                fmt::format("{},{},{}", _ccColor3B.r, _ccColor3B.g, _ccColor3B.b).c_str()
             );
         else {
             std::vector<std::string> rgb = explode(Ini.GetValue(MainSection.c_str(), MainVal.c_str()), ',');
@@ -172,8 +172,8 @@ class $modify(LevelSelectLayer) {
 
 #if 1
 #define crRetAAAsdp0(MainValaa, IniName) \
-std::string MainSection = std::format("{}", p0); \
-std::string MainVal = std::format("{}", MainValaa); \
+std::string MainSection = fmt::format("{}", p0); \
+std::string MainVal = fmt::format("{}", MainValaa); \
 std::string IniPath = IniName; \
 CSimpleIni Ini; \
 Ini.LoadFile(IniPath.c_str()); \
@@ -223,8 +223,8 @@ class $modify(LevelTools) {
             log::debug("{}: levelstr same as 1", p0);
             return pGJGameLevel;
         }*/
-        std::string MainSection = std::format("Level Setup");
-        std::string IniPath = FilePathFromModFolder(std::format("levels/setup/{}.ini", p0));
+        std::string MainSection = fmt::format("Level Setup");
+        std::string IniPath = FilePathFromModFolder(fmt::format("levels/setup/{}.ini", p0));
 
         CSimpleIni Ini;
         Ini.LoadFile(IniPath.c_str());
@@ -315,7 +315,7 @@ class $modify(LevelTools) {
 
         Ini.SaveFile(IniPath.c_str());
 
-        //CCMessageBox(std::format("{}", ).c_str(), __FUNCSIG__);
+        //CCMessageBox(fmt::format("{}", ).c_str(), __FUNCSIG__);
         return pGJGameLevel;
     }
 };

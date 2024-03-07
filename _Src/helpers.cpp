@@ -99,8 +99,8 @@ public:
             //grab level
             GJGameLevel* pGJGameLevel = pLevel;
             {
-                std::string MainSection = std::format("Level Setup");
-                std::string IniPath = FilePathFromModFolder(std::format("levels/setup/{}.ini", pTextInput->getString()));
+                std::string MainSection = fmt::format("Level Setup");
+                std::string IniPath = FilePathFromModFolder(fmt::format("levels/setup/{}.ini", pTextInput->getString()));
 
                 CSimpleIni Ini;
                 Ini.LoadFile(IniPath.c_str());
@@ -195,7 +195,7 @@ public:
                 decompressed = std::regex_replace(decompressed, std::regex(",1329,"), ",142,");
                 level_data = ZipUtils::compressString(decompressed, false, 0);
                 //save
-                std::string levelDataPath = FilePathFromModFolder(std::format("levels/{}.txt", pTextInput->getString()));
+                std::string levelDataPath = FilePathFromModFolder(fmt::format("levels/{}.txt", pTextInput->getString()));
                 std::ofstream levelData;
                 levelData.open(levelDataPath);
                 levelData.clear();
@@ -204,7 +204,7 @@ public:
             };
             //_PagesSetupPatch
             {
-                std::string MainSection = std::format("{}", "UpdatePagesSetup");
+                std::string MainSection = fmt::format("{}", "UpdatePagesSetup");
                 std::string IniPath = FilePathFromModFolder("_PagesSetupPatch.ini");
 
                 CSimpleIni Ini;
@@ -223,7 +223,7 @@ public:
             };
             //_AudioTracks
             if (pLevel->m_audioTrack <= 0) {
-                auto newSongPath = FilePathFromModFolder(std::format("audio/{} ({}).mp3", pLevel->m_levelName.c_str(), pLevel->m_songID));
+                auto newSongPath = FilePathFromModFolder(fmt::format("audio/{} ({}).mp3", pLevel->m_levelName.c_str(), pLevel->m_songID));
 
                 std::ifstream src(pLevel->getAudioFileName(), std::ios::binary);
                 std::ofstream dst(newSongPath, std::ios::binary);
@@ -233,7 +233,7 @@ public:
                     resultstr = resultstr.data() + std::string("\n<cr>song wasn't downloaded!</c>\n<co>download it first and retry...</c>");
                 }
 
-                std::string MainSection = std::format("{}", pTextInput->getString());
+                std::string MainSection = fmt::format("{}", pTextInput->getString());
                 std::string IniPath = FilePathFromModFolder("_AudioTracks.ini");
 
                 CSimpleIniA Ini;
@@ -375,12 +375,12 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
     }
     void onDelete(CCObject*) {
         //level setup
-        std::remove(FilePathFromModFolder(std::format("levels/setup/{}.ini", g_currentPage)).c_str());
+        std::remove(FilePathFromModFolder(fmt::format("levels/setup/{}.ini", g_currentPage)).c_str());
         //data store
-        std::remove(FilePathFromModFolder(std::format("levels/{}.txt", g_currentPage)).c_str());
+        std::remove(FilePathFromModFolder(fmt::format("levels/{}.txt", g_currentPage)).c_str());
         //_PagesSetupPatch
         {
-            std::string MainSection = std::format("{}", "UpdatePagesSetup");
+            std::string MainSection = fmt::format("{}", "UpdatePagesSetup");
             std::string IniPath = FilePathFromModFolder("_PagesSetupPatch.ini");
             CSimpleIni Ini;
             Ini.LoadFile(IniPath.c_str());
@@ -394,7 +394,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         };
         //_AudioTracks
         {
-            std::string MainSection = std::format("{}", g_currentLevel->m_audioTrack);
+            std::string MainSection = fmt::format("{}", g_currentLevel->m_audioTrack);
             std::string IniPath = FilePathFromModFolder("_AudioTracks.ini");
 
             CSimpleIniA Ini;
@@ -410,8 +410,8 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
             for (size_t levelID = 0; levelID < 127; levelID++) {
                 if (levelID > g_currentPage and levelID < 127) {
                     std::rename(
-                        FilePathFromModFolder(std::format("levels/setup/{}.ini", levelID)).c_str(),
-                        FilePathFromModFolder(std::format("levels/setup/{}.ini", levelID - 1)).c_str()
+                        FilePathFromModFolder(fmt::format("levels/setup/{}.ini", levelID)).c_str(),
+                        FilePathFromModFolder(fmt::format("levels/setup/{}.ini", levelID - 1)).c_str()
                     );
                 };
             }
@@ -419,23 +419,23 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
             for (size_t levelID = 0; levelID < 127; levelID++) {
                 if (levelID > g_currentPage) {
                     if (
-                        !std::filesystem::exists(FilePathFromModFolder(std::format("levels/{}.txt", levelID)))
-                        and std::filesystem::exists(std::format("Resources/levels/{}.txt", levelID))
+                        !std::filesystem::exists(FilePathFromModFolder(fmt::format("levels/{}.txt", levelID)))
+                        and std::filesystem::exists(fmt::format("Resources/levels/{}.txt", levelID))
                         )
                         std::filesystem::copy_file(
-                            std::format("Resources/levels/{}.txt", levelID).c_str(),
-                            FilePathFromModFolder(std::format("levels/{}.txt", levelID - 1)).c_str()
+                            fmt::format("Resources/levels/{}.txt", levelID).c_str(),
+                            FilePathFromModFolder(fmt::format("levels/{}.txt", levelID - 1)).c_str()
                         );
                     else
                         std::rename(
-                            FilePathFromModFolder(std::format("levels/{}.txt", levelID)).c_str(),
-                            FilePathFromModFolder(std::format("levels/{}.txt", levelID - 1)).c_str()
+                            FilePathFromModFolder(fmt::format("levels/{}.txt", levelID)).c_str(),
+                            FilePathFromModFolder(fmt::format("levels/{}.txt", levelID - 1)).c_str()
                         );
                 }
             }
         }
         //a
-        Notification::create(std::format("{} deleted...", g_currentLevel->m_levelName.data()).data(), NotificationIcon::Warning)->show();
+        Notification::create(fmt::format("{} deleted...", g_currentLevel->m_levelName.data()).data(), NotificationIcon::Warning)->show();
         if (pLevelSelectLayer->getChildByTag(5629)) pLevelSelectLayer->getChildByTag(5629)->removeMeAndCleanup();
         if (pLevelSelectLayer) {
             pLevelSelectLayer->removeAllChildren();
@@ -445,7 +445,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
     void openDeletePopup() {
         if (!pLevelSelectLayer) return;
         if (getDelPop()) getDelPop()->removeMeAndCleanup();
-        FLAlertLayer* deletePop = FLAlertLayer::create(nullptr, std::format("Delete {}'th Level", g_currentPage).c_str(), std::format("<co>Delete</c> level data, setup;\n try <cr>adaptate</c> <co>all next levels</c>;\nand <cy>decrease</c> level pages count?"), "Nah", "Delete");
+        FLAlertLayer* deletePop = FLAlertLayer::create(nullptr, fmt::format("Delete {}'th Level", g_currentPage).c_str(), fmt::format("<co>Delete</c> level data, setup;\n try <cr>adaptate</c> <co>all next levels</c>;\nand <cy>decrease</c> level pages count?"), "Nah", "Delete");
         //btn1
         if (deletePop->m_button1 and deletePop->m_button1->m_BGSprite) {
             auto SpriteFrame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName("geode.loader/baseEditor_Normal_DarkGray.png");
@@ -495,7 +495,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
     };
     void updateDeletePopTitle() {
         if (!getDelPop()) return;
-        dynamic_cast<CCLabelBMFont*>(getDelPop()->getChildByIDRecursive("title"))->setString(std::format("Delete {}'th Level", g_currentPage).c_str());
+        dynamic_cast<CCLabelBMFont*>(getDelPop()->getChildByIDRecursive("title"))->setString(fmt::format("Delete {}'th Level", g_currentPage).c_str());
     }
     void SomeSch(float asd) {
         if (!pLevelSelectLayer) return;
