@@ -17,7 +17,13 @@ so play stereo madness to generate all config structure
 Open level page and push `Insert` key.
 U can select stars in rate stars popup.
 ### Copy Editor Level Helper:
-open open share level layer and push `Insert` key 
+Open share level layer and push `Insert` key 
 U can select stars yea.
 ### Delete Main Level Helper:
-select level and push `Delete` key
+Select level and push `Delete` key
+
+#### why no android release?
+
+pages count stuff
+- patch? \- i cant make patch for game on android
+- programtically removal? \- BoomScrollLayer is unexplored and i tried myself but its too hard for me :>

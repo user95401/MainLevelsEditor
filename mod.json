@@ -7,5 +7,38 @@
 	"developer": "user95401",
 	"description": "customizable thing to change main levels uknowya",
 	"repository": "https://github.com/user95401/MainLevelsEditor",
-	"tags": [ "Song", "Music", "color", "Interface", "interface", "Utility", "Customization", "Cheats", "audio", "Cosmetic", "level" ]
+	"tags": [ "Interface", "Utility", "Customization", "Cheats" ],
+	"settings": {
+		"COLH": {
+			"name": "Copy Online Level Helper Key Wait",
+			"description": "Open level page and push `Insert` key to copy online level",
+			"type": "bool",
+			"default": true
+		},
+		"CELH": {
+			"name": "Copy Editor Level Helper Key Wait",
+			"description": "Open share level layer and push `Insert` key to copy editor level",
+			"type": "bool",
+			"default": true
+		},
+		"DMLH": {
+			"name": "Delete Main Level Helper Key Wait",
+			"description": "Select level and push `Delete` key to delete main level",
+			"type": "bool",
+			"default": true
+		},
+		"SGG": {
+			"name": "Stat Gain Guard",
+			"description": "ignore stars if its over max value",
+			"type": "bool",
+			"default": true
+		},
+		"SGGS": {
+			"name": "^ SGG Stars:",
+			"description": "ignore stars if its over max value",
+			"type": "int",
+			"min": 0,
+			"default": 22
+		}
+	}
 }

@@ -2,10 +2,12 @@
 #include <Geode/utils/web.hpp>//Include the Geode headers.
 using namespace geode::prelude;//cocos2d and all Geode namespaces
 
-#include "ModUtils.hpp"
 #include "SimpleIni.h"
-
 #include "Header1.hpp"
+
+#ifndef GEODE_IS_WINDOWS
+#define GetKeyState(asd) (short)asd
+#endif
 
 std::string truncate(std::string str, size_t width, bool show_ellipsis = true)
 {
@@ -287,7 +289,8 @@ class $modify(LevelInfoLayerExt, LevelInfoLayer) {
         GrabLevelPopup::TryOpenIt(this->getParent());
     }
     bool init(GJGameLevel* p0, bool p1) {
-        this->schedule(schedule_selector(LevelInfoLayerExt::SomeSch), 0.01f);
+        if (Mod::get()->getSettingValue<bool>("COLH"))
+            this->schedule(schedule_selector(LevelInfoLayerExt::SomeSch), 0.01f);
 		return LevelInfoLayer::init(p0, p1);
 	}
 };
@@ -300,7 +303,8 @@ class $modify(RateStarsLayerExt, RateStarsLayer) {
     }
     static RateStarsLayer* create(int p0, bool p1, bool p2) {
         m_pRateStarsLayer = RateStarsLayer::create(p0, p1, p2);
-        m_pRateStarsLayer->schedule(schedule_selector(RateStarsLayerExt::SomeSch), 0.01f);
+        if (Mod::get()->getSettingValue<bool>("COLH"))
+            m_pRateStarsLayer->schedule(schedule_selector(RateStarsLayerExt::SomeSch), 0.01f);
         return m_pRateStarsLayer;
 	}
 };
@@ -334,7 +338,9 @@ class $modify(ShareLevelLayerExt, ShareLevelLayer) {
     static ShareLevelLayer* create(GJGameLevel* p0) {
         m_pShareLevelLayer = ShareLevelLayer::create(p0);
         m_level = p0;
-        m_pShareLevelLayer->schedule(schedule_selector(ShareLevelLayerExt::SomeSch), 0.01f);
+        if (Mod::get()->getSettingValue<int64_t>("CELH")) {
+            m_pShareLevelLayer->schedule(schedule_selector(ShareLevelLayerExt::SomeSch), 0.01f);
+        };
 		return m_pShareLevelLayer;
 	}
 };
@@ -511,8 +517,10 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
     }
     static LevelSelectLayer* create(int p0) {
         pLevelSelectLayer = LevelSelectLayer::create(p0);
-        pLevelSelectLayer->schedule(schedule_selector(LevelSelectLayerExt::SomeSch), 0.01f);
-        pLevelSelectLayer->schedule(schedule_selector(LevelSelectLayerExt::SomeSch2), 0.1f);
+        if (Mod::get()->getSettingValue<bool>("DMLH")) {
+            pLevelSelectLayer->schedule(schedule_selector(LevelSelectLayerExt::SomeSch), 0.01f);
+            pLevelSelectLayer->schedule(schedule_selector(LevelSelectLayerExt::SomeSch2), 0.1f);
+        };
         return pLevelSelectLayer;
     };
 };

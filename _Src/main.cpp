@@ -4,24 +4,22 @@ using namespace geode::prelude;
 //i know all like use geode solutions blah blah blah but i dont like them
 //here collected all helpers that i selected
 #include "SimpleIni.h"
+#ifdef GEODE_IS_WINDOWS
 #include "patterns.hpp"
 #include "ModUtils.hpp"
-
+#endif
 //they force me
 
 //mindblowing shit 
 /////AAAAAAAAAAAAAA I HATE SO MUCHH THAT FU FUCKING GUIDLINES
 std::string FilePathFromModFolder(std::string fname) {
-    std::filesystem::path path = ("geode/config/user95401.mainlevelseditor/" + fname);
-    auto rtn = path.string();
-    //create folder
+    auto sCurrPath = ghc::filesystem::current_path().string();
+    auto sFullPath = Mod::get()->getConfigDir(true).string();
+    auto sRelPath = sFullPath.erase(0, sCurrPath.size() + 1);//sucks
+    std::replace(sRelPath.begin(), sRelPath.end(), '\\', '/'); // replace all '\' to '/' ;3
+    std::filesystem::path path = (sRelPath + "/" + fname);
     std::filesystem::create_directories(path.parent_path());
-    //CCTexturePack huh
-    /*CCTexturePack huh;
-    huh.m_id = "user95401.mainlevelseditor.levels";
-    huh.m_paths.insert(huh.m_paths.begin(), path.parent_path().string());
-    CCFileUtils::sharedFileUtils()->addTexturePack(huh);*/
-    return rtn;
+    return path.string();
 }
 auto read_file(std::string_view path) -> std::string {
     constexpr auto read_size = std::size_t(4096);
@@ -40,7 +38,7 @@ auto read_file(std::string_view path) -> std::string {
 }
 
 void UpdatePagesSetup() {
-    log::debug("{}", __FUNCTION__);
+#ifdef GEODE_IS_WINDOWS
 
     int cmp_amount = 23;
     int start_from = 1;
@@ -107,7 +105,7 @@ void UpdatePagesSetup() {
         // log((ReadProcMemAsStr(addr, 22)).c_str());
         WriteProcMem(addr, { 0xBE, toRewrite[0], toRewrite[1], toRewrite[2], toRewrite[3] });
     }
-
+#endif
 }
 
 //huh
@@ -138,8 +136,9 @@ class $modify(LoadingLayer) {
 #include <Geode/modify/LevelSelectLayer.hpp>
 class $modify(LevelSelectLayer) {
     bool init(int p0) {
+        auto rtn = LevelSelectLayer::init(p0);
         UpdatePagesSetup();
-        return LevelSelectLayer::init(p0);
+        return rtn;
     };
     ccColor3B colorForPage(int page) {
         ccColor3B _ccColor3B = LevelSelectLayer::colorForPage(page);
@@ -267,6 +266,10 @@ class $modify(LevelTools) {
             );
         else {
             int stars = Ini.GetLongValue(MainSection.c_str(), "stars");
+            if (Mod::get()->getSettingValue<bool>("SGG")) {
+                int max = Mod::get()->getSettingValue<int64_t>("SGGS");
+                if (stars >= max) stars = max;
+            }
             pGJGameLevel->m_stars = stars;
         }
 
