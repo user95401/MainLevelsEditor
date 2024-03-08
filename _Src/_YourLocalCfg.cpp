@@ -5,8 +5,8 @@ using namespace geode::prelude;
 void CopyFromLoacal() {
     try {
         ghc::filesystem::copy(
-            Mod::get()->getConfigDir(), //from game dir
-            Mod::get()->getSaveDir(), //to game save dir
+            Mod::get()->getConfigDir() / "settings.json", //from game dir
+            Mod::get()->getSaveDir() / "settings.json", //to game save dir
             ghc::filesystem::copy_options::recursive |
             ghc::filesystem::copy_options::overwrite_existing);
     }
@@ -18,8 +18,8 @@ void CopyFromLoacal() {
 void CopyFromData() {
     try {
         ghc::filesystem::copy(
-            Mod::get()->getSaveDir(), //to game save dir
-            Mod::get()->getConfigDir(), //from game dir
+            Mod::get()->getSaveDir() / "settings.json", //to game save dir
+            Mod::get()->getConfigDir() / "settings.json", //from game dir
             ghc::filesystem::copy_options::recursive | 
             ghc::filesystem::copy_options::overwrite_existing);
     }

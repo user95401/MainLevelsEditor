@@ -219,7 +219,7 @@ GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
 
     std::string MainSection = fmt::format("Level Setup");
     std::string IniPath = FilePathFromModFolder(fmt::format("levels/setup/{}.ini", id));
-
+    
     CSimpleIni Ini;
     Ini.LoadFile(IniPath.c_str());
 
@@ -331,43 +331,44 @@ GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
 
     return pGJGameLevel;
 }
-class $modify(LevelTools) {
 #ifdef GEODE_IS_WINDOWS
 #define LevelToolsero() LevelTools::
+#define LevelToolseros static
 #else
 #define LevelToolsero() this->
 #endif
-     gd::string getAudioFileName(int p0) {
+class $modify(LevelTools) {
+    LevelToolseros gd::string getAudioFileName(int p0) {
         std::string crRet = LevelToolsero()getAudioFileName(p0);
         crRetAAAsdp0("Filename", FilePathFromModFolder("_AudioTracks.ini"));
         return crRet;
     }
-     gd::string getAudioTitle(int p0) {
+    LevelToolseros gd::string getAudioTitle(int p0) {
         gd::string crRet = LevelToolsero()getAudioTitle(p0);
         crRetAAAsdp0("Title", FilePathFromModFolder("_AudioTracks.ini"));
         return crRet;
     }
-     gd::string nameForArtist(int p0) {
+    LevelToolseros gd::string nameForArtist(int p0) {
         gd::string crRet = LevelToolsero()nameForArtist(p0);
         crRetAAAsdp0("name", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
-     gd::string fbURLForArtist(int p0) {
+    LevelToolseros gd::string fbURLForArtist(int p0) {
         gd::string crRet = LevelToolsero()fbURLForArtist(p0);
         crRetAAAsdp0("fbURL", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
-     gd::string ngURLForArtist(int p0) {
+    LevelToolseros gd::string ngURLForArtist(int p0) {
         gd::string crRet = LevelToolsero()ngURLForArtist(p0);
         crRetAAAsdp0("ngURL", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
-     gd::string ytURLForArtist(int p0) {
+    LevelToolseros gd::string ytURLForArtist(int p0) {
         gd::string crRet = LevelToolsero()ytURLForArtist(p0);
         crRetAAAsdp0("ytURL", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
-    GJGameLevel* getLevel(int p0, bool p1) {
+    LevelToolseros GJGameLevel* getLevel(int p0, bool p1) {
         GJGameLevel* pGJGameLevel = processOutLevelByConfig(p0, LevelToolsero()getLevel(p0, p1));
         return pGJGameLevel;
     }
