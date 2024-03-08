@@ -336,6 +336,7 @@ GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
 #define LevelToolseros static
 #else
 #define LevelToolsero() this->
+#define LevelToolseros
 #endif
 class $modify(LevelTools) {
     LevelToolseros gd::string getAudioFileName(int p0) {
