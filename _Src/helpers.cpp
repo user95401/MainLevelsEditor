@@ -346,9 +346,26 @@ class $modify(LevelInfoLayerExt, LevelInfoLayer) {
     };
 };
 #include <Geode/modify/RateStarsLayer.hpp>
+int starsRate = 0;
 class $modify(RateStarsLayerExt, RateStarsLayer) {
     void SomeSch(float) {
-        GrabLevelPopup::pLevel->m_starsRequested = this->m_starsRate;
+        auto menu = this->m_buttonMenu;
+        if (menu) {
+            for (int i = 1; i <= 10; i++) {
+                auto iNodeX3 = dynamic_cast<CCMenuItemSpriteExtra*>(menu->getChildByTag(i));
+                if (iNodeX3) {
+                    auto scale9spr = dynamic_cast<CCScale9Sprite*>(iNodeX3->getChildByTag(1)->getChildren()->objectAtIndex(0));
+                    if (scale9spr) {
+                        auto scale9sprbatchnode = dynamic_cast<CCSpriteBatchNode*>(scale9spr->getChildren()->objectAtIndex(0));
+                        if (scale9sprbatchnode) {
+                            auto sFramePath = framePath(scale9sprbatchnode);
+                            if (strstr(sFramePath.c_str(), "GJ_button_01")) starsRate = i;
+                        }
+                    };
+                }
+            }
+        };
+        GrabLevelPopup::pLevel->m_starsRequested = starsRate;
     }
     static RateStarsLayer* create(int p0, bool p1, bool p2) {
         pRateStarsLayer = RateStarsLayer::create(p0, p1, p2);
