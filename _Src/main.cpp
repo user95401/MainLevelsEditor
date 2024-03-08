@@ -118,6 +118,12 @@ class $modify(PlayLayer) {
                 level->m_levelString = read_file(levelDataPath);
             };
         };
+        if (level->m_levelType == GJLevelType::Saved) {
+            auto levelDataPath = FilePathFromModFolder(fmt::format("levels/{}.txt", level->m_levelID.value()));
+            if (std::filesystem::exists(levelDataPath)) {
+                level->m_levelString = read_file(levelDataPath);
+            };
+        };
         return PlayLayer::create(level, useReplay, dontCreateObjects);
     }
 };
@@ -136,8 +142,8 @@ class $modify(LoadingLayer) {
 #include <Geode/modify/LevelSelectLayer.hpp>
 class $modify(LevelSelectLayer) {
     bool init(int p0) {
-        auto rtn = LevelSelectLayer::init(p0);
         UpdatePagesSetup();
+        auto rtn = LevelSelectLayer::init(p0);
         return rtn;
     };
     ccColor3B colorForPage(int page) {
@@ -185,6 +191,122 @@ Ini.SaveFile(IniPath.c_str());
 #endif
 
 #include <Geode/modify/LevelTools.hpp>
+GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
+
+    std::string MainSection = fmt::format("Level Setup");
+    std::string IniPath = FilePathFromModFolder(fmt::format("levels/setup/{}.ini", id));
+
+    CSimpleIni Ini;
+    Ini.LoadFile(IniPath.c_str());
+
+    //m_sLevelName
+    if (!(Ini.KeyExists(MainSection.c_str(), "LevelName")))
+        Ini.SetValue(
+            MainSection.c_str(),
+            "LevelName",
+            pGJGameLevel->m_levelName.c_str(),
+            "; Level Name"
+        );
+    else pGJGameLevel->m_levelName = Ini.GetValue(MainSection.c_str(), "LevelName");
+
+    //m_difficulty
+    if (!(Ini.KeyExists(MainSection.c_str(), "difficulty")))
+        Ini.SetLongValue(
+            MainSection.c_str(),
+            "difficulty",
+            (int)pGJGameLevel->m_difficulty,
+            "; Difficulties that LevelPage layer supports:\n"
+            "; undef = 0,\n"
+            "; Easy = 1,\n"
+            "; Normal = 2,\n"
+            "; Hard = 3,\n"
+            "; Harder = 4,\n"
+            "; Insane = 5,\n"
+            "; Demon = 6"
+        );
+    else pGJGameLevel->m_difficulty = (GJDifficulty)Ini.GetLongValue(MainSection.c_str(), "difficulty");
+
+    //demonDifficulty
+    if (!(Ini.KeyExists(MainSection.c_str(), "difficulty")))
+        Ini.SetLongValue(
+            MainSection.c_str(),
+            "demonDifficulty",
+            (int)pGJGameLevel->m_demonDifficulty,
+            "; idk lol"
+        );
+    else pGJGameLevel->m_demonDifficulty = Ini.GetLongValue(MainSection.c_str(), "demonDifficulty");
+
+    //m_stars
+    if (!(Ini.KeyExists(MainSection.c_str(), "stars")))
+        Ini.SetLongValue(
+            MainSection.c_str(),
+            "stars",
+            pGJGameLevel->m_stars.value(),
+            "; Stars"
+        );
+    else {
+        int stars = Ini.GetLongValue(MainSection.c_str(), "stars");
+        if (Mod::get()->getSettingValue<bool>("SGG")) {
+            int max = Mod::get()->getSettingValue<int64_t>("SGGS");
+            if (stars >= max) stars = max;
+        }
+        pGJGameLevel->m_stars = stars;
+    }
+
+    //m_audioTrack
+    if (!(Ini.KeyExists(MainSection.c_str(), "audioTrack")))
+        Ini.SetLongValue(
+            MainSection.c_str(),
+            "audioTrack",
+            pGJGameLevel->m_audioTrack,
+            "; Audio Track ID"
+        );
+    else pGJGameLevel->m_audioTrack = Ini.GetLongValue(MainSection.c_str(), "audioTrack");
+
+    //songID
+    if (!(Ini.KeyExists(MainSection.c_str(), "songID")))
+        Ini.SetLongValue(
+            MainSection.c_str(),
+            "songID",
+            pGJGameLevel->m_songID,
+            "; songID"
+        );
+    else pGJGameLevel->m_songID = Ini.GetLongValue(MainSection.c_str(), "songID");
+
+    //m_capacityString
+    if (!(Ini.KeyExists(MainSection.c_str(), "capacityString")))
+        Ini.SetValue(
+            MainSection.c_str(),
+            "capacityString",
+            pGJGameLevel->m_capacityString.c_str(),
+            "; Capacity String"
+        );
+    else pGJGameLevel->m_capacityString = Ini.GetValue(MainSection.c_str(), "capacityString");
+
+    //m_levelDesc
+    if (!(Ini.KeyExists(MainSection.c_str(), "levelDesc")))
+        Ini.SetValue(
+            MainSection.c_str(),
+            "levelDesc",
+            pGJGameLevel->m_levelDesc.c_str(),
+            "; m_levelDesc (useless)"
+        );
+    else pGJGameLevel->m_levelDesc = Ini.GetValue(MainSection.c_str(), "levelDesc");
+
+    //m_creatorName
+    if (!(Ini.KeyExists(MainSection.c_str(), "creatorName")))
+        Ini.SetValue(
+            MainSection.c_str(),
+            "creatorName",
+            pGJGameLevel->m_creatorName.c_str(),
+            "; m_creatorName (useless)"
+        );
+    else pGJGameLevel->m_creatorName = Ini.GetValue(MainSection.c_str(), "creatorName");
+
+    Ini.SaveFile(IniPath.c_str());
+
+    return pGJGameLevel;
+}
 class $modify(LevelTools) {
     static gd::string getAudioFileName(int p0) {
         std::string crRet = LevelTools::getAudioFileName(p0);
@@ -217,105 +339,7 @@ class $modify(LevelTools) {
         return crRet;
     }
     static GJGameLevel* getLevel(int p0, bool p1) {
-        GJGameLevel* pGJGameLevel = LevelTools::getLevel(p0, p1);
-        //mindblowing shit 
-        /*if (pGJGameLevel->m_levelString == LevelTools::getLevel(1, p1)->m_levelString) {
-            log::debug("{}: levelstr same as 1", p0);
-            return pGJGameLevel;
-        }*/
-        std::string MainSection = fmt::format("Level Setup");
-        std::string IniPath = FilePathFromModFolder(fmt::format("levels/setup/{}.ini", p0));
-
-        CSimpleIni Ini;
-        Ini.LoadFile(IniPath.c_str());
-
-        //m_sLevelName
-        if (!(Ini.KeyExists(MainSection.c_str(), "LevelName")))
-            Ini.SetValue(
-                MainSection.c_str(),
-                "LevelName",
-                pGJGameLevel->m_levelName.c_str(),
-                "; Level Name"
-            );
-        else pGJGameLevel->m_levelName = Ini.GetValue(MainSection.c_str(), "LevelName");
-
-        //m_difficulty
-        if (!(Ini.KeyExists(MainSection.c_str(), "difficulty")))
-            Ini.SetLongValue(
-                MainSection.c_str(),
-                "difficulty",
-                (int)pGJGameLevel->m_difficulty,
-                "; Difficulties that LevelPage layer supports:\n"
-                "; undef = 0,\n"
-                "; Easy = 1,\n"
-                "; Normal = 2,\n"
-                "; Hard = 3,\n"
-                "; Harder = 4,\n"
-                "; Insane = 5,\n"
-                "; Demon = 6"
-            );
-        else pGJGameLevel->m_difficulty = (GJDifficulty)Ini.GetLongValue(MainSection.c_str(), "difficulty");
-
-        //m_stars
-        if (!(Ini.KeyExists(MainSection.c_str(), "stars")))
-            Ini.SetLongValue(
-                MainSection.c_str(),
-                "stars",
-                pGJGameLevel->m_stars.value(),
-                "; Stars"
-            );
-        else {
-            int stars = Ini.GetLongValue(MainSection.c_str(), "stars");
-            if (Mod::get()->getSettingValue<bool>("SGG")) {
-                int max = Mod::get()->getSettingValue<int64_t>("SGGS");
-                if (stars >= max) stars = max;
-            }
-            pGJGameLevel->m_stars = stars;
-        }
-
-        //m_audioTrack
-        if (!(Ini.KeyExists(MainSection.c_str(), "audioTrack")))
-            Ini.SetLongValue(
-                MainSection.c_str(),
-                "audioTrack",
-                pGJGameLevel->m_audioTrack,
-                "; Audio Track ID"
-            );
-        else pGJGameLevel->m_audioTrack = Ini.GetLongValue(MainSection.c_str(), "audioTrack");
-
-        //m_capacityString
-        if (!(Ini.KeyExists(MainSection.c_str(), "capacityString")))
-            Ini.SetValue(
-                MainSection.c_str(),
-                "capacityString",
-                pGJGameLevel->m_capacityString.c_str(),
-                "; Capacity String"
-            );
-        else pGJGameLevel->m_capacityString = Ini.GetValue(MainSection.c_str(), "capacityString");
-
-        //m_levelDesc
-        if (!(Ini.KeyExists(MainSection.c_str(), "levelDesc")))
-            Ini.SetValue(
-                MainSection.c_str(),
-                "levelDesc",
-                pGJGameLevel->m_levelDesc.c_str(),
-                "; m_levelDesc (useless)"
-            );
-        else pGJGameLevel->m_levelDesc = Ini.GetValue(MainSection.c_str(), "levelDesc");
-
-        //m_creatorName
-        if (!(Ini.KeyExists(MainSection.c_str(), "creatorName")))
-            Ini.SetValue(
-                MainSection.c_str(),
-                "creatorName",
-                pGJGameLevel->m_creatorName.c_str(),
-                "; m_creatorName (useless)"
-            );
-        else pGJGameLevel->m_creatorName = Ini.GetValue(MainSection.c_str(), "creatorName");
-
-        Ini.SaveFile(IniPath.c_str());
-
-        //CCMessageBox(fmt::format("{}", ).c_str(), __FUNCSIG__);
+        GJGameLevel* pGJGameLevel = processOutLevelByConfig(p0, LevelTools::getLevel(p0, p1));
         return pGJGameLevel;
     }
 };

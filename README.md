@@ -27,3 +27,5 @@ Select level and push `Delete` key
 pages count stuff
 - patch? \- i cant make patch for game on android
 - programtically removal? \- BoomScrollLayer is unexplored and i tried myself but its too hard for me :>
+
+and more stuff like functions hooks errors shit

@@ -255,7 +255,7 @@ public:
         auto cmp_amount_str = Ini.GetValue("UpdatePagesSetup", "cmp_amount");
         auto retn = FLAlertLayer::create(GrabLevelPopup::GrabLevelPopupProtocol::create(), "Grab Level:", gd::string(""), "Close", "Grab It!");
         //textInput
-        pTextInput = InputNode::create(160.f, "main level id", "chatFont.fnt", "1234567890", 4);
+        pTextInput = InputNode::create(160.f, "main level id", "chatFont.fnt", "1234567890", 12);
         pTextInput->setPositionY(44.f);
         pTextInput->setString(cmp_amount_str);
         retn->m_buttonMenu->addChild(pTextInput);
@@ -282,7 +282,32 @@ public:
 };
 
 #include <Geode/modify/LevelInfoLayer.hpp>
+RateStarsLayer* pRateStarsLayer;
 class $modify(LevelInfoLayerExt, LevelInfoLayer) {
+    void OpenGrabLevelPopup1(CCObject * sender) {
+        LevelInfoLayer::onRateStars(sender);
+        pRateStarsLayer->runAction(CCRepeatForever::create(CCFadeTo::create(0.1f, 155)));
+        auto title = dynamic_cast<CCLabelBMFont*>(pRateStarsLayer->m_mainLayer->getChildren()->objectAtIndex(1));
+        if (title) title->setString("Stars For Main Level");
+        if (title) title->setScale(0.9f);
+        //hide btn2
+        dynamic_cast<CCNode*>(pRateStarsLayer->m_buttonMenu->getChildren()->lastObject())->setVisible(0);
+        //btn1
+        auto m_button1 = dynamic_cast
+            <CCMenuItemSpriteExtra*>
+            (pRateStarsLayer->m_buttonMenu->getChildren()
+                ->objectAtIndex(pRateStarsLayer->m_buttonMenu->getChildrenCount() - 2));
+        if (m_button1) m_button1->setPositionX(0.f);
+        if (m_button1) m_button1->setTarget(pRateStarsLayer, menu_selector(LevelInfoLayerExt::OpenGrabLevelPopup2));
+        auto m_ButtonSprite1 = dynamic_cast<ButtonSprite*>(m_button1->getChildren()->lastObject());
+        if (m_ButtonSprite1) m_ButtonSprite1->m_label->setString("Select");
+    }
+    void OpenGrabLevelPopup2(CCObject * sender) {
+        pRateStarsLayer->removeFromParent();
+        auto inner = CCDirector::get()->m_pRunningScene;
+        auto pFLAlertLayer = GrabLevelPopup::create();
+        inner->addChild(pFLAlertLayer, 999, 1374);
+    }
     void SomeSch(float) {
         if (!this) return;
         GrabLevelPopup::pLevel = this->m_level;
@@ -291,31 +316,112 @@ class $modify(LevelInfoLayerExt, LevelInfoLayer) {
     bool init(GJGameLevel* p0, bool p1) {
         if (Mod::get()->getSettingValue<bool>("COLH"))
             this->schedule(schedule_selector(LevelInfoLayerExt::SomeSch), 0.01f);
-		return LevelInfoLayer::init(p0, p1);
+        if (Mod::get()->getSettingValue<bool>("SL"))
+            p0 = processOutLevelByConfig(p0->m_levelID.value(), p0);
+        LevelInfoLayer::init(p0, p1);
+        if (Mod::get()->getSettingValue<bool>("UI")) {
+            //GJ_copyStateBtn_001
+            auto GJ_copyStateBtn_001 = CCMenuItemSpriteExtra::create(
+                CCSprite::createWithSpriteFrameName("GJ_copyStateBtn_001.png"),
+                this,
+                menu_selector(LevelInfoLayerExt::OpenGrabLevelPopup1)
+            );
+            //pCCMenu
+            {
+                auto pCCMenu = CCMenu::createWithItem(GJ_copyStateBtn_001);
+                pCCMenu->setAnchorPoint(CCSizeZero);
+                pCCMenu->setScale(.8f);
+                pCCMenu->setPositionY(18.f);
+                pCCMenu->setPositionX(CCDirector::get()->getScreenRight() - 110);
+                pCCMenu->setID("main levels editor ui");
+                this->addChild(pCCMenu, 999, 6282);
+            };
+        }
+        return 1;
 	}
+    TodoReturn setupLevelInfo() {
+        if (Mod::get()->getSettingValue<bool>("SL"))
+            this->m_level = processOutLevelByConfig(this->m_level->m_levelID.value(), this->m_level);
+        LevelInfoLayer::setupLevelInfo();
+    };
 };
 #include <Geode/modify/RateStarsLayer.hpp>
 class $modify(RateStarsLayerExt, RateStarsLayer) {
-    inline static RateStarsLayer* m_pRateStarsLayer;
     void SomeSch(float) {
-        if (!this) return;
-        GrabLevelPopup::pLevel->m_starsRequested = m_starsRate;
+        if(pRateStarsLayer)
+            GrabLevelPopup::pLevel->m_starsRequested = pRateStarsLayer->m_starsRate;
     }
     static RateStarsLayer* create(int p0, bool p1, bool p2) {
-        m_pRateStarsLayer = RateStarsLayer::create(p0, p1, p2);
+        pRateStarsLayer = RateStarsLayer::create(p0, p1, p2);
         if (Mod::get()->getSettingValue<bool>("COLH"))
-            m_pRateStarsLayer->schedule(schedule_selector(RateStarsLayerExt::SomeSch), 0.01f);
-        return m_pRateStarsLayer;
+            pRateStarsLayer->schedule(schedule_selector(RateStarsLayerExt::SomeSch), 0.01f);
+        return pRateStarsLayer;
 	}
+};
+
+#include <Geode/modify/EditLevelLayer.hpp>
+class $modify(EditLevelLayerExt, EditLevelLayer) {
+    void OpenGrabLevelPopup1(CCObject * sender) {
+        auto inner = CCDirector::get()->m_pRunningScene;
+        auto m_pShareLevelLayer = ShareLevelLayer::create(this->m_level);
+        inner->addChild(m_pShareLevelLayer, 999, 1374);
+        m_pShareLevelLayer->runAction(CCRepeatForever::create(CCFadeTo::create(0.1f, 155)));
+        auto title = dynamic_cast<CCLabelBMFont*>(m_pShareLevelLayer->m_mainLayer->getChildren()->objectAtIndex(1));
+        if (title) title->setString("Stars For Main Level");
+        if (title) title->setScale(0.9f);
+        //hide settings
+        dynamic_cast<CCNode*>(m_pShareLevelLayer->m_buttonMenu->getChildren()->lastObject())->setVisible(0);
+        //hide btn2
+        auto m_button2 = dynamic_cast
+            <CCMenuItemSpriteExtra*>
+            (m_pShareLevelLayer->m_buttonMenu->getChildren()
+                ->objectAtIndex(m_pShareLevelLayer->m_buttonMenu->getChildrenCount() - 2));
+        if (m_button2) m_button2->setVisible(0);
+        //btn1
+        auto m_button1 = dynamic_cast
+            <CCMenuItemSpriteExtra*>
+            (m_pShareLevelLayer->m_buttonMenu->getChildren()
+                ->objectAtIndex(m_pShareLevelLayer->m_buttonMenu->getChildrenCount() - 3));
+        if (m_button1) m_button1->setPositionX(0.f);
+        if (m_button1) m_button1->setTarget(m_pShareLevelLayer, menu_selector(EditLevelLayerExt::OpenGrabLevelPopup2));
+        auto m_ButtonSprite1 = dynamic_cast<ButtonSprite*>(m_button1->getChildren()->lastObject());
+        if (m_ButtonSprite1) m_ButtonSprite1->m_label->setString("Select");
+    }
+    void OpenGrabLevelPopup2(CCObject * sender) {
+        auto inner = CCDirector::get()->m_pRunningScene;
+        inner->removeChildByTag(1374);
+        auto pFLAlertLayer = GrabLevelPopup::create();
+        inner->addChild(pFLAlertLayer, 999, 1374);
+    }
+    bool init(GJGameLevel * p0) {
+        auto rtn = EditLevelLayer::init(p0);
+        if (Mod::get()->getSettingValue<bool>("UI")) {
+            //GJ_copyStateBtn_001
+            auto GJ_copyStateBtn_001 = CCMenuItemSpriteExtra::create(
+                CCSprite::createWithSpriteFrameName("GJ_copyStateBtn_001.png"),
+                this,
+                menu_selector(EditLevelLayerExt::OpenGrabLevelPopup1)
+            );
+            //pCCMenu
+            {
+                auto pCCMenu = CCMenu::createWithItem(GJ_copyStateBtn_001);
+                pCCMenu->setAnchorPoint(CCSizeZero);
+                pCCMenu->setScale(.8f);
+                pCCMenu->setPositionY(18.f);
+                pCCMenu->setPositionX(CCDirector::get()->getScreenRight() - 85);
+                pCCMenu->setID("main levels editor ui");
+                this->addChild(pCCMenu, 999, 6282);
+            };
+        }
+        return rtn;
+    };
 };
 #include <Geode/modify/ShareLevelLayer.hpp>
 class $modify(ShareLevelLayerExt, ShareLevelLayer) {
-    inline static GJGameLevel* m_level;
-    inline static ShareLevelLayer* m_pShareLevelLayer;
+    GJGameLevel* m_level;
     int starReq;
     void SomeSch(float) {
-        if (!m_pShareLevelLayer) return;
-        auto menu = m_pShareLevelLayer->m_buttonMenu;
+        auto menu = this->m_buttonMenu;
         if (menu) {
             for (int i = 1; i <= 10; i++) {
                 auto iNodeX3 = dynamic_cast<CCMenuItemSpriteExtra*>(menu->getChildByTag(i));
@@ -325,23 +431,23 @@ class $modify(ShareLevelLayerExt, ShareLevelLayer) {
                         auto scale9sprbatchnode = dynamic_cast<CCSpriteBatchNode*>(scale9spr->getChildren()->objectAtIndex(0));
                         if (scale9sprbatchnode) {
                             auto sFramePath = framePath(scale9sprbatchnode);
-                            if (strstr(sFramePath.c_str(), "GJ_button_01")) starReq = i;
+                            if (strstr(sFramePath.c_str(), "GJ_button_01")) this->m_fields->starReq = i;
                         }
                     };
                 }
             }
         };
-        m_level->m_starsRequested = starReq;
-        GrabLevelPopup::pLevel = m_level;
-        GrabLevelPopup::TryOpenIt(m_pShareLevelLayer);
+        this->m_fields->m_level->m_starsRequested = this->m_fields->starReq;
+        GrabLevelPopup::pLevel = this->m_fields->m_level;
+        GrabLevelPopup::TryOpenIt(this);
     }
-    static ShareLevelLayer* create(GJGameLevel* p0) {
-        m_pShareLevelLayer = ShareLevelLayer::create(p0);
-        m_level = p0;
-        if (Mod::get()->getSettingValue<int64_t>("CELH")) {
-            m_pShareLevelLayer->schedule(schedule_selector(ShareLevelLayerExt::SomeSch), 0.01f);
+    bool init(GJGameLevel* p0) {
+        auto rtn = ShareLevelLayer::init(p0);
+        this->m_fields->m_level = p0;
+        if (Mod::get()->getSettingValue<bool>("CELH")) {
+            this->schedule(schedule_selector(ShareLevelLayerExt::SomeSch), 0.01f);
         };
-		return m_pShareLevelLayer;
+		return rtn;
 	}
 };
 
@@ -442,7 +548,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
             pLevelSelectLayer->init(fabs(g_currentPage - 1));
         }
     }
-    void openDeletePopup() {
+    void openDeletePopup(CCObject* = nullptr) {
         if (!pLevelSelectLayer) return;
         if (getDelPop()) getDelPop()->removeMeAndCleanup();
         FLAlertLayer* deletePop = FLAlertLayer::create(nullptr, fmt::format("Delete {}'th Level", g_currentPage).c_str(), fmt::format("<co>Delete</c> level data, setup;\n try <cr>adaptate</c> <co>all next levels</c>;\nand <cy>decrease</c> level pages count?"), "Nah", "Delete");
@@ -514,6 +620,24 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         if (!pLevelSelectLayer) return;
         if ((GetKeyState(KEY_Right) & 0x8000) and getDelPop()) onNext(CCNode::create());
         if ((GetKeyState(KEY_Left) & 0x8000) and getDelPop()) onPrev(CCNode::create());
+        if (Mod::get()->getSettingValue<bool>("UI") and !pLevelSelectLayer->getChildByTag(6282)) {
+            //edit_delBtn_001
+            auto edit_delBtn_001 = CCMenuItemSpriteExtra::create(
+                CCSprite::createWithSpriteFrameName("edit_delBtn_001.png"),
+                pLevelSelectLayer,
+                menu_selector(LevelSelectLayerExt::openDeletePopup)
+            );
+            //pCCMenu
+            {
+                auto pCCMenu = CCMenu::createWithItem(edit_delBtn_001);
+                pCCMenu->setAnchorPoint(CCSizeZero);
+                pCCMenu->setScale(.8f);
+                pCCMenu->setPositionY(90.f);
+                pCCMenu->setPositionX(CCDirector::get()->getScreenRight() - 20);
+                pCCMenu->setID("main levels editor ui");
+                pLevelSelectLayer->addChild(pCCMenu, 999, 6282);
+            };
+        }
     }
     static LevelSelectLayer* create(int p0) {
         pLevelSelectLayer = LevelSelectLayer::create(p0);
