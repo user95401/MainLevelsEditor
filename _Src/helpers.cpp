@@ -349,7 +349,7 @@ class $modify(LevelInfoLayerExt, LevelInfoLayer) {
 class $modify(RateStarsLayerExt, RateStarsLayer) {
     void SomeSch(float) {
         if(pRateStarsLayer)
-            GrabLevelPopup::pLevel->m_starsRequested = pRateStarsLayer->m_starsRate;
+            GrabLevelPopup::pLevel->m_starsRequested = public_cast(pRateStarsLayer, m_starsRate);
     }
     static RateStarsLayer* create(int p0, bool p1, bool p2) {
         pRateStarsLayer = RateStarsLayer::create(p0, p1, p2);
