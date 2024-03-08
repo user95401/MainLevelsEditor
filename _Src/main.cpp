@@ -146,6 +146,7 @@ class $modify(LevelSelectLayer) {
         auto rtn = LevelSelectLayer::init(p0);
         return rtn;
     };
+#ifdef GEODE_IS_WINDOWS
     ccColor3B colorForPage(int page) {
         ccColor3B _ccColor3B = LevelSelectLayer::colorForPage(page);
         
@@ -174,6 +175,7 @@ class $modify(LevelSelectLayer) {
 
         return _ccColor3B;
     }
+#endif
 };
 
 #if 1
@@ -308,38 +310,43 @@ GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
     return pGJGameLevel;
 }
 class $modify(LevelTools) {
-    static gd::string getAudioFileName(int p0) {
-        std::string crRet = LevelTools::getAudioFileName(p0);
+#ifdef GEODE_IS_WINDOWS
+#define LevelToolsero() LevelTools::
+#else
+#define LevelToolsero() this->
+#endif
+     gd::string getAudioFileName(int p0) {
+        std::string crRet = LevelToolsero()getAudioFileName(p0);
         crRetAAAsdp0("Filename", FilePathFromModFolder("_AudioTracks.ini"));
         return crRet;
     }
-    static gd::string getAudioTitle(int p0) {
-        gd::string crRet = LevelTools::getAudioTitle(p0);
+     gd::string getAudioTitle(int p0) {
+        gd::string crRet = LevelToolsero()getAudioTitle(p0);
         crRetAAAsdp0("Title", FilePathFromModFolder("_AudioTracks.ini"));
         return crRet;
     }
-    static gd::string nameForArtist(int p0) {
-        gd::string crRet = LevelTools::nameForArtist(p0);
+     gd::string nameForArtist(int p0) {
+        gd::string crRet = LevelToolsero()nameForArtist(p0);
         crRetAAAsdp0("name", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
-    static gd::string fbURLForArtist(int p0) {
-        gd::string crRet = LevelTools::fbURLForArtist(p0);
+     gd::string fbURLForArtist(int p0) {
+        gd::string crRet = LevelToolsero()fbURLForArtist(p0);
         crRetAAAsdp0("fbURL", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
-    static gd::string ngURLForArtist(int p0) {
-        gd::string crRet = LevelTools::ngURLForArtist(p0);
+     gd::string ngURLForArtist(int p0) {
+        gd::string crRet = LevelToolsero()ngURLForArtist(p0);
         crRetAAAsdp0("ngURL", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
-    static gd::string ytURLForArtist(int p0) {
-        gd::string crRet = LevelTools::ytURLForArtist(p0);
+     gd::string ytURLForArtist(int p0) {
+        gd::string crRet = LevelToolsero()ytURLForArtist(p0);
         crRetAAAsdp0("ytURL", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
-    static GJGameLevel* getLevel(int p0, bool p1) {
-        GJGameLevel* pGJGameLevel = processOutLevelByConfig(p0, LevelTools::getLevel(p0, p1));
+    GJGameLevel* getLevel(int p0, bool p1) {
+        GJGameLevel* pGJGameLevel = processOutLevelByConfig(p0, LevelToolsero()getLevel(p0, p1));
         return pGJGameLevel;
     }
 };
