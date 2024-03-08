@@ -37,6 +37,28 @@ auto read_file(std::string_view path) -> std::string {
     return out;
 }
 
+bool __fastcall verifyLevelIntegrityHook(std::string* a1, int a2) {
+    return true;
+}
+void BreakLevelStrValidation() {
+#ifdef GEODE_IS_WINDOWS
+    WriteProcMem(patterns::find_pattern("8a c3 5b 5d c3", ""), { 0xB0, 0x01 });
+#else 
+    ;
+    //verifyLevelIntegrity
+    //bool __fastcall LevelTools::verifyLevelIntegrity(_DWORD *a1, int a2)
+    Mod::get()->hook(
+        //_ZN10LevelTools20verifyLevelIntegrityESsi
+        reinterpret_cast<void*>(
+            geode::addresser::getVirtual(geode::modifier::Resolve<gd::string, int>::func
+            (&LevelTools::verifyLevelIntegrity))),
+        &verifyLevelIntegrityHook, // Our detour
+        "LevelTools::verifyLevelIntegrity", // Display name, shows up on the console
+        tulip::hook::TulipConvention::Thiscall // Static free-standing cocos2d functions are cdecl
+    );
+#endif
+}
+
 void UpdatePagesSetup() {
 #ifdef GEODE_IS_WINDOWS
 
@@ -134,7 +156,7 @@ class $modify(LoadingLayer) {
         //create some inis
         LevelSelectLayer::create(0);
         //break level str check
-        WriteProcMem(patterns::find_pattern("8a c3 5b 5d c3", ""), { 0xB0, 0x01 });
+        BreakLevelStrValidation();
         LoadingLayer::loadingFinished();
     };
 };
