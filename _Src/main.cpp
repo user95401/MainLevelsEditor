@@ -36,11 +36,28 @@ auto read_file(std::string_view path) -> std::string {
     out.append(buf, 0, stream.gcount());
     return out;
 }
-
-void BreakLevelStrValidation() {
-#ifdef GEODE_IS_WINDOWS
-    WriteProcMem(patterns::find_pattern("8a c3 5b 5d c3", ""), { 0xB0, 0x01 });
-#endif
+std::vector<std::string> explode(const std::string& str, const char& ch) {
+    std::string next;
+    std::vector<std::string> result;
+    // For each character in the string
+    for (std::string::const_iterator it = str.begin(); it != str.end(); it++) {
+        // If we've hit the terminal character
+        if (*it == ch) {
+            // If we have some characters accumulated
+            if (!next.empty()) {
+                // Add them to the result vector
+                result.push_back(next);
+                next.clear();
+            }
+        }
+        else {
+            // Accumulate the next character into the sequence
+            next += *it;
+        }
+    }
+    if (!next.empty())
+        result.push_back(next);
+    return result;
 }
 
 void UpdatePagesSetup() {
@@ -139,8 +156,6 @@ class $modify(LoadingLayer) {
     TodoReturn loadingFinished() {
         //create some inis
         LevelSelectLayer::create(0);
-        //break level str check
-        BreakLevelStrValidation();
         LoadingLayer::loadingFinished();
     };
 };
@@ -152,7 +167,6 @@ class $modify(LevelSelectLayer) {
         auto rtn = LevelSelectLayer::init(p0);
         return rtn;
     };
-#ifdef GEODE_IS_WINDOWS
     ccColor3B colorForPage(int page) {
         ccColor3B _ccColor3B = LevelSelectLayer::colorForPage(page);
         
@@ -181,7 +195,6 @@ class $modify(LevelSelectLayer) {
 
         return _ccColor3B;
     }
-#endif
 };
 
 #if 1
@@ -315,46 +328,43 @@ GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
 
     return pGJGameLevel;
 }
-#ifdef GEODE_IS_WINDOWS
-#define LevelToolsero() LevelTools::
-#define LevelToolseros static
-#else
-#define LevelToolsero() this->
-#define LevelToolseros
-#endif
 class $modify(LevelTools) {
-    LevelToolseros gd::string getAudioFileName(int p0) {
-        std::string crRet = LevelToolsero()getAudioFileName(p0);
+    static gd::string getAudioFileName(int p0) {
+        std::string crRet = LevelTools::getAudioFileName(p0);
         crRetAAAsdp0("Filename", FilePathFromModFolder("_AudioTracks.ini"));
         return crRet;
     }
-    LevelToolseros gd::string getAudioTitle(int p0) {
-        gd::string crRet = LevelToolsero()getAudioTitle(p0);
+    static gd::string getAudioTitle(int p0) {
+        gd::string crRet = LevelTools::getAudioTitle(p0);
         crRetAAAsdp0("Title", FilePathFromModFolder("_AudioTracks.ini"));
         return crRet;
     }
-    LevelToolseros gd::string nameForArtist(int p0) {
-        gd::string crRet = LevelToolsero()nameForArtist(p0);
+    static gd::string nameForArtist(int p0) {
+        gd::string crRet = LevelTools::nameForArtist(p0);
         crRetAAAsdp0("name", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
-    LevelToolseros gd::string fbURLForArtist(int p0) {
-        gd::string crRet = LevelToolsero()fbURLForArtist(p0);
+    static gd::string fbURLForArtist(int p0) {
+        gd::string crRet = LevelTools::fbURLForArtist(p0);
         crRetAAAsdp0("fbURL", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
-    LevelToolseros gd::string ngURLForArtist(int p0) {
-        gd::string crRet = LevelToolsero()ngURLForArtist(p0);
+    static gd::string ngURLForArtist(int p0) {
+        gd::string crRet = LevelTools::ngURLForArtist(p0);
         crRetAAAsdp0("ngURL", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
-    LevelToolseros gd::string ytURLForArtist(int p0) {
-        gd::string crRet = LevelToolsero()ytURLForArtist(p0);
+    static gd::string ytURLForArtist(int p0) {
+        gd::string crRet = LevelTools::ytURLForArtist(p0);
         crRetAAAsdp0("ytURL", FilePathFromModFolder("_Artists.ini"));
         return crRet;
     }
-    LevelToolseros GJGameLevel* getLevel(int p0, bool p1) {
-        GJGameLevel* pGJGameLevel = processOutLevelByConfig(p0, LevelToolsero()getLevel(p0, p1));
+    static GJGameLevel* getLevel(int p0, bool p1) {
+        GJGameLevel* pGJGameLevel = processOutLevelByConfig(p0, LevelTools::getLevel(p0, p1));
         return pGJGameLevel;
+    }
+    bool verifyLevelIntegrity(gd::string p0, int p1) {
+        LevelTools::verifyLevelIntegrity(p0, p1);
+        return 1;
     }
 };

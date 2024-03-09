@@ -92,35 +92,6 @@ std::string getRandomFileNameFromDir(std::string path, std::string or_else) {
     return or_else;
 }
 
-/*
-    create strings vector by splitting string with separator char
-    example:
-    log(explode("zero_str.str1.strTwo", '.')[2]); //print strTwo
-*/
-std::vector<std::string> explode(const std::string& str, const char& ch) {
-    std::string next;
-    std::vector<std::string> result;
-    // For each character in the string
-    for (std::string::const_iterator it = str.begin(); it != str.end(); it++) {
-        // If we've hit the terminal character
-        if (*it == ch) {
-            // If we have some characters accumulated
-            if (!next.empty()) {
-                // Add them to the result vector
-                result.push_back(next);
-                next.clear();
-            }
-        }
-        else {
-            // Accumulate the next character into the sequence
-            next += *it;
-        }
-    }
-    if (!next.empty())
-        result.push_back(next);
-    return result;
-}
-
 //set every char of string to lower
 void strToLower(std::string& str) {
     for (auto& c : str) c = tolower(c);
