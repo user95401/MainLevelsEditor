@@ -3,36 +3,26 @@
 using namespace geode::prelude;
 
 void CopyFromLoacal() {
-    try {
-        ghc::filesystem::copy(
-            Mod::get()->getConfigDir() / "settings.json", //from game dir
-            Mod::get()->getSaveDir() / "settings.json", //to game save dir
-            ghc::filesystem::copy_options::recursive |
-            ghc::filesystem::copy_options::overwrite_existing);
-    }
-    catch (std::exception& theException) {
-        log::error("{}", theException.what());
-    }
-}
+    ghc::filesystem::copy(
+        Mod::get()->getConfigDir() / "settings.json", //from game dir
+        Mod::get()->getSaveDir() / "settings.json", //to game save dir
+        ghc::filesystem::copy_options::recursive |
+        ghc::filesystem::copy_options::overwrite_existing);
+};
 
 void CopyFromData() {
-    try {
-        ghc::filesystem::copy(
-            Mod::get()->getSaveDir() / "settings.json", //to game save dir
-            Mod::get()->getConfigDir() / "settings.json", //from game dir
-            ghc::filesystem::copy_options::recursive | 
-            ghc::filesystem::copy_options::overwrite_existing);
-    }
-    catch (std::exception& theException) {
-        log::error("{}", theException.what());
-    }
-}
+    ghc::filesystem::copy(
+        Mod::get()->getSaveDir() / "settings.json", //to game save dir
+        Mod::get()->getConfigDir() / "settings.json", //from game dir
+        ghc::filesystem::copy_options::recursive |
+        ghc::filesystem::copy_options::overwrite_existing);
+};
 
 #include <Geode/modify/LoadingLayer.hpp>
 class $modify(LoadingLayer) {
     TodoReturn loadingFinished() {
-        CopyFromLoacal();
-        Mod::get()->loadData();
+        //CopyFromLoacal();
+        //Mod::get()->loadData();
         LoadingLayer::loadingFinished();
     };
 };

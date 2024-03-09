@@ -135,6 +135,7 @@ void UpdatePagesSetup() {
 #include <Geode/modify/PlayLayer.hpp>
 class $modify(PlayLayer) {
     static PlayLayer* create(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
+        /*
         if (level->m_levelType == GJLevelType::Local) {
             auto levelDataPath = FilePathFromModFolder(fmt::format("levels/{}.txt", level->m_levelID.value()));
             if (std::filesystem::exists(levelDataPath)) {
@@ -147,6 +148,7 @@ class $modify(PlayLayer) {
                 level->m_levelString = read_file(levelDataPath);
             };
         };
+        */
         return PlayLayer::create(level, useReplay, dontCreateObjects);
     }
 };
@@ -167,6 +169,7 @@ class $modify(LevelSelectLayer) {
         auto rtn = LevelSelectLayer::init(p0);
         return rtn;
     };
+    /*
     ccColor3B colorForPage(int page) {
         ccColor3B _ccColor3B = LevelSelectLayer::colorForPage(page);
         
@@ -194,7 +197,7 @@ class $modify(LevelSelectLayer) {
         Ini.SaveFile(IniPath.c_str());
 
         return _ccColor3B;
-    }
+    }*/
 };
 
 #if 1
@@ -211,7 +214,7 @@ else {crRet = Ini.GetValue(MainSection.c_str(), MainVal.c_str());} \
 Ini.SaveFile(IniPath.c_str());
 #endif
 
-#include <Geode/modify/LevelTools.hpp>
+/*#include <Geode/modify/LevelTools.hpp>
 GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
 
     std::string MainSection = fmt::format("Level Setup");
@@ -366,4 +369,4 @@ class $modify(LevelTools) {
     static bool verifyLevelIntegrity(gd::string p0, int p1) {
         return 1;
     }
-};
+};*/
