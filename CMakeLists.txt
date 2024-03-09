@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_OSX_ARCHITECTURES "x86_64")
 set(GEODE_BINDINGS_REPO_PATH "${CMAKE_CURRENT_LIST_DIR}/bindings")
 
-project(MainLevelsEditor VERSION 3.0.0)
+project(MainLevelsEditor VERSION 5.0.0)
 
 if (NOT DEFINED ENV{GEODE_SDK})
     message(FATAL_ERROR "Unable to find Geode SDK! Please define GEODE_SDK environment variable to point to Geode")

@@ -28,9 +28,13 @@ void CopyFromData() {
     }
 }
 
-$on_mod(Loaded) {
-    CopyFromLoacal();
-    Mod::get()->loadData();
+#include <Geode/modify/LoadingLayer.hpp>
+class $modify(LoadingLayer) {
+    TodoReturn loadingFinished() {
+        CopyFromLoacal();
+        Mod::get()->loadData();
+        LoadingLayer::loadingFinished();
+    };
 };
 
 #include <Geode/modify/AppDelegate.hpp>

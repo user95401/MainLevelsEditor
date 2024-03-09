@@ -155,7 +155,7 @@ class $modify(PlayLayer) {
 class $modify(LoadingLayer) {
     TodoReturn loadingFinished() {
         //create some inis
-        LevelSelectLayer::create(0);
+        //LevelSelectLayer::create(0);
         LoadingLayer::loadingFinished();
     };
 };
