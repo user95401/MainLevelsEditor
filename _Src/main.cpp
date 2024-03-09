@@ -363,8 +363,7 @@ class $modify(LevelTools) {
         GJGameLevel* pGJGameLevel = processOutLevelByConfig(p0, LevelTools::getLevel(p0, p1));
         return pGJGameLevel;
     }
-    bool verifyLevelIntegrity(gd::string p0, int p1) {
-        LevelTools::verifyLevelIntegrity(p0, p1);
+    static bool verifyLevelIntegrity(gd::string p0, int p1) {
         return 1;
     }
 };
