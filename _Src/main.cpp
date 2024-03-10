@@ -13,11 +13,16 @@ using namespace geode::prelude;
 //mindblowing shit 
 /////AAAAAAAAAAAAAA I HATE SO MUCHH THAT FU FUCKING GUIDLINES
 std::string FilePathFromModFolder(std::string fname) {
-    auto sCurrPath = ghc::filesystem::current_path().string();
     auto sFullPath = Mod::get()->getConfigDir(true).string();
+#ifdef GEODE_IS_WINDOWS
+    auto sCurrPath = ghc::filesystem::current_path().string();
     auto sRelPath = sFullPath.erase(0, sCurrPath.size() + 1);//sucks
     std::replace(sRelPath.begin(), sRelPath.end(), '\\', '/'); // replace all '\' to '/' ;3
     ghc::filesystem::path path = (sRelPath + "/" + fname);
+    ghc::filesystem::create_directories(path.parent_path());
+#else
+    ghc::filesystem::path path = (sFullPath + "/" + fname);
+#endif
     ghc::filesystem::create_directories(path.parent_path());
     return path.string();
 }
