@@ -180,7 +180,7 @@ class $modify(LevelSelectLayer) {
         Ini.LoadFile(IniPath.c_str());
 
         //Color
-        if (!(Ini.KeyExists(MainSection.c_str(), MainVal.c_str())))
+        /*if (!(Ini.KeyExists(MainSection.c_str(), MainVal.c_str())))
             Ini.SetValue(
                 MainSection.c_str(),
                 MainVal.c_str(),
@@ -191,7 +191,7 @@ class $modify(LevelSelectLayer) {
             _ccColor3B.r = stoi(rgb[0]);
             _ccColor3B.g = stoi(rgb[1]);
             _ccColor3B.b = stoi(rgb[2]);
-        }
+        }*/
 
         Ini.SaveFile(IniPath.c_str());
 
