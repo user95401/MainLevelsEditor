@@ -140,20 +140,18 @@ void UpdatePagesSetup() {
 #include <Geode/modify/PlayLayer.hpp>
 class $modify(PlayLayer) {
     static PlayLayer* create(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
-        /*
         if (level->m_levelType == GJLevelType::Local) {
             auto levelDataPath = FilePathFromModFolder(fmt::format("levels/{}.txt", level->m_levelID.value()));
-            if (std::filesystem::exists(levelDataPath)) {
+            if (ghc::filesystem::exists(levelDataPath)) {
                 level->m_levelString = read_file(levelDataPath);
             };
         };
         if (level->m_levelType == GJLevelType::Saved) {
             auto levelDataPath = FilePathFromModFolder(fmt::format("levels/{}.txt", level->m_levelID.value()));
-            if (std::filesystem::exists(levelDataPath)) {
+            if (ghc::filesystem::exists(levelDataPath)) {
                 level->m_levelString = read_file(levelDataPath);
             };
         };
-        */
         return PlayLayer::create(level, useReplay, dontCreateObjects);
     }
 };
@@ -162,7 +160,7 @@ class $modify(PlayLayer) {
 class $modify(LoadingLayer) {
     TodoReturn loadingFinished() {
         //create some inis
-        //LevelSelectLayer::create(0);
+        LevelSelectLayer::create(0);
         LoadingLayer::loadingFinished();
     };
 };
@@ -176,6 +174,7 @@ class $modify(LevelSelectLayer) {
     };
     ccColor3B colorForPage(int page) {
         ccColor3B _ccColor3B = LevelSelectLayer::colorForPage(page);
+
         std::string IniPath = FilePathFromModFolder("_PageColors.ini");
         std::string MainSection = fmt::format("colorForPage");
         std::string MainVal = fmt::format("{}", page);
@@ -219,7 +218,7 @@ else {crRet = Ini.GetValue(MainSection.c_str(), MainVal.c_str());} \
 Ini.SaveFile(IniPath.c_str());
 #endif
 
-/*#include <Geode/modify/LevelTools.hpp>
+#include <Geode/modify/LevelTools.hpp>
 GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
 
     std::string MainSection = fmt::format("Level Setup");
@@ -374,4 +373,5 @@ class $modify(LevelTools) {
     static bool verifyLevelIntegrity(gd::string p0, int p1) {
         return 1;
     }
-};*/
+};
+/**/
