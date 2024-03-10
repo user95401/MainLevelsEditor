@@ -18,26 +18,6 @@ std::string truncate(std::string str, size_t width, bool show_ellipsis = true)
             return str.substr(0, width);
     return str;
 }
-int stoi(const std::string& str, int* p_value, std::size_t* pos = 0, int base = 10) {
-    // wrapping std::stoi because it may throw an exception
-    try {
-        *p_value = std::stoi(str, pos, base);
-        return 0;
-    }
-    catch (const std::invalid_argument& ia) {
-        //std::cerr << "Invalid argument: " << ia.what() << std::endl;
-        return -1;
-    }
-    catch (const std::out_of_range& oor) {
-        //std::cerr << "Out of Range error: " << oor.what() << std::endl;
-        return -2;
-    }
-    catch (const std::exception& e)
-    {
-        //std::cerr << "Undefined error: " << e.what() << std::endl;
-        return -3;
-    }
-}
 std::string framePath(CCNode* node) {
     if (auto textureProtocol = typeinfo_cast<CCTextureProtocol*>(node)) {
         if (auto texture = textureProtocol->getTexture()) {
@@ -152,7 +132,7 @@ public:
                 );
 
                 //m_audioTrack
-                auto audioTrack = (pLevel->m_audioTrack <= 0) ? stoi(pTextInput->getString()) : pLevel->m_audioTrack;
+                auto audioTrack = (pLevel->m_audioTrack <= 0) ? atoi(pTextInput->getString().c_str()) : pLevel->m_audioTrack;
                 Ini.SetLongValue(
                     MainSection.c_str(),
                     "audioTrack",
@@ -210,7 +190,7 @@ public:
                 CSimpleIni Ini;
                 Ini.LoadFile(IniPath.c_str());
 
-                int tar = std::stoi(pTextInput->getString()) + 1;
+                int tar = atoi(pTextInput->getString().data()) + 1;
                 if (tar > Ini.GetLongValue(MainSection.c_str(), "cmp_amount") and tar < 128) {
                     Ini.SetLongValue(
                         MainSection.c_str(),
@@ -466,7 +446,7 @@ class $modify(ShareLevelLayerExt, ShareLevelLayer) {
 		return rtn;
 	}
 };
-
+/*
 //DELETE LEVEL HELPER
 static int g_currentPage;
 static GJGameLevel* g_currentLevel;
@@ -663,4 +643,4 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         };
         return pLevelSelectLayer;
     };
-};
+};*/
