@@ -169,7 +169,6 @@ class $modify(LevelSelectLayer) {
         auto rtn = LevelSelectLayer::init(p0);
         return rtn;
     };
-    /*
     ccColor3B colorForPage(int page) {
         ccColor3B _ccColor3B = LevelSelectLayer::colorForPage(page);
         
@@ -197,7 +196,8 @@ class $modify(LevelSelectLayer) {
         Ini.SaveFile(IniPath.c_str());
 
         return _ccColor3B;
-    }*/
+    }
+    /**/
 };
 
 #if 1
