@@ -17,8 +17,8 @@ std::string FilePathFromModFolder(std::string fname) {
     auto sFullPath = Mod::get()->getConfigDir(true).string();
     auto sRelPath = sFullPath.erase(0, sCurrPath.size() + 1);//sucks
     std::replace(sRelPath.begin(), sRelPath.end(), '\\', '/'); // replace all '\' to '/' ;3
-    std::filesystem::path path = (sRelPath + "/" + fname);
-    std::filesystem::create_directories(path.parent_path());
+    ghc::filesystem::path path = (sRelPath + "/" + fname);
+    ghc::filesystem::create_directories(path.parent_path());
     return path.string();
 }
 auto read_file(std::string_view path) -> std::string {
@@ -176,6 +176,7 @@ class $modify(LevelSelectLayer) {
         std::string MainSection = fmt::format("colorForPage");
         std::string MainVal = fmt::format("{}", page);
 
+        /*
         CSimpleIni Ini;
         Ini.LoadFile(IniPath.c_str());
 
