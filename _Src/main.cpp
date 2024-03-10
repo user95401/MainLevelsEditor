@@ -171,7 +171,7 @@ class $modify(LevelSelectLayer) {
     };
     ccColor3B colorForPage(int page) {
         ccColor3B _ccColor3B = LevelSelectLayer::colorForPage(page);
-        
+        /*
         std::string MainSection = fmt::format("colorForPage");
         std::string MainVal = fmt::format("{}", page);
         std::string IniPath = FilePathFromModFolder("_PageColors.ini");
@@ -180,7 +180,7 @@ class $modify(LevelSelectLayer) {
         Ini.LoadFile(IniPath.c_str());
 
         //Color
-        /*if (!(Ini.KeyExists(MainSection.c_str(), MainVal.c_str())))
+        if (!(Ini.KeyExists(MainSection.c_str(), MainVal.c_str())))
             Ini.SetValue(
                 MainSection.c_str(),
                 MainVal.c_str(),
@@ -188,12 +188,12 @@ class $modify(LevelSelectLayer) {
             );
         else {
             std::vector<std::string> rgb = explode(Ini.GetValue(MainSection.c_str(), MainVal.c_str()), ',');
-            _ccColor3B.r = stoi(rgb[0]);
-            _ccColor3B.g = stoi(rgb[1]);
-            _ccColor3B.b = stoi(rgb[2]);
-        }*/
+            _ccColor3B.r = atoi(rgb[0].data());
+            _ccColor3B.g = atoi(rgb[1].data());
+            _ccColor3B.b = atoi(rgb[2].data());
+        }
 
-        Ini.SaveFile(IniPath.c_str());
+        Ini.SaveFile(IniPath.c_str());*/
 
         return _ccColor3B;
     }
