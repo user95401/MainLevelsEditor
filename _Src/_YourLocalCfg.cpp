@@ -2,7 +2,7 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-void CopyFromLoacal() {
+void CopyFromLocal() {
     ghc::filesystem::copy(
         Mod::get()->getConfigDir() / "settings.json", //from game dir
         Mod::get()->getSaveDir() / "settings.json", //to game save dir
@@ -21,8 +21,8 @@ void CopyFromData() {
 #include <Geode/modify/LoadingLayer.hpp>
 class $modify(LoadingLayer) {
     TodoReturn loadingFinished() {
-        //CopyFromLoacal();
-        //Mod::get()->loadData();
+        CopyFromLocal();
+        Mod::get()->loadData();
         LoadingLayer::loadingFinished();
     };
 };
