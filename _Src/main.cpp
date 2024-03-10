@@ -176,6 +176,7 @@ class $modify(LevelSelectLayer) {
         std::string MainSection = fmt::format("colorForPage");
         std::string MainVal = fmt::format("{}", page);
 
+        /*
         CSimpleIni Ini;
         Ini.LoadFile(IniPath.c_str());
 
