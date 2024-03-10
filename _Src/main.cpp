@@ -219,7 +219,7 @@ else {crRet = Ini.GetValue(MainSection.c_str(), MainVal.c_str());} \
 Ini.SaveFile(IniPath.c_str());
 #endif
 
-/*#include <Geode/modify/LevelTools.hpp>
+#include <Geode/modify/LevelTools.hpp>
 GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
 
     std::string MainSection = fmt::format("Level Setup");
@@ -374,4 +374,5 @@ class $modify(LevelTools) {
     static bool verifyLevelIntegrity(gd::string p0, int p1) {
         return 1;
     }
-};*/
+};
+/**/
