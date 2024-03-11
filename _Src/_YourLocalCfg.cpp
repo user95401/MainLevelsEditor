@@ -3,28 +3,30 @@
 using namespace geode::prelude;
 
 void CopyFromLocal() {
+    auto game_dir = Mod::get()->getConfigDir() / "settings.json"; //from_game_dir
+    auto save_dir = Mod::get()->getSaveDir() / "settings.json"; //from_game_dir
+    if (!ghc::filesystem::exists(game_dir)) return;
+    //if (!ghc::filesystem::exists(save_dir)) return;
     ghc::filesystem::copy(
-        Mod::get()->getConfigDir() / "settings.json", //from game dir
-        Mod::get()->getSaveDir() / "settings.json", //to game save dir
-        ghc::filesystem::copy_options::recursive |
+        game_dir, //from game dir
+        save_dir, //to game save dir
         ghc::filesystem::copy_options::overwrite_existing);
 };
 
 void CopyFromData() {
+    auto game_dir = Mod::get()->getConfigDir() / "settings.json"; //from_game_dir
+    auto save_dir = Mod::get()->getSaveDir() / "settings.json"; //from_game_dir
+    //if (!ghc::filesystem::exists(game_dir)) return;
+    if (!ghc::filesystem::exists(save_dir)) return;
     ghc::filesystem::copy(
-        Mod::get()->getSaveDir() / "settings.json", //to game save dir
-        Mod::get()->getConfigDir() / "settings.json", //from game dir
-        ghc::filesystem::copy_options::recursive |
+        save_dir, //to game save dir
+        game_dir, //from game dir
         ghc::filesystem::copy_options::overwrite_existing);
 };
 
-#include <Geode/modify/LoadingLayer.hpp>
-class $modify(LoadingLayer) {
-    TodoReturn loadingFinished() {
-        CopyFromLocal();
-        Mod::get()->loadData();
-        LoadingLayer::loadingFinished();
-    };
+$on_mod(Loaded) {
+    CopyFromLocal();
+    Mod::get()->loadData();
 };
 
 #include <Geode/modify/AppDelegate.hpp>
