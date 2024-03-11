@@ -446,7 +446,7 @@ class $modify(ShareLevelLayerExt, ShareLevelLayer) {
 		return rtn;
 	}
 };
-/*
+
 //DELETE LEVEL HELPER
 static int g_currentPage;
 static GJGameLevel* g_currentLevel;
@@ -643,4 +643,5 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         };
         return pLevelSelectLayer;
     };
-};*/
+};
+/**/
