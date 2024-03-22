@@ -1,6 +1,8 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+#include "Header1.hpp"
+
 //i know all like use geode solutions blah blah blah but i dont like them
 //here collected all helpers that i selected
 #include "SimpleIni.h"
@@ -8,62 +10,7 @@ using namespace geode::prelude;
 #include "patterns.hpp"
 #include "ModUtils.hpp"
 #endif
-//they force me
 
-//mindblowing shit 
-/////AAAAAAAAAAAAAA I HATE SO MUCHH THAT FU FUCKING GUIDLINES
-std::string FilePathFromModFolder(std::string fname) {
-    auto sFullPath = Mod::get()->getConfigDir(true).string();
-#ifdef GEODE_IS_WINDOWS
-    auto sCurrPath = ghc::filesystem::current_path().string();
-    auto sRelPath = sFullPath.erase(0, sCurrPath.size() + 1);//sucks
-    std::replace(sRelPath.begin(), sRelPath.end(), '\\', '/'); // replace all '\' to '/' ;3
-    ghc::filesystem::path path = (sRelPath + "/" + fname);
-    ghc::filesystem::create_directories(path.parent_path());
-#else
-    ghc::filesystem::path path = (sFullPath + "/" + fname);
-#endif
-    ghc::filesystem::create_directories(path.parent_path());
-    return path.string();
-}
-auto read_file(std::string_view path) -> std::string {
-    constexpr auto read_size = std::size_t(4096);
-    auto stream = std::ifstream(path.data());
-    stream.exceptions(std::ios_base::badbit);
-    if (not stream) {
-        throw std::ios_base::failure("file does not exist");
-    }
-    auto out = std::string();
-    auto buf = std::string(read_size, '\0');
-    while (stream.read(&buf[0], read_size)) {
-        out.append(buf, 0, stream.gcount());
-    }
-    out.append(buf, 0, stream.gcount());
-    return out;
-}
-std::vector<std::string> explode(const std::string& str, const char& ch) {
-    std::string next;
-    std::vector<std::string> result;
-    // For each character in the string
-    for (std::string::const_iterator it = str.begin(); it != str.end(); it++) {
-        // If we've hit the terminal character
-        if (*it == ch) {
-            // If we have some characters accumulated
-            if (!next.empty()) {
-                // Add them to the result vector
-                result.push_back(next);
-                next.clear();
-            }
-        }
-        else {
-            // Accumulate the next character into the sequence
-            next += *it;
-        }
-    }
-    if (!next.empty())
-        result.push_back(next);
-    return result;
-}
 
 void UpdatePagesSetup() {
 #ifdef GEODE_IS_WINDOWS
@@ -219,122 +166,6 @@ Ini.SaveFile(IniPath.c_str());
 #endif
 
 #include <Geode/modify/LevelTools.hpp>
-GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
-
-    std::string MainSection = fmt::format("Level Setup");
-    std::string IniPath = FilePathFromModFolder(fmt::format("levels/setup/{}.ini", id));
-    
-    CSimpleIni Ini;
-    Ini.LoadFile(IniPath.c_str());
-
-    //m_sLevelName
-    if (!(Ini.KeyExists(MainSection.c_str(), "LevelName")))
-        Ini.SetValue(
-            MainSection.c_str(),
-            "LevelName",
-            pGJGameLevel->m_levelName.c_str(),
-            "; Level Name"
-        );
-    else pGJGameLevel->m_levelName = Ini.GetValue(MainSection.c_str(), "LevelName");
-
-    //m_difficulty
-    if (!(Ini.KeyExists(MainSection.c_str(), "difficulty")))
-        Ini.SetLongValue(
-            MainSection.c_str(),
-            "difficulty",
-            (int)pGJGameLevel->m_difficulty,
-            "; Difficulties that LevelPage layer supports:\n"
-            "; undef = 0,\n"
-            "; Easy = 1,\n"
-            "; Normal = 2,\n"
-            "; Hard = 3,\n"
-            "; Harder = 4,\n"
-            "; Insane = 5,\n"
-            "; Demon = 6"
-        );
-    else pGJGameLevel->m_difficulty = (GJDifficulty)Ini.GetLongValue(MainSection.c_str(), "difficulty");
-
-    //demonDifficulty
-    if (!(Ini.KeyExists(MainSection.c_str(), "difficulty")))
-        Ini.SetLongValue(
-            MainSection.c_str(),
-            "demonDifficulty",
-            (int)pGJGameLevel->m_demonDifficulty,
-            "; idk lol"
-        );
-    else pGJGameLevel->m_demonDifficulty = Ini.GetLongValue(MainSection.c_str(), "demonDifficulty");
-
-    //m_stars
-    if (!(Ini.KeyExists(MainSection.c_str(), "stars")))
-        Ini.SetLongValue(
-            MainSection.c_str(),
-            "stars",
-            pGJGameLevel->m_stars.value(),
-            "; Stars"
-        );
-    else {
-        int stars = Ini.GetLongValue(MainSection.c_str(), "stars");
-        if (Mod::get()->getSettingValue<bool>("SGG")) {
-            int max = Mod::get()->getSettingValue<int64_t>("SGGS");
-            if (stars >= max) stars = max;
-        }
-        pGJGameLevel->m_stars = stars;
-    }
-
-    //m_audioTrack
-    if (!(Ini.KeyExists(MainSection.c_str(), "audioTrack")))
-        Ini.SetLongValue(
-            MainSection.c_str(),
-            "audioTrack",
-            pGJGameLevel->m_audioTrack,
-            "; Audio Track ID"
-        );
-    else pGJGameLevel->m_audioTrack = Ini.GetLongValue(MainSection.c_str(), "audioTrack");
-
-    //songID
-    if (!(Ini.KeyExists(MainSection.c_str(), "songID")))
-        Ini.SetLongValue(
-            MainSection.c_str(),
-            "songID",
-            pGJGameLevel->m_songID,
-            "; songID"
-        );
-    else pGJGameLevel->m_songID = Ini.GetLongValue(MainSection.c_str(), "songID");
-
-    //m_capacityString
-    if (!(Ini.KeyExists(MainSection.c_str(), "capacityString")))
-        Ini.SetValue(
-            MainSection.c_str(),
-            "capacityString",
-            pGJGameLevel->m_capacityString.c_str(),
-            "; Capacity String"
-        );
-    else pGJGameLevel->m_capacityString = Ini.GetValue(MainSection.c_str(), "capacityString");
-
-    //m_levelDesc
-    if (!(Ini.KeyExists(MainSection.c_str(), "levelDesc")))
-        Ini.SetValue(
-            MainSection.c_str(),
-            "levelDesc",
-            pGJGameLevel->m_levelDesc.c_str(),
-            "; m_levelDesc (useless)"
-        );
-    else pGJGameLevel->m_levelDesc = Ini.GetValue(MainSection.c_str(), "levelDesc");
-
-    //m_creatorName
-    if (!(Ini.KeyExists(MainSection.c_str(), "creatorName")))
-        Ini.SetValue(
-            MainSection.c_str(),
-            "creatorName",
-            pGJGameLevel->m_creatorName.c_str(),
-            "; m_creatorName (useless)"
-        );
-    else pGJGameLevel->m_creatorName = Ini.GetValue(MainSection.c_str(), "creatorName");
-
-    Ini.SaveFile(IniPath.c_str());
-
-    return pGJGameLevel;
-}
 class $modify(LevelTools) {
     static gd::string getAudioFileName(int p0) {
         std::string crRet = LevelTools::getAudioFileName(p0);
