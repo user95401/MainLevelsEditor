@@ -14,7 +14,7 @@ settings here is generating per hooked functions call
 so play stereo madness to generate all config structure
 
 \- [level data](geode\config\user95401.mainlevelseditor\levels) -
-\- [level settings](geode\config\user95401.mainlevelseditor\levels\settings) -
+\- [level settings](geode\config\user95401.mainlevelseditor\levels\setup) -
 \- [_PagesSetupPatch.ini](geode\config\user95401.mainlevelseditor\\_PagesSetupPatch.ini) -
 \- [_PageColors.ini](geode\config\user95401.mainlevelseditor\\_PageColors.ini) -
 \- [_AudioTracks.ini](geode\config\user95401.mainlevelseditor\\_AudioTracks.ini) -

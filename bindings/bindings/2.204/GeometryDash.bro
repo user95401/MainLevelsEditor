@@ -9517,7 +9517,7 @@ class LevelSelectLayer : cocos2d::CCLayer, BoomScrollLayerDelegate, DynamicScrol
 	void onNext(cocos2d::CCObject* sender) = win 0x268c40;
 	void onPlay(cocos2d::CCObject* sender);
 	void onPrev(cocos2d::CCObject* sender) = win 0x268ca0;
-	TodoReturn scene(int) = win 0x267c20;
+	static cocos2d::CCScene* scene(int) = win 0x267c20;
 	TodoReturn tryShowAd();
 
 	virtual void keyBackClicked() = win 0x268d60;
