@@ -117,6 +117,11 @@ class $modify(LevelSelectLayer) {
     bool init(int p0) {
         UpdatePagesSetup();
         auto rtn = LevelSelectLayer::init(p0);
+        
+#ifndef GEODE_IS_WINDOWS
+        //BoomScrollLayer* ohfuck = MEMBERBYOFFSET(BoomScrollLayer*, this, 336);
+        //ohfuck->setScale(0.8f);
+#endif
         return rtn;
     };
     ccColor3B colorForPage(int page) {
