@@ -9,6 +9,7 @@ using namespace geode::prelude;//cocos2d and all Geode namespaces
 #define GetKeyState(asd) (short)asd
 #endif
 
+#include <regex>
 //funny layers
 class MainLevelsEditorLayer : public CCLayer {
 public:
@@ -76,7 +77,11 @@ public:
     }
     //LevelEditor
     void editorSave(CCObject*) {
-        geode::createQuickPopup("Save By Inputs?", "Values u had wrote will be saved in ini file of this level", "No", "Yes", [this](void*, bool asd) {
+        geode::createQuickPopup(
+            "Save By Inputs?", 
+            "Values u had wrote will be saved in ini file of this level", 
+            "No", "Yes", 
+            [this](void*, bool asd) {
             if (!asd) return;
             //nodes
             auto levelNameInput = dynamic_cast<InputNode*>(this->getChildByIDRecursive("levelNameInput"));
@@ -98,6 +103,7 @@ public:
                 levelNameInput->getString().c_str(),
                 "; Level Name"
             );
+            m_tar->m_levelName = difficultyInput->getString();
             Ini.SetValue(
                 MainSection.c_str(),
                 "difficulty",
@@ -111,18 +117,21 @@ public:
                 "; Insane = 5,\n"
                 "; Demon = 6"
             );
+            m_tar->m_difficulty = (GJDifficulty)stoi(difficultyInput->getString());
             Ini.SetValue(
                 MainSection.c_str(),
                 "stars",
                 starsInput->getString().c_str(),
                 "; Stars"
             );
+            m_tar->m_stars = stoi(starsInput->getString());
             Ini.SetValue(
                 MainSection.c_str(),
                 "audioTrack",
                 audioTrackInput->getString().c_str(),
                 "; Audio Track ID"
             );
+            m_tar->m_audioTrack = stoi(audioTrackInput->getString());
 
             Ini.SaveFile(IniPath.c_str());
             auto ntfyUpdated = Notification::create("Saved...", NotificationIcon::None);
@@ -131,7 +140,12 @@ public:
             });
     }
     void editorReset(CCObject* asd) {
-        auto pop = geode::createQuickPopup("Reset Inputs?", "Set inputs values by ini files\n<cr>i mean its not restore original level setup</c>", "No", "Yes", [this](void*, bool asd) {
+        auto pop = geode::createQuickPopup(
+            "Reset Inputs?", 
+            "Set inputs values by ini files\n"
+            "<cr>i mean its not restore original level setup</c>", 
+            "No", "Yes", 
+            [this](void*, bool asd) {
             if (!asd) return;
 
             //nodes
@@ -157,13 +171,42 @@ public:
         if (!asd) pop->onBtn2(asd);
     }
     void editorEditLevel(CCObject* asd) {
-        auto editor = LevelEditorLayer::scene(PlayLayer::create(m_tar, 0, 0)->m_level, 0);
-        editor->addChild(CCNode::create(), 999, 1971);
-        editor->getChildByTag(1971)->setID("MainLevelEditorMark");
-        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, editor));
+        auto pop = geode::createQuickPopup(
+            "Main Level Editor Notice",
+            "Yea, u will get Main Level Editor...\n"
+            "Sooo saving here <cg>works</c> and <cr>actually writes level data in file</c>.\n"
+            "<co>User Coins</c> will be replaced by <cy>Gold Coins</c>\n"
+            "<cr>Audio Track doesn't saving!</c>",
+            "Let me go", nullptr,
+            460.f,
+            [this](void*, bool a) {
+                auto levelForEditor = PlayLayer::create(m_tar, 0, 0)->m_level;
+                //levelString
+                {
+                    std::string level_data = levelForEditor->m_levelString;
+                    std::string decompressed = ZipUtils::decompressString(level_data, false, 0);
+                    //user coin id 1329, 142 golden coin
+                    decompressed = std::regex_replace(decompressed, std::regex(",142,"), ",1329,");
+                    level_data = ZipUtils::compressString(decompressed, false, 0);
+                    levelForEditor->m_levelString = level_data;
+                };
+                auto scene = CCScene::create();
+                auto editor = LevelEditorLayer::create(levelForEditor, 0);
+                editor->addChild(CCNode::create(), 999, 1971);
+                editor->getChildByTag(1971)->setID("MainLevelEditorMark");
+                scene->addChild(editor);
+                CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, scene));
+            }
+        );
     }
     void editorOnBack(CCObject* object) {
-        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, LevelSelectLayer::scene(m_tar->m_levelID.value() - 1)));
+        auto emptyScene = CCScene::create();
+        auto scene = LevelSelectLayer::scene(this->getTag() - 1);
+        if (this->getTag() >= 5000 and this->getTag() < 5100) {
+            emptyScene->addChild(LevelAreaInnerLayer::create(1));
+            scene = emptyScene;
+        };
+        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, scene));
     }
     static void openLevelEditor(GJGameLevel* tar) {
         auto scene = CCScene::create();
@@ -171,10 +214,6 @@ public:
         me->m_tar = tar;
         dynamic_cast<CCMenuItemSpriteExtra*>(me->getChildByIDRecursive("backBtn"))
             ->setTarget(me, menu_selector(MainLevelsEditorLayer::editorOnBack));
-        auto asd2 = ButtonSprite::create("editt");
-        auto kfc2 = CCMenuItemSpriteExtra::create(asd2, me, menu_selector(MainLevelsEditorLayer::editorEditLevel));
-        kfc2->setPositionX(50.f);
-        me->getChildByIDRecursive("backBtn")->getParent()->addChild(kfc2);
         {
             //create menu
             auto inputsContainer = CCMenu::create();
@@ -223,7 +262,7 @@ public:
                 audioTrackInput->getInput()->setAllowedChars("1234567890");
                 inputsContainer->addChild(audioTrackInput);
             };
-            //controll btns
+            //con troll btns
             {
                 auto asd = ButtonSprite::create("Reset");
                 auto kfc = CCMenuItemSpriteExtra::create(asd, me, menu_selector(MainLevelsEditorLayer::editorReset));
@@ -232,6 +271,19 @@ public:
                 auto container = CCMenu::create(kfc, kfc2, nullptr);
                 container->setContentHeight(32.f);
                 container->alignItemsHorizontallyWithPadding(12.f);
+                CCMenuItemSpriteExtra* editLevel;
+                {
+                    auto hi = geode::AccountButtonSprite::create(
+                        CCSprite::createWithSpriteFrameName("GJ_hammerIcon_001.png"),
+                        AccountBaseColor::Gray
+                    );
+                    hi->setScale(0.8f);
+                    typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setScale(1.1f);
+                    editLevel = CCMenuItemSpriteExtra::create(hi, me, menu_selector(MainLevelsEditorLayer::editorEditLevel));
+                    editLevel->setPositionX(208.f);
+                    editLevel->setPositionY(-10.f);
+                    container->addChild(editLevel);
+                }
                 inputsContainer->addChild(container);
             }
             //update and add menu
@@ -249,9 +301,45 @@ public:
             //yea setup inputs
             me->editorReset(nullptr);//nullptr is means click on btn2 instatnly
         }
-        scene->addChild(me, 0, 3228);
+        scene->addChild(me, 0, tar->m_levelID);
         CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(0.5f, scene));
     }
+};
+#include <Geode/modify/EditorPauseLayer.hpp>
+class $modify(EditorPauseLayerExt, EditorPauseLayer) {
+    bool isMainLevelEditor() {
+        return this->m_editorLayer->getChildByIDRecursive("MainLevelEditorMark");
+    }
+    void onSave(cocos2d::CCObject* sender) {
+        if (isMainLevelEditor()) {
+            this->saveLevel();
+            Notification::create("Saving level")->show();
+            saveLevelData(this->m_editorLayer->m_level);
+            return;
+        }
+        EditorPauseLayer::onSave(sender);
+    };
+    void onSaveAndExit(cocos2d::CCObject* sender) {
+        if (isMainLevelEditor()) {
+            MainLevelsEditorLayer::openLevelEditor(this->m_editorLayer->m_level);
+            this->saveLevel();
+            Notification::create("Saving level")->show();
+            saveLevelData(this->m_editorLayer->m_level);
+            return;
+        }
+        EditorPauseLayer::onSaveAndExit(sender);
+    };
+    void onSaveAndPlay(cocos2d::CCObject* sender) {
+        if (isMainLevelEditor()) if(auto node = dynamic_cast<CCMenuItemSpriteExtra*>(sender)) {
+            node->setNormalImage(CCLabelTTF::create("No", "Courier New", 16.f));
+            return;
+        }
+        EditorPauseLayer::onSaveAndPlay(sender);
+    };
+    void FLAlert_Clicked(FLAlertLayer* p0, bool p1) {
+        if (isMainLevelEditor() and p1) return MainLevelsEditorLayer::openLevelEditor(this->m_editorLayer->m_level);
+        EditorPauseLayer::FLAlert_Clicked(p0, p1);
+    };
 };
 
 #include <Geode/modify/LevelInfoLayer.hpp>
@@ -439,6 +527,7 @@ class $modify(LevelPageExt, LevelPage) {
                 hi->setScale(0.8f);
                 typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setScale(1.1f);
                 typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setColor({ 20, 20, 20 });
+                hi->addChild(typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0)));
                 editLevel = CCMenuItemSpriteExtra::create(hi, rtn, menu_selector(LevelPageExt::editLevel));
             };
             auto pCCMenu = CCMenu::create(deleteLevel, editLevel, nullptr);
@@ -455,4 +544,59 @@ class $modify(LevelPageExt, LevelPage) {
         return rtn;
     };
 };
-/**/
+
+#include <Geode/modify/LevelAreaInnerLayer.hpp>
+class $modify(LevelAreaInnerLayerExt, LevelAreaInnerLayer) {
+    class EditBtn : public CCMenuItemSpriteExtra {
+    public:
+        void editLevel(CCObject* asneeeeder) {
+            MainLevelsEditorLayer::openLevelEditor(
+                PlayLayer::create(
+                    LevelTools::getLevel(asneeeeder->getTag(), false),
+                    0, 0
+                )->m_level
+            );
+        }
+        static auto createAndSetup(CCNode* door) {
+            //Node
+            auto hi = geode::AccountButtonSprite::create(
+                CCSprite::createWithSpriteFrameName("d_cogwheel_04_001.png"),
+                AccountBaseColor::Gray
+            );
+            hi->setScale(0.4f);
+            typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setScale(1.1f);
+            typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setColor({ 20, 20, 20 });
+            hi->addChild(typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0)));
+            //create
+            auto me = (EditBtn*)create(hi, door, menu_selector(EditBtn::editLevel));
+            me->setTag(door->getTag());
+            door->getParent()->addChild(me, 999);
+            me->setPositionX(door->getPosition().x + 40);
+            me->setPositionY(door->getPosition().y + 45);
+            return me;
+        }
+    };
+    static LevelAreaInnerLayer* create(bool p0) {
+        auto rtn = LevelAreaInnerLayer::create(p0);
+        if (Mod::get()->getSettingValue<bool>("UI")) {
+            auto mainnode = dynamic_cast<CCNode*>(rtn->getChildren()->objectAtIndex(1));
+            if (mainnode) {
+                for (int index = 0; index < mainnode->getChildrenCount(); ++index) {
+                    auto obj = mainnode->getChildren()->objectAtIndex(index);
+                    if (obj) {
+                        auto menu = dynamic_cast<CCMenu*>(obj);
+                        if (menu) {
+                            if (menu->getChildByTag(5001)) {
+                                EditBtn::createAndSetup(menu->getChildByTag(5001));
+                                EditBtn::createAndSetup(menu->getChildByTag(5002));
+                                EditBtn::createAndSetup(menu->getChildByTag(5003));
+                                EditBtn::createAndSetup(menu->getChildByTag(5004));
+                            };
+                        };
+                    };
+                };
+            }
+        }
+        return rtn;
+    }
+};

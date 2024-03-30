@@ -91,7 +91,8 @@ class $modify(PlayLayer) {
             auto levelDataPath = FilePathFromModFolder(fmt::format("levels/{}.txt", level->m_levelID.value()));
             if (ghc::filesystem::exists(levelDataPath)) {
                 level->m_levelString = read_file(levelDataPath);
-            };
+            }
+            else level->m_levelString = LocalLevelManager::get()->getMainLevelString(level->m_levelID.value());
         };
         if (level->m_levelType == GJLevelType::Saved) {
             auto levelDataPath = FilePathFromModFolder(fmt::format("levels/{}.txt", level->m_levelID.value()));

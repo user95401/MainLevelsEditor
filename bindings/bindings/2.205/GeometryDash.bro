@@ -9795,12 +9795,12 @@ class LocalLevelManager : GManager {
 	TodoReturn getCreatedLevels(int);
 	TodoReturn getCreatedLists(int);
 	TodoReturn getLevelsInNameGroups();
-	TodoReturn getMainLevelString(int);
+	gd::string getMainLevelString(int tarLevelID);
 	TodoReturn markLevelsAsUnmodified();
 	TodoReturn moveLevelToTop(GJGameLevel*);
 	TodoReturn reorderLevels();
 	TodoReturn reorderLists();
-	TodoReturn tryLoadMainLevelString(int);
+	gd::string tryLoadMainLevelString(int tarLevelID);
 	TodoReturn updateLevelOrder();
 	TodoReturn updateLevelRevision();
 	TodoReturn updateListOrder();

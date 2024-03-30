@@ -180,7 +180,7 @@ GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
 }
 
 #include <regex>
-std::string saveLevel(int id, GJGameLevel* pGJGameLevel) {
+std::string saveToMainLevel(int id, GJGameLevel* pGJGameLevel) {
     auto resultstr = gd::string("The <cy>level</c> was <co>copied</c>...");
     //grab level
     GJGameLevel* pLevel = pGJGameLevel;
@@ -333,6 +333,25 @@ std::string saveLevel(int id, GJGameLevel* pGJGameLevel) {
     //set result string for text area
     return resultstr;
 };
+void saveLevelData(GJGameLevel* pGJGameLevel) {
+    GJGameLevel* pLevel = pGJGameLevel;
+    //data store
+    {
+        //levelString
+        std::string level_data = pGJGameLevel->m_levelString;
+        std::string decompressed = ZipUtils::decompressString(level_data, false, 0);
+        //user coin id 1329, 142 golden coin
+        decompressed = std::regex_replace(decompressed, std::regex(",1329,"), ",142,");
+        level_data = ZipUtils::compressString(decompressed, false, 0);
+        //save
+        std::string levelDataPath = FilePathFromModFolder(fmt::format("levels/{}.txt", pGJGameLevel->m_levelID.value()));
+        std::ofstream levelData;
+        levelData.open(levelDataPath);
+        levelData.clear();
+        levelData << level_data.data();
+        levelData.close();
+    };
+}
 
 std::string truncate(std::string str, size_t width, bool show_ellipsis)
 {
