@@ -76,7 +76,7 @@ public:
     }
     //LevelEditor
     void editorSave(CCObject*) {
-        geode::createQuickPopup("Save By Inputs", "Are you sure?)", "No", "Yes", [this](void*, bool asd) {
+        geode::createQuickPopup("Save By Inputs?", "Values u had wrote will be saved in ini file of this level", "No", "Yes", [this](void*, bool asd) {
             if (!asd) return;
             //nodes
             auto levelNameInput = dynamic_cast<InputNode*>(this->getChildByIDRecursive("levelNameInput"));
@@ -131,7 +131,7 @@ public:
             });
     }
     void editorReset(CCObject* asd) {
-        auto pop = geode::createQuickPopup("Reset Inputs", "Are you sure?)", "No", "Yes", [this](void*, bool asd) {
+        auto pop = geode::createQuickPopup("Reset Inputs?", "Set inputs values by ini files\n<cr>i mean its not restore original level setup</c>", "No", "Yes", [this](void*, bool asd) {
             if (!asd) return;
 
             //nodes
@@ -156,6 +156,12 @@ public:
             });
         if (!asd) pop->onBtn2(asd);
     }
+    void editorEditLevel(CCObject* asd) {
+        auto editor = LevelEditorLayer::scene(PlayLayer::create(m_tar, 0, 0)->m_level, 0);
+        editor->addChild(CCNode::create(), 999, 1971);
+        editor->getChildByTag(1971)->setID("MainLevelEditorMark");
+        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, editor));
+    }
     void editorOnBack(CCObject* object) {
         CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, LevelSelectLayer::scene(m_tar->m_levelID.value() - 1)));
     }
@@ -165,12 +171,22 @@ public:
         me->m_tar = tar;
         dynamic_cast<CCMenuItemSpriteExtra*>(me->getChildByIDRecursive("backBtn"))
             ->setTarget(me, menu_selector(MainLevelsEditorLayer::editorOnBack));
+        auto asd2 = ButtonSprite::create("editt");
+        auto kfc2 = CCMenuItemSpriteExtra::create(asd2, me, menu_selector(MainLevelsEditorLayer::editorEditLevel));
+        kfc2->setPositionX(50.f);
+        me->getChildByIDRecursive("backBtn")->getParent()->addChild(kfc2);
         {
             //create menu
             auto inputsContainer = CCMenu::create();
+            //title
+            {
+                auto title = CCLabelBMFont::create("Edit Level", "goldFont.fnt");
+                title->setID("title");
+                inputsContainer->addChild(title);
+            };
             //levelNameInput
             {
-                auto levelNameInputLabel = CCLabelTTF::create("Level Name:", "Comic Sans MS", 16.f);
+                auto levelNameInputLabel = CCLabelTTF::create("Level Name:", "Comic Sans MS", 13.f);
                 levelNameInputLabel->setID("levelNameInputLabel");
                 inputsContainer->addChild(levelNameInputLabel);
                 auto levelNameInput = InputNode::create(310.f, "Level Name", "chatFont.fnt");
@@ -179,7 +195,7 @@ public:
             };
             //difficultyInput
             {
-                auto difficultyInputLabel = CCLabelTTF::create("Difficulty:", "Comic Sans MS", 16.f);
+                auto difficultyInputLabel = CCLabelTTF::create("Difficulty:", "Comic Sans MS", 13.f);
                 difficultyInputLabel->setID("difficultyInputLabel");
                 inputsContainer->addChild(difficultyInputLabel);
                 auto difficultyInput = InputNode::create(310.f, "Difficulty", "chatFont.fnt");
@@ -189,7 +205,7 @@ public:
             };
             //starsInput
             {
-                auto starsInputLabel = CCLabelTTF::create("Stars:", "Comic Sans MS", 16.f);
+                auto starsInputLabel = CCLabelTTF::create("Stars:", "Comic Sans MS", 13.f);
                 starsInputLabel->setID("starsInputLabel");
                 inputsContainer->addChild(starsInputLabel);
                 auto starsInput = InputNode::create(310.f, "Stars", "chatFont.fnt");
@@ -199,7 +215,7 @@ public:
             };
             //audioTrackInput
             {
-                auto audioTrackInputLabel = CCLabelTTF::create("Audio Track:", "Comic Sans MS", 16.f);
+                auto audioTrackInputLabel = CCLabelTTF::create("Audio Track:", "Comic Sans MS", 13.f);
                 audioTrackInputLabel->setID("audioTrackInputLabel");
                 inputsContainer->addChild(audioTrackInputLabel);
                 auto audioTrackInput = InputNode::create(310.f, "Audio Track", "chatFont.fnt");
@@ -220,7 +236,16 @@ public:
             }
             //update and add menu
             inputsContainer->alignItemsVertically();
+            inputsContainer->setAnchorPoint(CCPointZero);
+            inputsContainer->setScale(0.9f);
             me->addChild(inputsContainer);
+            //bg
+            {
+                auto bg = CCScale9Sprite::create("GJ_square05.png");
+                bg->setID("bg");
+                bg->setContentSize({366.f, 318.f});
+                inputsContainer->addChild(bg, -1, 57290);
+            };
             //yea setup inputs
             me->editorReset(nullptr);//nullptr is means click on btn2 instatnly
         }
