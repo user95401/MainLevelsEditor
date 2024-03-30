@@ -480,20 +480,10 @@ class $modify(LevelPageExt, LevelPage) {
                 //level data
                 for (size_t levelID = 0; levelID < 127; levelID++) {
                     if (levelID > g_currentPage) {
-                        auto filepath = CCFileUtils::sharedFileUtils()->fullPathForFilename(fmt::format("levels/{}.txt", levelID).data(), 0);
-                        if (
-                            !std::filesystem::exists(FilePathFromModFolder(fmt::format("levels/{}.txt", levelID)))
-                            and std::filesystem::exists(filepath.data())
-                            )
-                            std::filesystem::copy_file(
-                                filepath.data(),
-                                FilePathFromModFolder(fmt::format("levels/{}.txt", levelID - 1)).c_str()
-                            );
-                        else
-                            std::rename(
-                                FilePathFromModFolder(fmt::format("levels/{}.txt", levelID)).c_str(),
-                                FilePathFromModFolder(fmt::format("levels/{}.txt", levelID - 1)).c_str()
-                            );
+                        std::rename(
+                            FilePathFromModFolder(fmt::format("levels/{}.txt", levelID)).c_str(),
+                            FilePathFromModFolder(fmt::format("levels/{}.txt", levelID - 1)).c_str()
+                        );
                     }
                 }
             }

@@ -109,6 +109,21 @@ class $modify(LoadingLayer) {
     TodoReturn loadingFinished() {
         //create some inis
         LevelSelectLayer::create(0);
+        for (int levelID = 0; levelID < 127; levelID++) {
+            if (!ghc::filesystem::exists(FilePathFromModFolder(fmt::format("levels/{}.txt", levelID)))) {
+                //save
+                auto levelData = LocalLevelManager::get()->getMainLevelString(levelID);
+                if (std::string(levelData) != "") {
+                    std::string levelDataPath = FilePathFromModFolder(fmt::format("levels/{}.txt", levelID));
+                    std::ofstream levelDataFile;
+                    levelDataFile.open(levelDataPath);
+                    levelDataFile.clear();
+                    levelDataFile << levelData.data();
+                    levelDataFile.close();
+                }
+            }
+        }
+        //call org
         LoadingLayer::loadingFinished();
     };
 };
