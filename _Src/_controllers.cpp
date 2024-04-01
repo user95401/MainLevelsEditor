@@ -135,8 +135,8 @@ class $modify(LevelSelectLayer) {
         auto rtn = LevelSelectLayer::init(p0);
         
 #ifndef GEODE_IS_WINDOWS
-        //BoomScrollLayer* ohfuck = MEMBERBYOFFSET(BoomScrollLayer*, this, 336);
-        //ohfuck->setScale(0.8f);
+        BoomScrollLayer* ohfuck = MEMBERBYOFFSET(BoomScrollLayer*, this, 336);
+        ohfuck->setRotation(6.f);
 #endif
         return rtn;
     };
