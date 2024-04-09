@@ -13,7 +13,6 @@ using namespace geode::prelude;
 
 
 void UpdatePagesSetup() {
-#ifdef GEODE_IS_WINDOWS
 
     int cmp_amount = 23;
     int start_from = 1;
@@ -46,6 +45,7 @@ void UpdatePagesSetup() {
 
     Ini.SaveFile(IniPath.c_str());
 
+#ifdef GEODE_IS_WINDOWS
     //we at LevelSelectLayer::init(LevelSelectLayer* pClass, int initLevel)
     //way: "Download the soundtrack" string, move up to sideart sprites
 
@@ -80,6 +80,9 @@ void UpdatePagesSetup() {
         // log((ReadProcMemAsStr(addr, 22)).c_str());
         WriteProcMem(addr, { 0xBE, toRewrite[0], toRewrite[1], toRewrite[2], toRewrite[3] });
     }
+#else
+    //0x3ebda2
+        WriteProcMem(geode::base::get() + 0x3ebda2, { 0xBE, toRewrite[0], toRewrite[1], toRewrite[2], toRewrite[3] });
 #endif
 }
 
@@ -133,11 +136,6 @@ class $modify(LevelSelectLayer) {
     bool init(int p0) {
         UpdatePagesSetup();
         auto rtn = LevelSelectLayer::init(p0);
-        
-#ifndef GEODE_IS_WINDOWS
-        BoomScrollLayer* ohfuck = MEMBERBYOFFSET(BoomScrollLayer*, this, 336);
-        ohfuck->setRotation(6.f);
-#endif
         return rtn;
     };
     ccColor3B colorForPage(int page) {
