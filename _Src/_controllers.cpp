@@ -81,8 +81,8 @@ void UpdatePagesSetup() {
         WriteProcMem(addr, { 0xBE, toRewrite[0], toRewrite[1], toRewrite[2], toRewrite[3] });
     }
 #else
-    //0x3ebda2
-        WriteProcMem(geode::base::get() + 0x3ebda2, { 0xBE, toRewrite[0], toRewrite[1], toRewrite[2], toRewrite[3] });
+    //0x3ebda2 (v2.2.1.3-armeabi-v7a)
+        //WriteProcMem(geode::base::get() + 0x3ebda2, { 0xBE, toRewrite[0], toRewrite[1], toRewrite[2], toRewrite[3] });
 #endif
 }
 
@@ -109,7 +109,7 @@ class $modify(PlayLayer) {
 
 #include <Geode/modify/LoadingLayer.hpp>
 class $modify(LoadingLayer) {
-    TodoReturn loadingFinished() {
+    void loadingFinished() {
         //create some inis
         LevelSelectLayer::create(0);
         for (int levelID = 0; levelID < 127; levelID++) {
@@ -136,6 +136,14 @@ class $modify(LevelSelectLayer) {
     bool init(int p0) {
         UpdatePagesSetup();
         auto rtn = LevelSelectLayer::init(p0);
+        BoomScrollLayer* ohfuck = MEMBERBYOFFSET(BoomScrollLayer*, this, 336);
+#ifndef GEODE_IS_WINDOWS
+        ohfuck = MEMBERBYOFFSET(BoomScrollLayer*, this, 84);//84 armeabi-v7a
+#endif
+        ohfuck->setRotation(3.f);
+#ifndef GEODE_IS_WINDOWS
+        //todo: controll this shit on android
+#endif
         return rtn;
     };
     ccColor3B colorForPage(int page) {

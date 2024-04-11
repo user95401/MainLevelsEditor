@@ -170,6 +170,23 @@ public:
             });
         if (!asd) pop->onBtn2(asd);
     }
+    void editorCopyLevel(CCObject* asd) {
+        auto saveTar = dynamic_cast<InputNode*>(this->getChildByIDRecursive("saveTar"));
+        FLAlertLayer* pop;
+        pop = geode::createQuickPopup(
+            "Copy Level",
+            "Copy this level into main level?\nsettings, data, audio file will be saved"
+            "\n" + fmt::format("Tar: {}", saveTar->getString()),
+            "Abort", "Copy!",
+            460.f,
+            [this, saveTar](void*, bool a) {
+                if (!a) return;
+                FLAlertLayer* pop = geode::createQuickPopup("Finish info", "asd", "OK", nullptr, 460.f, nullptr, 0);
+                pop->m_noElasticity = 1;
+                pop->show();
+            }
+        );
+    }
     void editorEditLevel(CCObject* asd) {
         auto pop = geode::createQuickPopup(
             "Main Level Editor Notice",
@@ -284,6 +301,23 @@ public:
                     editLevel->setPositionY(-10.f);
                     container->addChild(editLevel);
                 }
+                CCMenuItemSpriteExtra* copyLevel;
+                {
+                    auto hi = CCSprite::createWithSpriteFrameName("GJ_copyStateBtn_001.png");
+                    copyLevel = CCMenuItemSpriteExtra::create(hi, me, menu_selector(MainLevelsEditorLayer::editorCopyLevel));
+                    copyLevel->setPositionX(208.f);
+                    copyLevel->setPositionY(22.f);
+                    container->addChild(copyLevel);
+                }
+                //saveTar
+                {
+                    auto saveTar = InputNode::create(60.f, "saveTar", "chatFont.fnt");
+                    saveTar->setPositionX(238.f);
+                    saveTar->setPositionY(22.f);
+                    saveTar->setID("saveTar");
+                    saveTar->getInput()->setAllowedChars("1234567890");
+                    container->addChild(saveTar);
+                };
                 inputsContainer->addChild(container);
             }
             //update and add menu
@@ -373,7 +407,7 @@ class $modify(LevelInfoLayerExt, LevelInfoLayer) {
         }
         return 1;
 	}
-    TodoReturn setupLevelInfo() {
+    void setupLevelInfo() {
         if (Mod::get()->getSettingValue<bool>("SL"))
             this->m_level = processOutLevelByConfig(this->m_level->m_levelID.value(), this->m_level);
         LevelInfoLayer::setupLevelInfo();
@@ -582,6 +616,7 @@ class $modify(LevelAreaInnerLayerExt, LevelAreaInnerLayer) {
                                 EditBtn::createAndSetup(menu->getChildByTag(5002));
                                 EditBtn::createAndSetup(menu->getChildByTag(5003));
                                 EditBtn::createAndSetup(menu->getChildByTag(5004));
+                                break;//1st menu only 
                             };
                         };
                     };
