@@ -136,14 +136,7 @@ class $modify(LevelSelectLayer) {
     bool init(int p0) {
         UpdatePagesSetup();
         auto rtn = LevelSelectLayer::init(p0);
-        BoomScrollLayer* ohfuck = MEMBERBYOFFSET(BoomScrollLayer*, this, 336);
-#ifndef GEODE_IS_WINDOWS
-        ohfuck = MEMBERBYOFFSET(BoomScrollLayer*, this, 84);//84 armeabi-v7a
-#endif
-        ohfuck->setRotation(3.f);
-#ifndef GEODE_IS_WINDOWS
-        //todo: controll this shit on android
-#endif
+        
         return rtn;
     };
     ccColor3B colorForPage(int page) {
