@@ -6,11 +6,25 @@ using namespace geode::prelude;
 //i know all like use geode solutions blah blah blah but i dont like them
 //here collected all helpers that i selected
 #include "SimpleIni.h"
-#ifdef GEODE_IS_WINDOWS
-#include "patterns.hpp"
-#include "ModUtils.hpp"
-#endif
 
+void WriteProcMem(uintptr_t address, ByteVector const& data) {
+    for (auto catgirl : Mod::get()->getPatches()) {
+        if (catgirl and catgirl->getAddress() == address) {
+            catgirl->updateBytes(data);
+            return;
+        }
+    }
+    Mod::get()->patch((void*)address, data);
+}
+//std::vector<uint8_t> { intToBytes(777)[0], intToBytes(777)[1], intToBytes(777)[2],intToBytes(777)[3] }
+std::vector<unsigned char> intToBytes(int value) {
+    std::vector<unsigned char> result;
+    result.push_back(value & 0x000000ff);
+    result.push_back((value & 0x0000ff00) >> 8);
+    result.push_back((value & 0x00ff0000) >> 16);
+    result.push_back((value & 0xff000000) >> 24);
+    return result;
+}
 
 void UpdatePagesSetup() {
 
@@ -65,13 +79,13 @@ void UpdatePagesSetup() {
 
     {
         //std::vector<unsigned char> toRewrite = intToBytes(cmp_amount);
-        auto addr = patterns::find_pattern("83 FE ? 7C 9F 8B 5C 24 1C BE 03 00 00 00 8D 9B");
+        auto addr = geode::base::get() + 0x26812C;//patterns::find_pattern("83 FE ? 7C 9F 8B 5C 24 1C BE 03 00 00 00 8D 9B");
         WriteProcMem(addr, { 0x83, 0xFE, (uint8_t)cmp_amount });
     }
 
     {
         std::vector<unsigned char> toRewrite = intToBytes(start_from);
-        auto addr = patterns::find_pattern("be ???? 89 44 24 18 8b d8 8d 9b");
+        auto addr = geode::base::get() + 0x2680BF;//patterns::find_pattern("be ???? 89 44 24 18 8b d8 8d 9b");
         //addr = gd::base + 0x2680BF; //2.204
         //
         // 
