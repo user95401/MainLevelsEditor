@@ -53,21 +53,53 @@ public:
             gauntletCorner_003->setRotation(180.f);
             gauntletCorner_003->setAnchorPoint({ 0.f,0.f });
             __this->addChild(gauntletCorner_003);//add gauntletCorner_003
-            //backBtn
-            auto backBtn = CCMenuItemSpriteExtra::create(CCSprite::createWithSpriteFrameName("GJ_arrow_03_001.png"), __this, menu_selector(MainLevelsEditorLayer::onBack));
+            //TLMenu
+            auto backBtn = CCMenuItemSpriteExtra::create(
+                CCSprite::createWithSpriteFrameName("GJ_arrow_03_001.png"), 
+                __this, menu_selector(MainLevelsEditorLayer::onBack)
+            );
             backBtn->setID("backBtn");
-            auto menuBack = CCMenu::createWithItem(backBtn);
-            menuBack->setPosition({ 25, CCDirector::sharedDirector()->getWinSize().height - 25 });
-            __this->addChild(menuBack);
+            auto TLMenu = CCMenu::createWithItem(backBtn);
+            TLMenu->setPosition({ 25, CCDirector::sharedDirector()->getWinSize().height - 25 });
+            __this->addChild(TLMenu);
+            //TRMenu
+            auto infoBtn = CCMenuItemSpriteExtra::create(
+                CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png"), 
+                __this, menu_selector(MainLevelsEditorLayer::onInfo)
+            );
+            infoBtn->setID("infoBtn");
+            auto TRMenu = CCMenu::createWithItem(infoBtn);
+            TRMenu->setPosition(CCDirector::sharedDirector()->getWinSize() - 25);
+            __this->addChild(TRMenu);
         };
         return __this;
     }
     void onBack(CCObject* object) {
         CCDirector::sharedDirector()->popSceneWithTransition(0.5f, PopTransition::kPopTransitionFade);
     }
+    void onInfo(CCObject* object) {
+        std::string IniPath = FilePathFromModFolder(fmt::format("levels/setup/{}.ini", m_tar->m_levelID.value()));
+        auto contentstream = std::stringstream(); 
+        contentstream << "# [" << m_tar->m_levelID.value() << ".ini](" << IniPath << ")" "\n";
+        contentstream << read_file(IniPath);
+        contentstream << "# [_PagesSetupPatch.ini](" << FilePathFromModFolder("_PagesSetupPatch.ini") << ")" "\n";
+        contentstream << read_file(FilePathFromModFolder("_PagesSetupPatch.ini"));
+        contentstream << "# [_PageColors.ini](" << FilePathFromModFolder("_PageColors.ini") << ")" "\n";
+        contentstream << read_file(FilePathFromModFolder("_PageColors.ini"));
+        MDPopup* pop = geode::MDPopup::create(
+            "THE INFO",
+            contentstream.str(),
+            "     OK     ");
+        pop->show();
+        public_cast(pop, m_closeBtn)->setVisible(0);//i so hate this button
+    }
     void keyBackClicked() {
         auto backBtn = dynamic_cast<CCMenuItemSpriteExtra*>(this->getChildByIDRecursive("backBtn"));
         backBtn->activate();
+    }
+    void keyMenuClicked() {
+        auto infoBtn = dynamic_cast<CCMenuItemSpriteExtra*>(this->getChildByIDRecursive("infoBtn"));
+        infoBtn->activate();
     }
     void openMe(CCObject*) {
         auto scene = CCScene::create();
@@ -156,36 +188,45 @@ public:
 
             //setup inputs
 
+            levelNameInput->setString(fmt::to_string(m_tar->m_levelName.data()));
+            difficultyInput->setString(fmt::to_string((int)m_tar->m_difficulty));
+            starsInput->setString(fmt::to_string(m_tar->m_starsRequested == 0 ? m_tar->m_stars : m_tar->m_starsRequested));
+            audioTrackInput->setString(fmt::to_string(m_tar->m_audioTrack));
+
             std::string MainSection = fmt::format("Level Setup");
             std::string IniPath = FilePathFromModFolder(fmt::format("levels/setup/{}.ini", m_tar->m_levelID.value()));
 
             CSimpleIni Ini;
-            Ini.LoadFile(IniPath.c_str());
-
-            levelNameInput->setString(Ini.GetValue(MainSection.c_str(), "LevelName"));
-            difficultyInput->setString(Ini.GetValue(MainSection.c_str(), "difficulty"));
-            starsInput->setString(Ini.GetValue(MainSection.c_str(), "stars"));
-            audioTrackInput->setString(Ini.GetValue(MainSection.c_str(), "audioTrack"));
+            if (SI_OK == Ini.LoadFile(IniPath.c_str())) {
+                levelNameInput->setString(Ini.GetValue(MainSection.c_str(), "LevelName"));
+                difficultyInput->setString(Ini.GetValue(MainSection.c_str(), "difficulty"));
+                starsInput->setString(Ini.GetValue(MainSection.c_str(), "stars"));
+                audioTrackInput->setString(Ini.GetValue(MainSection.c_str(), "audioTrack"));
+            }
 
             });
         if (!asd) pop->onBtn2(asd);
     }
     void editorCopyLevel(CCObject* asd) {
-        auto saveTar = dynamic_cast<InputNode*>(this->getChildByIDRecursive("saveTar"));
+        auto saveTar = InputNode::create(120.f, "saveTar", "chatFont.fnt");
+        saveTar->getInput()->setAllowedChars("1234567890");
+        saveTar->setString(fmt::to_string(m_tar->m_levelID.value()));
+        saveTar->setPositionY(42.f);
         FLAlertLayer* pop;
         pop = geode::createQuickPopup(
             "Copy Level",
             "Copy this level into main level?\nsettings, data, audio file will be saved"
-            "\n" + fmt::format("Tar: {}", saveTar->getString()),
+            "\n" "Target level id (copy into): \n \n \n",
             "Abort", "Copy!",
             460.f,
             [this, saveTar](void*, bool a) {
                 if (!a) return;
-                FLAlertLayer* pop = geode::createQuickPopup("Finish info", "asd", "OK", nullptr, 460.f, nullptr, 0);
+                FLAlertLayer* pop = geode::createQuickPopup("Finish info", saveToMainLevel(stoi(saveTar->getString()), this->m_tar), "OK", nullptr, 460.f, nullptr, 0);
                 pop->m_noElasticity = 1;
                 pop->show();
             }
         );
+        pop->m_buttonMenu->addChild(saveTar);
     }
     void editorEditLevel(CCObject* asd) {
         auto pop = geode::createQuickPopup(
@@ -219,13 +260,16 @@ public:
     void editorOnBack(CCObject* object) {
         auto emptyScene = CCScene::create();
         auto scene = LevelSelectLayer::scene(this->getTag() - 1);
+        if (this->getTag() > 127) scene = nullptr;
         if (this->getTag() >= 5000 and this->getTag() < 5100) {
             emptyScene->addChild(LevelAreaInnerLayer::create(1));
             scene = emptyScene;
         };
-        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, scene));
+        if(!scene) CCDirector::sharedDirector()->popSceneWithTransition(0.5f, PopTransition::kPopTransitionFade);
+        else CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, scene));
     }
     static void openLevelEditor(GJGameLevel* tar) {
+        if (!tar) return;
         auto scene = CCScene::create();
         auto me = create();
         me->m_tar = tar;
@@ -306,18 +350,9 @@ public:
                     auto hi = CCSprite::createWithSpriteFrameName("GJ_copyStateBtn_001.png");
                     copyLevel = CCMenuItemSpriteExtra::create(hi, me, menu_selector(MainLevelsEditorLayer::editorCopyLevel));
                     copyLevel->setPositionX(208.f);
-                    copyLevel->setPositionY(22.f);
+                    copyLevel->setPositionY(32.f);
                     container->addChild(copyLevel);
                 }
-                //saveTar
-                {
-                    auto saveTar = InputNode::create(60.f, "saveTar", "chatFont.fnt");
-                    saveTar->setPositionX(238.f);
-                    saveTar->setPositionY(22.f);
-                    saveTar->setID("saveTar");
-                    saveTar->getInput()->setAllowedChars("1234567890");
-                    container->addChild(saveTar);
-                };
                 inputsContainer->addChild(container);
             }
             //update and add menu
@@ -378,12 +413,10 @@ class $modify(EditorPauseLayerExt, EditorPauseLayer) {
 
 #include <Geode/modify/LevelInfoLayer.hpp>
 class $modify(LevelInfoLayerExt, LevelInfoLayer) {
-    void SomeSch(float) {
-        if (!this) return;
+    void openEditor(CCObject*) {
+        MainLevelsEditorLayer::openLevelEditor(this->m_level);
     }
     bool init(GJGameLevel* p0, bool p1) {
-        if (Mod::get()->getSettingValue<bool>("COLH"))
-            this->schedule(schedule_selector(LevelInfoLayerExt::SomeSch), 0.01f);
         if (Mod::get()->getSettingValue<bool>("SL"))
             p0 = processOutLevelByConfig(p0->m_levelID.value(), p0);
         LevelInfoLayer::init(p0, p1);
@@ -392,7 +425,7 @@ class $modify(LevelInfoLayerExt, LevelInfoLayer) {
             auto GJ_copyStateBtn_001 = CCMenuItemSpriteExtra::create(
                 CCSprite::createWithSpriteFrameName("GJ_copyStateBtn_001.png"),
                 this,
-                menu_selector(MainLevelsEditorLayer::openMe)
+                menu_selector(LevelInfoLayerExt::openEditor)
             );
             //pCCMenu
             {

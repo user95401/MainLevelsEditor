@@ -81,8 +81,14 @@ void UpdatePagesSetup() {
         WriteProcMem(addr, { 0xBE, toRewrite[0], toRewrite[1], toRewrite[2], toRewrite[3] });
     }
 #else
-    //0x3ebda2 (v2.2.1.3-armeabi-v7a)
-        //WriteProcMem(geode::base::get() + 0x3ebda2, { 0xBE, toRewrite[0], toRewrite[1], toRewrite[2], toRewrite[3] });
+    //0x3ebda2 (v2.2.1.3-armeabi-v7a) idk what the fuck is that
+    //003EBDA0 BA F1 17 0F F0 D1 4F F0 03 0A 00 20 FF F7 34 FE
+    //                               BL              _ZN7cocos2d7CCArray9addObjectEPNS_8CCObjectE ; cocos2d::CCArray::addObject(cocos2d::CCObject *)
+    //  .text:003EBDA0                 CMP.W           R10, #0x17
+    //.text:003EBDA4                 BNE             loc_3EBD88
+    //.text : 003EBDA6               MOV.W           R10, #3
+    WriteProcMem(geode::base::get() + 0x3ebda2, { 0xba, 0xf1, (uint8_t)cmp_amount });
+    //WriteProcMem(geode::addresser::getNonVirtual(geode::modifier::AsStaticFunction_init<LevelSelectLayer, bool>()) + 0x2e2, { 0xba, 0xf1, (uint8_t)cmp_amount });
 #endif
 }
 

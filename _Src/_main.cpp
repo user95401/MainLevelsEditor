@@ -5,6 +5,8 @@ using namespace geode::prelude;
 
 #include "SimpleIni.h"
 
+#include <regex>
+
 //mindblowing shit 
 /////AAAAAAAAAAAAAA I HATE SO MUCHH THAT FU FUCKING GUIDLINES
 std::string FilePathFromModFolder(std::string fname) {//they force me
@@ -12,14 +14,17 @@ std::string FilePathFromModFolder(std::string fname) {//they force me
 #ifdef GEODE_IS_WINDOWS
     auto sCurrPath = ghc::filesystem::current_path().string();
     auto sRelPath = sFullPath.erase(0, sCurrPath.size() + 1);//sucks
-    std::replace(sRelPath.begin(), sRelPath.end(), '\\', '/'); // replace all '\' to '/' ;3
-    ghc::filesystem::path path = (sRelPath + "/" + fname);
+    ghc::filesystem::path path = (sRelPath + "//" + fname);
     ghc::filesystem::create_directories(path.parent_path());
 #else
-    ghc::filesystem::path path = (sFullPath + "/" + fname);
+    ghc::filesystem::path path = (sFullPath + "//" + fname);
 #endif
     ghc::filesystem::create_directories(path.parent_path());
-    return path.string();
+    auto rtn = path.string();
+    //std::replace(rtn.begin(), rtn.end(), '\\', '/'); // replace all '\' to '/' ;3
+    if(rtn.find("\\_") != std::string::npos) rtn.insert(rtn.find("\\_"), "\\"); // fun thing (MDLNK)
+    log::debug("{}({}): {}", __func__, fname, rtn);
+    return rtn;
 }
 
 auto read_file(std::string_view path) -> std::string {
@@ -179,7 +184,6 @@ GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
     return pGJGameLevel;
 }
 
-#include <regex>
 std::string saveToMainLevel(int id, GJGameLevel* pGJGameLevel) {
     auto resultstr = gd::string("The <cy>level</c> was <co>copied</c>...");
     //grab level
@@ -229,7 +233,7 @@ std::string saveToMainLevel(int id, GJGameLevel* pGJGameLevel) {
         );
 
         //m_stars
-        auto stars = pGJGameLevel->m_starsRequested;
+        auto stars = pGJGameLevel->m_starsRequested == 0 ? pGJGameLevel->m_stars : pGJGameLevel->m_starsRequested;
         Ini.SetLongValue(
             MainSection.c_str(),
             "stars",
