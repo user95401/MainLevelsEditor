@@ -12,24 +12,6 @@
 	"repository": "https://github.com/user95401/MainLevelsEditor",
 	"tags": [ "Interface", "Utility", "Customization", "Cheats" ],
 	"settings": {
-		"COLH": {
-			"name": "Copy Online Lvl Helper",
-			"description": "Open level page and push `Insert` key to copy online level",
-			"type": "bool",
-			"default": true
-		},
-		"CELH": {
-			"name": "Copy Editor Lvl Helper",
-			"description": "Open share level layer and push `Insert` key to copy editor level",
-			"type": "bool",
-			"default": true
-		},
-		"DMLH": {
-			"name": "Delete Main Lvl Helper",
-			"description": "Select level and push `Delete` key to delete main level",
-			"type": "bool",
-			"default": true
-		},
 		"SGG": {
 			"name": "Stat Gain Guard",
 			"description": "ignore stars if its over max value",
@@ -44,14 +26,14 @@
 			"default": 22
 		},
 		"SL": {
-			"name": "Saved levels",
+			"name": "Saved levels (BETA)",
 			"description": "<cr>experimental function</c> that allows u replace stuff on online levels",
 			"type": "bool",
 			"default": false
 		},
 		"UI": {
-			"name": "Add Helper Buttons",
-			"description": "add buttons for delete level, copy level helpers",
+			"name": "Add controll UI",
+			"description": "add buttons an other stuff to controll things in game",
 			"type": "bool",
 			"default": false
 		}
