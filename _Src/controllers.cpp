@@ -3,9 +3,9 @@ using namespace geode::prelude;
 
 #include "Header1.hpp"
 
-//i know all like use geode solutions blah blah blah but i dont like them
-//here collected all helpers that i selected
 #include "SimpleIni.h"
+
+#include <Geode/modify/LevelSelectLayer.hpp>
 
 void WriteProcMem(uintptr_t address, ByteVector const& data) {
     for (auto catgirl : Mod::get()->getPatches()) {
