@@ -101,8 +101,8 @@ void UpdatePagesSetup() {
     //  .text:003EBDA0                 CMP.W           R10, #0x17
     //.text:003EBDA4                 BNE             loc_3EBD88
     //.text : 003EBDA6               MOV.W           R10, #3
-    WriteProcMem(geode::base::get() + 0x3ebda2, { 0xba, 0xf1, (uint8_t)cmp_amount });
-    //WriteProcMem(geode::addresser::getNonVirtual(geode::modifier::AsStaticFunction_init<LevelSelectLayer, bool>()) + 0x2e2, { 0xba, 0xf1, (uint8_t)cmp_amount });
+    //WriteProcMem(geode::base::get() + 0x3ebda2, { 0xba, 0xf1, (uint8_t)cmp_amount });
+    WriteProcMem(geode::addresser::getNonVirtual(geode::modifier::AsStaticFunction_init<LevelSelectLayer, bool>()) + 0x2e2, { 0xba, 0xf1, (uint8_t)cmp_amount });
 #endif
 }
 
