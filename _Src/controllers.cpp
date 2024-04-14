@@ -2,6 +2,7 @@
 using namespace geode::prelude;
 
 #include "Header1.hpp"
+#include <Geode/modify/LevelSelectLayer.hpp>
 
 void WriteProcMem(uintptr_t address, ByteVector const& data) {
     for (auto catgirl : Mod::get()->getPatches()) {
