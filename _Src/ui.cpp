@@ -5,12 +5,8 @@ using namespace geode::prelude;//cocos2d and all Geode namespaces
 #include "SimpleIni.h"
 #include "Header1.hpp"
 
-#ifndef GEODE_IS_WINDOWS
-#define GetKeyState(asd) (short)asd
-#endif
-
 #include <regex>
-//funny layers
+//funny layer
 class MainLevelsEditorLayer : public CCLayer {
 public:
     GJGameLevel* m_tar;
@@ -62,20 +58,52 @@ public:
             auto TLMenu = CCMenu::createWithItem(backBtn);
             TLMenu->setPosition({ 25, CCDirector::sharedDirector()->getWinSize().height - 25 });
             __this->addChild(TLMenu);
-            //TRMenu
+            //TRMenu infoBtn
             auto infoBtn = CCMenuItemSpriteExtra::create(
                 CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png"), 
                 __this, menu_selector(MainLevelsEditorLayer::onInfo)
             );
             infoBtn->setID("infoBtn");
-            auto TRMenu = CCMenu::createWithItem(infoBtn);
+            //TRMenu deleteAll
+            auto deleteAllA = geode::AccountButtonSprite::create(
+                CCSprite::createWithSpriteFrameName("edit_delBtn_001.png"),
+                AccountBaseColor::Gray
+            );
+            deleteAllA->setScale(0.8f);
+            typeinfo_cast<CCSprite*>(deleteAllA->getChildren()->objectAtIndex(0))->setScale(1.1f);
+            auto deleteAll = CCMenuItemSpriteExtra::create(
+                deleteAllA,
+                __this, menu_selector(MainLevelsEditorLayer::onDeleteAll)
+            );
+            deleteAll->setID("deleteAll");
+            deleteAll->setPositionY(-72.f);
+            //TRMenu folderBtn
+            auto folderBtna = geode::AccountButtonSprite::create(
+                CCSprite::createWithSpriteFrameName("gj_folderBtn_001.png"),
+                AccountBaseColor::Blue
+            );
+            folderBtna->setScale(0.8f);
+            typeinfo_cast<CCSprite*>(folderBtna->getChildren()->objectAtIndex(0))->setScale(0.8f);
+            typeinfo_cast<CCSprite*>(folderBtna->getChildren()->objectAtIndex(0))->setAnchorPoint({ 0.5f, 0.6f });
+            auto folderBtn = CCMenuItemSpriteExtra::create(
+                folderBtna,
+                __this, menu_selector(MainLevelsEditorLayer::onOpenFolder)
+            );
+            folderBtn->setID("folderBtn");
+            folderBtn->setPositionY(-108.f);
+            //TRMenu
+            auto TRMenu = CCMenu::create(infoBtn, deleteAll, folderBtn, nullptr);
             TRMenu->setPosition(CCDirector::sharedDirector()->getWinSize() - 25);
+            TRMenu->setID("TRMenu");
             __this->addChild(TRMenu);
         };
         return __this;
     }
     void onBack(CCObject* object) {
         CCDirector::sharedDirector()->popSceneWithTransition(0.5f, PopTransition::kPopTransitionFade);
+    }
+    void onOpenFolder(CCObject* object) {
+        CCApplication::get()->openURL(FilePathFromModFolder("levels/setup").data());
     }
     void onInfo(CCObject* object) {
         std::string IniPath = FilePathFromModFolder(fmt::format("levels/setup/{}.ini", m_tar->m_levelID.value()));
@@ -86,12 +114,38 @@ public:
         contentstream << read_file(FilePathFromModFolder("_PagesSetupPatch.ini"));
         contentstream << "# [_PageColors.ini](" << FilePathFromModFolder("_PageColors.ini") << ")" "\n";
         contentstream << read_file(FilePathFromModFolder("_PageColors.ini"));
+        contentstream << "# [_AudioTracks.ini](" << FilePathFromModFolder("_AudioTracks.ini") << ")" "\n";
+        contentstream << read_file(FilePathFromModFolder("_AudioTracks.ini"));
         MDPopup* pop = geode::MDPopup::create(
             "THE INFO",
             contentstream.str(),
             "     OK     ");
         pop->show();
         public_cast(pop, m_closeBtn)->setVisible(0);//i so hate this button
+    }
+    void onDeleteAll(CCObject* asd) {
+        auto someInput = InputNode::create(120.f, "someInput", "chatFont.fnt");
+        someInput->setPositionY(42.f);
+        auto pop = geode::createQuickPopup(
+            "Clear Config",
+            fmt::format(
+                "Delete the <cr>WHOLE CONFIG FOLDER</c> of this mod!?" "\n"
+                "<co>{}</c>" "\n"
+                "Write here \"someInput\": "
+                "\n\n\n"
+                ,
+                FilePathFromModFolder("")
+            ),
+            "No", "Yes",
+            390.f,
+            [this, someInput](void*, bool asd) {
+                if (!asd or someInput->getString() != std::string("someInput")) return;
+                auto ntfy = Notification::create(std::format("Removed!"));
+                ntfy->setIcon(NotificationIcon::Warning);
+                if (not ghc::filesystem::remove_all(FilePathFromModFolder(""))) ntfy->setString("Failed to remove!");
+                ntfy->show();
+            });
+        pop->m_buttonMenu->addChild(someInput);
     }
     void keyBackClicked() {
         auto backBtn = dynamic_cast<CCMenuItemSpriteExtra*>(this->getChildByIDRecursive("backBtn"));
@@ -171,7 +225,7 @@ public:
             
             });
     }
-    void editorReset(CCObject* asd) {
+    void editorLoad(CCObject* asd) {
         auto pop = geode::createQuickPopup(
             "Reset Inputs?", 
             "Set inputs values by ini files\n"
@@ -203,6 +257,30 @@ public:
                 starsInput->setString(Ini.GetValue(MainSection.c_str(), "stars"));
                 audioTrackInput->setString(Ini.GetValue(MainSection.c_str(), "audioTrack"));
             }
+
+            });
+        if (!asd) pop->onBtn2(asd);
+    }
+    void editorClear(CCObject* asd) {
+        auto pop = geode::createQuickPopup(
+            "Clear Inputs?", 
+            "its a because of pointer bugs yea?..", 
+            "No", "Yes", 
+            [this](void*, bool asd) {
+            if (!asd) return;
+
+            //nodes
+            auto levelNameInput = dynamic_cast<InputNode*>(this->getChildByIDRecursive("levelNameInput"));
+            auto difficultyInput = dynamic_cast<InputNode*>(this->getChildByIDRecursive("difficultyInput"));
+            auto starsInput = dynamic_cast<InputNode*>(this->getChildByIDRecursive("starsInput"));
+            auto audioTrackInput = dynamic_cast<InputNode*>(this->getChildByIDRecursive("audioTrackInput"));
+
+            //setup inputs
+
+            levelNameInput->setString("");
+            difficultyInput->setString("");
+            starsInput->setString("");
+            audioTrackInput->setString("");
 
             });
         if (!asd) pop->onBtn2(asd);
@@ -325,11 +403,13 @@ public:
             };
             //con troll btns
             {
-                auto asd = ButtonSprite::create("Reset");
-                auto kfc = CCMenuItemSpriteExtra::create(asd, me, menu_selector(MainLevelsEditorLayer::editorReset));
+                auto rst = ButtonSprite::create("Clear");
+                auto rsts = CCMenuItemSpriteExtra::create(rst, me, menu_selector(MainLevelsEditorLayer::editorClear));
+                auto asd = ButtonSprite::create("Load");
+                auto kfc = CCMenuItemSpriteExtra::create(asd, me, menu_selector(MainLevelsEditorLayer::editorLoad));
                 auto asd2 = ButtonSprite::create("Save");
                 auto kfc2 = CCMenuItemSpriteExtra::create(asd2, me, menu_selector(MainLevelsEditorLayer::editorSave));
-                auto container = CCMenu::create(kfc, kfc2, nullptr);
+                auto container = CCMenu::create(rsts, kfc, kfc2, nullptr);
                 container->setContentHeight(32.f);
                 container->alignItemsHorizontallyWithPadding(12.f);
                 CCMenuItemSpriteExtra* editLevel;
@@ -368,12 +448,13 @@ public:
                 inputsContainer->addChild(bg, -1, 57290);
             };
             //yea setup inputs
-            me->editorReset(nullptr);//nullptr is means click on btn2 instatnly
+            me->editorLoad(nullptr);//nullptr is means click on btn2 instatnly
         }
         scene->addChild(me, 0, tar->m_levelID);
         CCDirector::sharedDirector()->pushScene(CCTransitionFade::create(0.5f, scene));
     }
 };
+
 #include <Geode/modify/EditorPauseLayer.hpp>
 class $modify(EditorPauseLayerExt, EditorPauseLayer) {
     bool isMainLevelEditor() {
@@ -390,7 +471,7 @@ class $modify(EditorPauseLayerExt, EditorPauseLayer) {
     };
     void onSaveAndExit(cocos2d::CCObject* sender) {
         if (isMainLevelEditor()) {
-            MainLevelsEditorLayer::openLevelEditor(this->m_editorLayer->m_level);
+            CCDirector::sharedDirector()->popSceneWithTransition(0.5f, PopTransition::kPopTransitionFade);
             this->saveLevel();
             Notification::create("Saving level")->show();
             saveLevelData(this->m_editorLayer->m_level);
@@ -406,7 +487,7 @@ class $modify(EditorPauseLayerExt, EditorPauseLayer) {
         EditorPauseLayer::onSaveAndPlay(sender);
     };
     void FLAlert_Clicked(FLAlertLayer* p0, bool p1) {
-        if (isMainLevelEditor() and p1) return MainLevelsEditorLayer::openLevelEditor(this->m_editorLayer->m_level);
+        if (isMainLevelEditor() and p1) return (void)CCDirector::sharedDirector()->popSceneWithTransition(0.5f, PopTransition::kPopTransitionFade);
         EditorPauseLayer::FLAlert_Clicked(p0, p1);
     };
 };
@@ -417,16 +498,24 @@ class $modify(LevelInfoLayerExt, LevelInfoLayer) {
         MainLevelsEditorLayer::openLevelEditor(this->m_level);
     }
     bool init(GJGameLevel* p0, bool p1) {
-        if (Mod::get()->getSettingValue<bool>("SL"))
-            p0 = processOutLevelByConfig(p0->m_levelID.value(), p0);
-        LevelInfoLayer::init(p0, p1);
+        //org call rtn
+        auto rtn = LevelInfoLayer::init(p0, p1);
+        //ui
         if (Mod::get()->getSettingValue<bool>("UI")) {
             //GJ_copyStateBtn_001
-            auto GJ_copyStateBtn_001 = CCMenuItemSpriteExtra::create(
-                CCSprite::createWithSpriteFrameName("GJ_copyStateBtn_001.png"),
-                this,
-                menu_selector(LevelInfoLayerExt::openEditor)
-            );
+            CCMenuItemSpriteExtra* GJ_copyStateBtn_001;
+            {
+                //Node
+                auto hi = geode::AccountButtonSprite::create(
+                    CCSprite::createWithSpriteFrameName("d_cogwheel_04_001.png"),
+                    AccountBaseColor::Gray
+                );
+                hi->setScale(0.8f);
+                typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setScale(1.1f);
+                typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setColor({ 20, 20, 20 });
+                hi->addChild(typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0)));//make it darker
+                GJ_copyStateBtn_001 = CCMenuItemSpriteExtra::create(hi, this, menu_selector(LevelInfoLayerExt::openEditor));
+            };
             //pCCMenu
             {
                 auto pCCMenu = CCMenu::createWithItem(GJ_copyStateBtn_001);
@@ -438,26 +527,41 @@ class $modify(LevelInfoLayerExt, LevelInfoLayer) {
                 this->addChild(pCCMenu, 999, 6282);
             };
         }
-        return 1;
+        return rtn;
 	}
     void setupLevelInfo() {
-        if (Mod::get()->getSettingValue<bool>("SL"))
+        auto SL = Mod::get()->getSettingValue<bool>("SL");
+        //orglevel
+        if (SL) {
             this->m_level = processOutLevelByConfig(this->m_level->m_levelID.value(), this->m_level);
+            //m_difficultySprite->updateFeatureStateFromLevel(this->m_level);
+        }
         LevelInfoLayer::setupLevelInfo();
-    };
+    }
 };
 
 #include <Geode/modify/EditLevelLayer.hpp>
 class $modify(EditLevelLayerExt, EditLevelLayer) {
+    void openEditor(CCObject*) {
+        MainLevelsEditorLayer::openLevelEditor(this->m_level);
+    }
     bool init(GJGameLevel * p0) {
         auto rtn = EditLevelLayer::init(p0);
         if (Mod::get()->getSettingValue<bool>("UI")) {
             //GJ_copyStateBtn_001
-            auto GJ_copyStateBtn_001 = CCMenuItemSpriteExtra::create(
-                CCSprite::createWithSpriteFrameName("GJ_copyStateBtn_001.png"),
-                this,
-                menu_selector(MainLevelsEditorLayer::openMe)
-            );
+            CCMenuItemSpriteExtra* GJ_copyStateBtn_001;
+            {
+                //Node
+                auto hi = geode::AccountButtonSprite::create(
+                    CCSprite::createWithSpriteFrameName("d_cogwheel_04_001.png"),
+                    AccountBaseColor::Gray
+                );
+                hi->setScale(0.8f);
+                typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setScale(1.1f);
+                typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setColor({ 20, 20, 20 });
+                hi->addChild(typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0)));//make it darker
+                GJ_copyStateBtn_001 = CCMenuItemSpriteExtra::create(hi, this, menu_selector(LevelInfoLayerExt::openEditor));
+            };
             //pCCMenu
             {
                 auto pCCMenu = CCMenu::createWithItem(GJ_copyStateBtn_001);
@@ -585,7 +689,7 @@ class $modify(LevelPageExt, LevelPage) {
                 hi->setScale(0.8f);
                 typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setScale(1.1f);
                 typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setColor({ 20, 20, 20 });
-                hi->addChild(typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0)));
+                hi->addChild(typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0)));//make it darker
                 editLevel = CCMenuItemSpriteExtra::create(hi, rtn, menu_selector(LevelPageExt::editLevel));
             };
             auto pCCMenu = CCMenu::create(deleteLevel, editLevel, nullptr);

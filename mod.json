@@ -32,8 +32,8 @@
 			"default": false
 		},
 		"UI": {
-			"name": "Add controll UI",
-			"description": "add buttons an other stuff to controll things in game",
+			"name": "Add control UI",
+			"description": "add buttons an other stuff to control things in game",
 			"type": "bool",
 			"default": false
 		}

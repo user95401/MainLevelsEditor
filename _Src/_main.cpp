@@ -179,6 +179,79 @@ GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
         );
     else pGJGameLevel->m_creatorName = Ini.GetValue(MainSection.c_str(), "creatorName");
 
+    //m_levelLength
+    if (!(Ini.KeyExists(MainSection.c_str(), "levelLength")))
+        Ini.SetLongValue(
+            MainSection.c_str(),
+            "levelLength",
+            pGJGameLevel->m_levelLength,
+            "; m_levelLength (useless)"
+        );
+    else pGJGameLevel->m_levelLength = Ini.GetLongValue(MainSection.c_str(), "levelLength");
+
+    //m_featured
+    if (!(Ini.KeyExists(MainSection.c_str(), "featured")))
+        Ini.SetLongValue(
+            MainSection.c_str(),
+            "featured",
+            pGJGameLevel->m_featured,
+            "; m_featured (useless)"
+        );
+    else pGJGameLevel->m_featured = Ini.GetLongValue(MainSection.c_str(), "featured");
+
+    //m_isEpic
+    if (!(Ini.KeyExists(MainSection.c_str(), "isEpic")))
+        Ini.SetLongValue(
+            MainSection.c_str(),
+            "isEpic",
+            pGJGameLevel->m_isEpic,
+            "; m_isEpic (useless)"
+        );
+    else pGJGameLevel->m_isEpic = Ini.GetLongValue(MainSection.c_str(), "isEpic");
+
+    //m_autoLevel
+    if (!(Ini.KeyExists(MainSection.c_str(), "autoLevel")))
+        Ini.SetLongValue(
+            MainSection.c_str(),
+            "autoLevel",
+            pGJGameLevel->m_autoLevel,
+            "; m_autoLevel (useless)"
+        );
+    else pGJGameLevel->m_autoLevel = Ini.GetLongValue(MainSection.c_str(), "autoLevel");
+
+    //m_levelType
+    if (!(Ini.KeyExists(MainSection.c_str(), "levelType")))
+        Ini.SetLongValue(
+            MainSection.c_str(),
+            "levelType",
+            (int)pGJGameLevel->m_levelType,
+            "; m_levelType (useless)"
+            "\n; " " Local = 1"
+            "\n; " "Editor = 2"
+            "\n; " " Saved = 3"
+        );
+    else pGJGameLevel->m_levelType = (GJLevelType)Ini.GetLongValue(MainSection.c_str(), "levelType");
+
+    //m_songIDs
+    if (!(Ini.KeyExists(MainSection.c_str(), "songIDs")))
+        Ini.SetValue(
+            MainSection.c_str(),
+            "songIDs",
+            pGJGameLevel->m_songIDs.data(),
+            "; songIDs"
+        );
+    else pGJGameLevel->m_songIDs = Ini.GetValue(MainSection.c_str(), "songIDs");
+
+    //sfxIDs
+    if (!(Ini.KeyExists(MainSection.c_str(), "sfxIDs")))
+        Ini.SetValue(
+            MainSection.c_str(),
+            "sfxIDs",
+            pGJGameLevel->m_sfxIDs.data(),
+            "; m_sfxIDs (useless)"
+        );
+    else pGJGameLevel->m_sfxIDs = Ini.GetValue(MainSection.c_str(), "sfxIDs");
+
     Ini.SaveFile(IniPath.c_str());
 
     return pGJGameLevel;
