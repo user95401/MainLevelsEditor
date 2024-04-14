@@ -3,10 +3,6 @@ using namespace geode::prelude;
 
 #include "Header1.hpp"
 
-#include "SimpleIni.h"
-
-#include <Geode/modify/LevelSelectLayer.hpp>
-
 void WriteProcMem(uintptr_t address, ByteVector const& data) {
     for (auto catgirl : Mod::get()->getPatches()) {
         if (catgirl and catgirl->getAddress() == address) {
@@ -102,7 +98,8 @@ void UpdatePagesSetup() {
     //.text:003EBDA4                 BNE             loc_3EBD88
     //.text : 003EBDA6               MOV.W           R10, #3
     //WriteProcMem(geode::base::get() + 0x3ebda2, { 0xba, 0xf1, (uint8_t)cmp_amount });
-    WriteProcMem(geode::addresser::getNonVirtual(geode::modifier::AsStaticFunction_init<LevelSelectLayer, bool>()) + 0x2e2, { 0xba, 0xf1, (uint8_t)cmp_amount });
+    auto addr = geode::addresser::getNonVirtual(geode::modifier::Resolve<int>::func(&LevelSelectLayer::init)) + 0x2e2;
+    WriteProcMem(addr, { 0xba, 0xf1, (uint8_t)cmp_amount });
 #endif
 }
 

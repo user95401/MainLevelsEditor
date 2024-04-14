@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include "SimpleIni.h"
 std::string FilePathFromModFolder(std::string fname);
 GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel);
 std::string saveToMainLevel(int id, GJGameLevel* pGJGameLevel);
