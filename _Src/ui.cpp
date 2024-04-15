@@ -140,7 +140,7 @@ public:
             390.f,
             [this, someInput](void*, bool asd) {
                 if (!asd or someInput->getString() != std::string("someInput")) return;
-                auto ntfy = Notification::create(std::format("Removed!"));
+                auto ntfy = Notification::create("Removed!");
                 ntfy->setIcon(NotificationIcon::Warning);
                 if (not ghc::filesystem::remove_all(FilePathFromModFolder(""))) ntfy->setString("Failed to remove!");
                 ntfy->show();
