@@ -109,16 +109,43 @@ public:
         std::string IniPath = FilePathFromModFolder(fmt::format("levels/setup/{}.ini", m_tar->m_levelID.value()));
         auto contentstream = std::stringstream(); 
         contentstream << "# [" << m_tar->m_levelID.value() << ".ini](" << IniPath << ")" "\n";
-        contentstream << read_file(IniPath);
+        contentstream << read_file(IniPath) << std::endl;
         contentstream << "# [_PagesSetupPatch.ini](" << FilePathFromModFolder("_PagesSetupPatch.ini") << ")" "\n";
-        contentstream << read_file(FilePathFromModFolder("_PagesSetupPatch.ini"));
+        contentstream << read_file(FilePathFromModFolder("_PagesSetupPatch.ini")) << std::endl;
         contentstream << "# [_PageColors.ini](" << FilePathFromModFolder("_PageColors.ini") << ")" "\n";
-        contentstream << read_file(FilePathFromModFolder("_PageColors.ini"));
+        contentstream << read_file(FilePathFromModFolder("_PageColors.ini")) << std::endl;
         contentstream << "# [_AudioTracks.ini](" << FilePathFromModFolder("_AudioTracks.ini") << ")" "\n";
-        contentstream << read_file(FilePathFromModFolder("_AudioTracks.ini"));
+        contentstream << read_file(FilePathFromModFolder("_AudioTracks.ini")) << std::endl;
+        auto content = std::regex_replace(contentstream.str(), std::regex("\n"), "\n\n");
+        //some idk for why highlighting
+        {
+            bool waitForEndl = false;
+            char commentChar = ';';
+            char sectionChar = '[';
+            for (int a = 0; a < content.size(); ++a) {
+                //comment
+                if (content.at(a) == commentChar) {
+                    waitForEndl = true;
+                    content.insert(a, "<cb>");
+                    a = a + 5;
+                }
+                //section
+                else if (content.at(a) == sectionChar) {
+                    waitForEndl = true;
+                    content.insert(a, "<cj>");
+                    a = a + 5;
+                }
+                //endl
+                if (content.at(a) == '\n' and waitForEndl) {
+                    waitForEndl = false;
+                    content.insert(a, "</c>");
+                    a = a + 5;
+                }
+            };
+        };
         MDPopup* pop = geode::MDPopup::create(
             "THE INFO",
-            contentstream.str(),
+            content.data(),
             "     OK     ");
         pop->show();
         public_cast(pop, m_closeBtn)->setVisible(0);//i so hate this button
@@ -138,8 +165,12 @@ public:
             ),
             "No", "Yes",
             390.f,
-            [this, someInput](void*, bool asd) {
-                if (!asd or someInput->getString() != std::string("someInput")) return;
+            [this, someInput](void*, bool btn2) {
+                if (!btn2) return;
+                //testinput
+                if (someInput->getString() != std::string("someInput")) 
+                    return onDeleteAll(nullptr);
+                //hi
                 auto ntfy = Notification::create(std::format("Removed!"));
                 ntfy->setIcon(NotificationIcon::Warning);
                 if (not ghc::filesystem::remove_all(FilePathFromModFolder(""))) ntfy->setString("Failed to remove!");
@@ -432,6 +463,15 @@ public:
                     copyLevel->setPositionX(208.f);
                     copyLevel->setPositionY(32.f);
                     container->addChild(copyLevel);
+                    if (me->m_tar->m_levelType != GJLevelType::Local) {
+                        CCScaleTo* scaleTo = CCScaleTo::create(0.5f, 1.1f);
+                        CCEaseInOut* easeInOut = CCEaseInOut::create(scaleTo, 2.0f);
+                        CCScaleTo* scaleTo2 = CCScaleTo::create(0.5f, 1.0f);
+                        CCEaseInOut* easeInOut2 = CCEaseInOut::create(scaleTo2, 2.0f);
+                        CCSequence* sequence = CCSequence::create(easeInOut, easeInOut2, nullptr);
+                        CCRepeatForever* repeatForever = CCRepeatForever::create(sequence);
+                        hi->runAction(repeatForever);
+                    }
                 }
                 inputsContainer->addChild(container);
             }
@@ -529,15 +569,6 @@ class $modify(LevelInfoLayerExt, LevelInfoLayer) {
         }
         return rtn;
 	}
-    void setupLevelInfo() {
-        auto SL = Mod::get()->getSettingValue<bool>("SL");
-        //orglevel
-        if (SL) {
-            this->m_level = processOutLevelByConfig(this->m_level->m_levelID.value(), this->m_level);
-            //m_difficultySprite->updateFeatureStateFromLevel(this->m_level);
-        }
-        LevelInfoLayer::setupLevelInfo();
-    }
 };
 
 #include <Geode/modify/EditLevelLayer.hpp>
@@ -560,7 +591,10 @@ class $modify(EditLevelLayerExt, EditLevelLayer) {
                 typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setScale(1.1f);
                 typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setColor({ 20, 20, 20 });
                 hi->addChild(typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0)));//make it darker
-                GJ_copyStateBtn_001 = CCMenuItemSpriteExtra::create(hi, this, menu_selector(LevelInfoLayerExt::openEditor));
+                GJ_copyStateBtn_001 = CCMenuItemSpriteExtra::create(
+                    hi, 
+                    this, menu_selector(EditLevelLayerExt::openEditor)
+                );
             };
             //pCCMenu
             {

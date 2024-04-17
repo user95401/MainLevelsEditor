@@ -23,7 +23,7 @@ std::string FilePathFromModFolder(std::string fname) {//they force me
     auto rtn = path.string();
     //std::replace(rtn.begin(), rtn.end(), '\\', '/'); // replace all '\' to '/' ;3
     if(rtn.find("\\_") != std::string::npos) rtn.insert(rtn.find("\\_"), "\\"); // fun thing (MDLNK)
-    log::debug("{}({}): {}", __func__, fname, rtn);
+    //log::debug("{}({}): {}", __func__, fname, rtn);
     return rtn;
 }
 
@@ -32,7 +32,7 @@ auto read_file(std::string_view path) -> std::string {
     auto stream = std::ifstream(path.data());
     stream.exceptions(std::ios_base::badbit);
     if (not stream) {
-        throw std::ios_base::failure("file does not exist");
+        return ("file does not exist");
     }
     auto out = std::string();
     auto buf = std::string(read_size, '\0');
@@ -103,7 +103,7 @@ GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
     else pGJGameLevel->m_difficulty = (GJDifficulty)Ini.GetLongValue(MainSection.c_str(), "difficulty");
 
     //demonDifficulty
-    if (!(Ini.KeyExists(MainSection.c_str(), "difficulty")))
+    if (!(Ini.KeyExists(MainSection.c_str(), "demonDifficulty")))
         Ini.SetLongValue(
             MainSection.c_str(),
             "demonDifficulty",
@@ -111,6 +111,16 @@ GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel) {
             "; idk lol"
         );
     else pGJGameLevel->m_demonDifficulty = Ini.GetLongValue(MainSection.c_str(), "demonDifficulty");
+    
+    //ratings
+    if (!(Ini.KeyExists(MainSection.c_str(), "m_ratings")))
+        Ini.SetLongValue(
+            MainSection.c_str(),
+            "ratings",
+            (int)pGJGameLevel->m_ratings,
+            "; idk lol"
+        );
+    else pGJGameLevel->m_ratings = Ini.GetLongValue(MainSection.c_str(), "ratings");
 
     //m_stars
     if (!(Ini.KeyExists(MainSection.c_str(), "stars")))
@@ -315,7 +325,7 @@ std::string saveToMainLevel(int id, GJGameLevel* pGJGameLevel) {
         );
 
         //m_audioTrack
-        auto audioTrack = (pLevel->m_audioTrack <= 0) ? id : pLevel->m_audioTrack;
+        auto audioTrack = (pLevel->m_audioTrack == 0) ? pLevel->m_songID : pLevel->m_audioTrack;
         Ini.SetLongValue(
             MainSection.c_str(),
             "audioTrack",

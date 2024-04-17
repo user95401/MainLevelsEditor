@@ -151,15 +151,28 @@ class $modify(LoadingLayer) {
 };
 
 #include <Geode/modify/LevelSelectLayer.hpp>
-class $modify(LevelSelectLayer) {
+class $modify(LevelSelectLayerExd, LevelSelectLayer) {
     bool init(int p0) {
         UpdatePagesSetup();
         auto rtn = LevelSelectLayer::init(p0);
         
         return rtn;
     };
+    void updatePageIndicatorNode(ccColor3B _ccColor3B, int page) {
+        auto node = this->getChildByID("page");
+        if (!node) {
+            auto newnode = CCLabelTTF::create("last page from colorForPage() sets to tag for this node", "arial", 1.f);
+            newnode->setVisible(0);
+            newnode->setID("page");
+            this->addChild(newnode, 999);
+            node = newnode;
+        }
+        node->setTag(page);
+        ((CCNodeRGBA*)node)->setColor(_ccColor3B);
+    }
     ccColor3B colorForPage(int page) {
         ccColor3B _ccColor3B = LevelSelectLayer::colorForPage(page);
+        updatePageIndicatorNode(_ccColor3B, page);
 
         std::string IniPath = FilePathFromModFolder("_PageColors.ini");
         std::string MainSection = fmt::format("colorForPage");
@@ -245,3 +258,41 @@ class $modify(LevelTools) {
     }
 };
 /**/
+
+#include <Geode/modify/LevelInfoLayer.hpp>
+class $modify(LevelInfoLayer) {
+    void setupLevelInfo() {
+        auto SL = Mod::get()->getSettingValue<bool>("SL");
+        //orglevel
+        if (SL) {
+            this->m_level = processOutLevelByConfig(this->m_level->m_levelID.value(), this->m_level);
+            //m_difficultySprite->updateFeatureStateFromLevel(this->m_level);
+        }
+        LevelInfoLayer::setupLevelInfo();
+    }
+    void levelDownloadFinished(GJGameLevel * p0) {
+        auto SL = Mod::get()->getSettingValue<bool>("SL");
+        //orglevel
+        if (SL) {
+            p0 = processOutLevelByConfig(p0->m_levelID.value(), p0);
+            //m_difficultySprite->updateFeatureStateFromLevel(this->m_level);
+        }
+        LevelInfoLayer::levelDownloadFinished(p0);
+        if (SL) {
+            this->m_level = processOutLevelByConfig(this->m_level->m_levelID.value(), this->m_level);
+            //m_difficultySprite->updateFeatureStateFromLevel(this->m_level);
+        }
+    }
+};
+#include <Geode/modify/LevelCell.hpp>
+class $modify(LevelCellExt, LevelCell) {
+    void loadFromLevel(GJGameLevel* p0) {
+        auto SL = Mod::get()->getSettingValue<bool>("SL");
+        //orglevel
+        if (SL) {
+            p0 = processOutLevelByConfig(p0->m_levelID.value(), p0);
+            //m_difficultySprite->updateFeatureStateFromLevel(this->m_level);
+        }
+        LevelCell::loadFromLevel(p0);
+    }
+};
