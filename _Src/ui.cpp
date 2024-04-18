@@ -319,7 +319,7 @@ public:
     void editorCopyLevel(CCObject* asd) {
         auto saveTar = InputNode::create(120.f, "saveTar", "chatFont.fnt");
         saveTar->getInput()->setAllowedChars("1234567890");
-        saveTar->setString(fmt::to_string(cmp_amount));
+        saveTar->setString(fmt::to_string(cmp_amount + 1));
         saveTar->setPositionY(42.f);
         FLAlertLayer* pop;
         pop = geode::createQuickPopup(
