@@ -2,6 +2,10 @@
 #include <iostream>
 #include <string>
 #include "SimpleIni.h"
+
+inline int cmp_amount = 23;
+inline int start_from = 1;
+
 std::string FilePathFromModFolder(std::string fname);
 GJGameLevel* processOutLevelByConfig(int id, GJGameLevel* pGJGameLevel);
 std::string saveToMainLevel(int id, GJGameLevel* pGJGameLevel);

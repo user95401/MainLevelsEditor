@@ -25,9 +25,6 @@ std::vector<unsigned char> intToBytes(int value) {
 
 void UpdatePagesSetup() {
 
-    int cmp_amount = 23;
-    int start_from = 1;
-
     std::string MainSection = fmt::format("UpdatePagesSetup");
     std::string IniPath = FilePathFromModFolder("_PagesSetupPatch.ini");
 
