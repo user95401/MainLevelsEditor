@@ -615,7 +615,7 @@ class $modify(EditLevelLayerExt, EditLevelLayer) {
 class $modify(LevelPageExt, LevelPage) {
     void updateUI(float) {
         if (auto pCCMenu = this->getChildByIDRecursive("main levels editor ui")) {
-            pCCMenu->setVisible(this->m_level->m_levelID >= 0);
+            pCCMenu->setVisible(this->m_level->m_levelID > 0);
         }
     }
     void editLevel(CCObject*) {

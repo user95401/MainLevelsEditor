@@ -3,35 +3,6 @@ using namespace geode::prelude;
 
 #include "Header1.hpp"
 
-class CumingSoonItem : public CCMenuItem {
-public:
-    CCMenu* menu;
-    static CumingSoonItem* create() {
-        CumingSoonItem* pRet = new CumingSoonItem();
-        if (pRet && pRet->init()) {
-            pRet->autorelease();
-            return pRet;
-        }
-        else {
-            delete pRet;
-            pRet = NULL;
-            return NULL;
-        }
-    }
-    bool init() {
-        setContentSize(CCDirector::sharedDirector()->getWinSize());
-        //menu
-        menu = CCMenu::create();
-        addChild(menu, 10);
-        //comingSoonActually
-        CCLabelBMFont* comingSoonActually = CCLabelBMFont::create("Coming soon!", "bigFont.fnt");
-        comingSoonActually->setAlignment(kCCTextAlignmentLeft);
-        comingSoonActually->setAnchorPoint({ 0.500f, -0.500f });
-        menu->addChild(comingSoonActually);
-        return true;
-    }
-};
-
 #include <Geode/modify/LevelSelectLayer.hpp>
 class $modify(LevelSelectLayerExt, LevelSelectLayer) {
     BoomScrollLayer* m_LevelsScrollLayer;
@@ -43,6 +14,8 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
     CCMenuItem* m_rightTouchZone;
     CCMenuItem* m_leftTouchZone;
     int m_page;
+    bool m_waitForTouchFromLeft;
+    bool m_waitForTouchFromRight;
     void updSchedule(float) {
         //ground color
         /*this->m_fields->m_GJGroundLayer->updateGround01Color(ccColor3B(
@@ -52,10 +25,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         ));*/
     }
     void theSchedule(float) {
-        //color
-        /*auto pageColor = this->colorForPage(m_fields->m_page);
-        this->m_fields->m_BackgroundSprite->runAction(CCTintTo::create(0.050f, pageColor.r, pageColor.g, pageColor.b));
-        *///animate
+        //animate
         if (this->m_fields->m_shitcodingmenu->getPosition() != this->m_fields->m_shitcodingmenuPoint) {
             if (!this->m_fields->m_shitcodingmenu->getActionByTag(m_fields->m_page)) {
                 auto moveTo = CCEaseElasticOut::create(CCMoveTo::create(0.5f, this->m_fields->m_shitcodingmenuPoint), 0.6f);
@@ -72,7 +42,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
                 else thisdot->runAction(CCTintTo::create(0.1f, 255, 255, 255));
             }
         };
-        //wah
+        //wah update page on real scroll
         {
             m_fields->m_LevelsScrollLayer->instantMoveToPage(m_fields->m_page);
         }
@@ -80,58 +50,73 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
     void controlAndAddStuff() {
         //hide away this unexplored thing
         this->m_fields->m_LevelsScrollLayer->setVisible(0);
-        this->m_fields->m_LevelsScrollLayer->setTouchEnabled(0);
+        //this->m_fields->m_LevelsScrollLayer->setTouchEnabled(0);
         //add updates
         this->schedule(schedule_selector(LevelSelectLayerExt::updSchedule));
         this->schedule(schedule_selector(LevelSelectLayerExt::theSchedule), 0.1f);
         //a
-        //levels
-        this->m_fields->m_shitcodingmenu = CCMenu::create();
-        this->m_fields->m_shitcodingmenu->setPosition(CCPointZero);
-        this->m_fields->m_shitcodingmenu->setAnchorPoint(CCPointZero);
-        this->addChild(this->m_fields->m_shitcodingmenu);
-        //add levels
-        for (int i = start_from; i <= cmp_amount; i++) {
-            auto lvl = GameLevelManager::sharedState()->getMainLevel(i, 0);
-            auto page = LevelPage::create(lvl);
-            page->updateDynamicPage(lvl);
-            this->m_fields->m_shitcodingmenu->addChild(page, i, i);
-        }
-        this->m_fields->m_shitcodingmenu->addChild(CumingSoonItem::create(), cmp_amount, cmp_amount);
-        //Layout
-        this->m_fields->m_shitcodingmenu->setLayout(
-            ColumnLayout::create()
-            ->setAxisAlignment(AxisAlignment::Start)
-            ->setCrossAxisAlignment(AxisAlignment::Start)
-            ->setCrossAxisLineAlignment(AxisAlignment::Start)
-            ->setGrowCrossAxis(true)
-            ->setCrossAxisReverse(true)
-            ->setGap(0.f)
-        );
-        this->m_fields->m_shitcodingmenu->updateLayout();
-        //scroll to initpage
-        instantMoveToCurrentPage();
-        //nav dots
-        auto shitdotingmenu = CCMenu::create();
-        this->m_fields->m_shitdotingmenu = shitdotingmenu;
-        shitdotingmenu->setPosition(CCPointZero);
-        this->addChild(shitdotingmenu);
-        //add pages
-        for (int i = 0; i < this->m_fields->m_shitcodingmenu->getChildrenCount(); i++) {
-            auto dot = CCSprite::createWithSpriteFrameName("uiDot_001.png");
-            dot->setScale(1.15f);
-            dot->setBlendFunc({ GL_SRC_ALPHA, GL_ONE });
-            CCMenuItemSpriteExtra* CCMenuItemSpriteExtra_ = CCMenuItemSpriteExtra::create(
-                dot, this, menu_selector(LevelSelectLayerExt::onDot)
+        //m_shitcodingmenu
+        {
+            this->m_fields->m_shitcodingmenu = CCMenu::create();
+            this->m_fields->m_shitcodingmenu->setPosition(CCPointZero);
+            this->m_fields->m_shitcodingmenu->setAnchorPoint(CCPointZero);
+            this->addChild(this->m_fields->m_shitcodingmenu);
+            //add levels
+            int i = start_from;
+            for (i; i <= cmp_amount; i++) {
+                auto lvl = GameLevelManager::sharedState()->getMainLevel(i, 0);
+                auto page = LevelPage::create(lvl);
+                page->updateDynamicPage(lvl);
+                this->m_fields->m_shitcodingmenu->addChild(page, i, i);
+            }
+            auto lvl = GJGameLevel::create();
+            //thetowerpage
+            lvl->m_levelID = -2;
+            auto thetowerpage = LevelPage::create(lvl);
+            thetowerpage->updateDynamicPage(lvl);
+            this->m_fields->m_shitcodingmenu->addChild(thetowerpage, i, i);
+            i++;
+            //cumingsoon
+            lvl->m_levelID = 0;
+            auto cumingsoon = LevelPage::create(lvl);
+            cumingsoon->updateDynamicPage(lvl);
+            this->m_fields->m_shitcodingmenu->addChild(cumingsoon, i, i);
+            //Layout
+            this->m_fields->m_shitcodingmenu->setLayout(
+                ColumnLayout::create()
+                ->setAxisAlignment(AxisAlignment::Start)
+                ->setCrossAxisAlignment(AxisAlignment::Start)
+                ->setCrossAxisLineAlignment(AxisAlignment::Start)
+                ->setGrowCrossAxis(true)
+                ->setCrossAxisReverse(true)
+                ->setGap(0.f)
             );
-            CCMenuItemSpriteExtra_->setSizeMult(1.5f);
-            shitdotingmenu->addChild(CCMenuItemSpriteExtra_, 0, i);
-        }
-        shitdotingmenu->alignItemsHorizontallyWithPadding(6.0f);
-        shitdotingmenu->setPosition(
-            CCPoint(CCDirector::get()->getWinSize().width * 0.5f, CCDirector::get()->getScreenBottom() + 16.000f)
-        );
-
+            this->m_fields->m_shitcodingmenu->updateLayout();
+            //scroll to initpage
+            instantMoveToCurrentPage();
+        };
+        //nav dots
+        {
+            auto shitdotingmenu = CCMenu::create();
+            this->m_fields->m_shitdotingmenu = shitdotingmenu;
+            shitdotingmenu->setPosition(CCPointZero);
+            this->addChild(shitdotingmenu);
+            //add pages
+            for (int i = 0; i < this->m_fields->m_shitcodingmenu->getChildrenCount(); i++) {
+                auto dot = CCSprite::createWithSpriteFrameName("uiDot_001.png");
+                dot->setScale(1.15f);
+                dot->setBlendFunc({ GL_SRC_ALPHA, GL_ONE });
+                CCMenuItemSpriteExtra* CCMenuItemSpriteExtra_ = CCMenuItemSpriteExtra::create(
+                    dot, this, menu_selector(LevelSelectLayerExt::onDot)
+                );
+                CCMenuItemSpriteExtra_->setSizeMult(1.5f);
+                shitdotingmenu->addChild(CCMenuItemSpriteExtra_, 0, i);
+            }
+            shitdotingmenu->alignItemsHorizontallyWithPadding(6.0f);
+            shitdotingmenu->setPosition(
+                CCPoint(CCDirector::get()->getWinSize().width * 0.5f, CCDirector::get()->getScreenBottom() + 16.000f)
+            );
+        };
     }
     void mainSetup(int p0) {
         m_fields->m_page = p0;
@@ -205,11 +190,6 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
             m_fields->m_shitcodingmenuPoint.x = (newPointX);
         }
     };
-    virtual void keyDown(cocos2d::enumKeyCodes p0) {
-        if (p0 == KEY_Left and m_fields->m_shitcodingmenu->numberOfRunningActions() == 0) onPrev(this);
-        if (p0 == KEY_Right and m_fields->m_shitcodingmenu->numberOfRunningActions() == 0) onNext(this);
-        return LevelSelectLayer::keyDown(p0);
-    }
     static LevelSelectLayer* create(int p0) {
         auto rtn = LevelSelectLayer::create(p0);
         ((LevelSelectLayerExt*)rtn)->mainSetup(p0);
