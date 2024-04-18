@@ -383,7 +383,7 @@ std::string saveToMainLevel(int id, GJGameLevel* pGJGameLevel) {
         CSimpleIni Ini;
         Ini.LoadFile(IniPath.c_str());
 
-        int tar = id + 1;
+        int tar = id;
         if (tar > Ini.GetLongValue(MainSection.c_str(), "cmp_amount") and tar < 128) {
             Ini.SetLongValue(
                 MainSection.c_str(),

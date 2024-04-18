@@ -368,8 +368,8 @@ public:
     }
     void editorOnBack(CCObject* object) {
         auto emptyScene = CCScene::create();
-        auto scene = LevelSelectLayer::scene(this->getTag() - 1);
-        if (this->getTag() > 127) scene = nullptr;
+        CCScene* scene = nullptr;
+        if (this->getTag() < 127) scene = LevelSelectLayer::scene(this->getTag() - 1);
         if (this->getTag() >= 5000 and this->getTag() < 5100) {
             emptyScene->addChild(LevelAreaInnerLayer::create(1));
             scene = emptyScene;

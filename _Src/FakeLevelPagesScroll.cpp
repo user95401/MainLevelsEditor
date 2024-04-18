@@ -3,6 +3,35 @@ using namespace geode::prelude;
 
 #include "Header1.hpp"
 
+class CumingSoonItem : public CCMenuItem {
+public:
+    CCMenu* menu;
+    static CumingSoonItem* create() {
+        CumingSoonItem* pRet = new CumingSoonItem();
+        if (pRet && pRet->init()) {
+            pRet->autorelease();
+            return pRet;
+        }
+        else {
+            delete pRet;
+            pRet = NULL;
+            return NULL;
+        }
+    }
+    bool init() {
+        setContentSize(CCDirector::sharedDirector()->getWinSize());
+        //menu
+        menu = CCMenu::create();
+        addChild(menu, 10);
+        //comingSoonActually
+        CCLabelBMFont* comingSoonActually = CCLabelBMFont::create("Coming soon!", "bigFont.fnt");
+        comingSoonActually->setAlignment(kCCTextAlignmentLeft);
+        comingSoonActually->setAnchorPoint({ 0.500f, -0.500f });
+        menu->addChild(comingSoonActually);
+        return true;
+    }
+};
+
 #include <Geode/modify/LevelSelectLayer.hpp>
 class $modify(LevelSelectLayerExt, LevelSelectLayer) {
     BoomScrollLayer* m_LevelsScrollLayer;
@@ -39,7 +68,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         if (this->m_fields->m_shitdotingmenu) {
             for (int i = 0; i < this->m_fields->m_shitdotingmenu->getChildrenCount(); i++) {
                 CCNode* thisdot = this->m_fields->m_shitdotingmenu->getChildByTag(i);
-                if (thisdot->getTag() == this->m_fields->m_page) thisdot->runAction(CCTintTo::create(0.1f, 160, 160, 160));
+                if (thisdot->getTag() == this->m_fields->m_page) thisdot->runAction(CCTintTo::create(0.1f, 100, 100, 100));
                 else thisdot->runAction(CCTintTo::create(0.1f, 255, 255, 255));
             }
         };
@@ -68,6 +97,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
             page->updateDynamicPage(lvl);
             this->m_fields->m_shitcodingmenu->addChild(page, i, i);
         }
+        this->m_fields->m_shitcodingmenu->addChild(CumingSoonItem::create(), cmp_amount, cmp_amount);
         //Layout
         this->m_fields->m_shitcodingmenu->setLayout(
             ColumnLayout::create()
@@ -90,6 +120,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         for (int i = 0; i < this->m_fields->m_shitcodingmenu->getChildrenCount(); i++) {
             auto dot = CCSprite::createWithSpriteFrameName("uiDot_001.png");
             dot->setScale(1.15f);
+            dot->setBlendFunc({ GL_SRC_ALPHA, GL_ONE });
             CCMenuItemSpriteExtra* CCMenuItemSpriteExtra_ = CCMenuItemSpriteExtra::create(
                 dot, this, menu_selector(LevelSelectLayerExt::onDot)
             );
@@ -140,7 +171,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         if (m_fields->m_page >= m_fields->m_shitcodingmenu->getChildrenCount()) {
             m_fields->m_page = 0;
             m_fields->m_shitcodingmenuPoint.x = 0;
-            m_fields->m_shitcodingmenu->setPositionX(0 - CCDirector::get()->getScreenRight());
+            m_fields->m_shitcodingmenu->setPositionX(0 + CCDirector::get()->getScreenRight());
             return;
         };
         auto newPointX = this->m_fields->m_shitcodingmenuPoint.x - CCDirector::get()->getScreenRight();
@@ -162,7 +193,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
                 newPointX = newPointX - CCDirector::get()->getScreenRight();
             };
             m_fields->m_shitcodingmenuPoint.x = newPointX;
-            m_fields->m_shitcodingmenu->setPositionX(newPointX + CCDirector::get()->getScreenRight());
+            m_fields->m_shitcodingmenu->setPositionX(newPointX - CCDirector::get()->getScreenRight());
             return;
         };
         auto newPointX = this->m_fields->m_shitcodingmenuPoint.x + CCDirector::get()->getScreenRight();
