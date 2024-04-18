@@ -53,6 +53,7 @@ void UpdatePagesSetup() {
 
     Ini.SaveFile(IniPath.c_str());
 
+    return;////////////////////////////////////////////////////////////////////////////////
 #ifdef GEODE_IS_WINDOWS
     //we at LevelSelectLayer::init(LevelSelectLayer* pClass, int initLevel)
     //way: "Download the soundtrack" string, move up to sideart sprites

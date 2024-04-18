@@ -36,6 +36,18 @@
 			"description": "add buttons an other stuff to control things in game",
 			"type": "bool",
 			"default": false
+		},
+		"NO_THETOWER": {
+			"name": "Remove The Tower Page",
+			"description": "dont add this page yea",
+			"type": "bool",
+			"default": false
+		},
+		"NO_COMINGSOON": {
+			"name": "Remove Coming Soon Page",
+			"description": "nothin coming",
+			"type": "bool",
+			"default": false
 		}
 	}
 }

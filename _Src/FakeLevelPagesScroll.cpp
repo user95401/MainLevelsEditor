@@ -50,7 +50,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
     void controlAndAddStuff() {
         //hide away this unexplored thing
         this->m_fields->m_LevelsScrollLayer->setVisible(0);
-        //this->m_fields->m_LevelsScrollLayer->setTouchEnabled(0);
+        this->m_fields->m_LevelsScrollLayer->setTouchEnabled(0);
         //add updates
         this->schedule(schedule_selector(LevelSelectLayerExt::updSchedule));
         this->schedule(schedule_selector(LevelSelectLayerExt::theSchedule), 0.1f);
@@ -71,16 +71,20 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
             }
             auto lvl = GJGameLevel::create();
             //thetowerpage
-            lvl->m_levelID = -2;
-            auto thetowerpage = LevelPage::create(lvl);
-            thetowerpage->updateDynamicPage(lvl);
-            this->m_fields->m_shitcodingmenu->addChild(thetowerpage, i, i);
-            i++;
+            if (not Mod::get()->getSettingValue<bool>("NO_THETOWER")) {
+                lvl->m_levelID = -2;
+                auto thetowerpage = LevelPage::create(lvl);
+                thetowerpage->updateDynamicPage(lvl);
+                this->m_fields->m_shitcodingmenu->addChild(thetowerpage, i, i);
+                i++;
+            };
             //cumingsoon
-            lvl->m_levelID = 0;
-            auto cumingsoon = LevelPage::create(lvl);
-            cumingsoon->updateDynamicPage(lvl);
-            this->m_fields->m_shitcodingmenu->addChild(cumingsoon, i, i);
+            if (not Mod::get()->getSettingValue<bool>("NO_COMINGSOON")) {
+                lvl->m_levelID = 0;
+                auto cumingsoon = LevelPage::create(lvl);
+                cumingsoon->updateDynamicPage(lvl);
+                this->m_fields->m_shitcodingmenu->addChild(cumingsoon, i, i);
+            };
             //Layout
             this->m_fields->m_shitcodingmenu->setLayout(
                 ColumnLayout::create()
