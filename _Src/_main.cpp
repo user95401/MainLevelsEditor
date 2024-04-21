@@ -28,7 +28,7 @@ std::string FilePathFromModFolder(std::string fname) {//they force me
 }
 
 auto read_file(std::string_view path) -> std::string {
-    /*constexpr auto read_size = std::size_t(4096);
+    constexpr auto read_size = std::size_t(4096);
     auto stream = std::ifstream(path.data());
     stream.exceptions(std::ios_base::badbit);
     if (not stream) {
@@ -40,7 +40,7 @@ auto read_file(std::string_view path) -> std::string {
         out.append(buf, 0, stream.gcount());
     }
     out.append(buf, 0, stream.gcount());
-    */return "test";//out;
+    return out;
 }
 
 std::vector<std::string> explode(const std::string& str, const char& ch) {
