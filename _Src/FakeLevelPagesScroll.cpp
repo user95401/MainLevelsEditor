@@ -21,15 +21,16 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         if (this->getChildByIDRecursive("scroll")) {
             auto scroll = typeinfo_cast<ScrollLayer*>(this->getChildByIDRecursive("scroll"));
             auto asd = scroll->m_contentLayer;
-            bool asdHasNoActions = asd->numberOfRunningActions() == 0;
             //>>>>>> = <[]
-            if (asd->getPositionX() > 20.f) {
+            if (asd->getPositionX() > 10.f) {
+                scroll->setTouchEnabled(0);
                 asd->stopAllActions();
                 asd->setPositionX(0.f);
                 onPrev(asd);
             }
             //<<<<<< =  []>
-            else if (asd->getPositionX() < -20.f) {
+            else if (asd->getPositionX() < -10.f) {
+                scroll->setTouchEnabled(0);
                 asd->stopAllActions();
                 asd->setPositionX(0.f);
                 onNext(asd);
@@ -57,6 +58,11 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         //wah update page on real scroll
         {
             m_fields->m_LevelsScrollLayer->instantMoveToPage(m_fields->m_page);
+        }
+        //swipe
+        if (this->getChildByIDRecursive("scroll")) {
+            auto scroll = typeinfo_cast<ScrollLayer*>(this->getChildByIDRecursive("scroll"));
+            scroll->setTouchEnabled(1);
         }
     }
     void controlAndAddStuff() {
