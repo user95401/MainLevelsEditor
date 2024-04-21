@@ -58,6 +58,22 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         {
             m_fields->m_LevelsScrollLayer->instantMoveToPage(m_fields->m_page);
         }
+        //swipe
+        if (this->getChildByIDRecursive("scroll")) {
+            auto scroll = typeinfo_cast<ScrollLayer*>(this->getChildByIDRecursive("scroll"));
+            auto asd = scroll->m_contentLayer;
+            //>>>>>> = <[]
+            if (asd->getPositionX() > 100.f and scroll->m_touchDown) {
+                asd->setPositionX(0.f);
+                onPrev(asd);
+            }
+            //<<<<<< =  []>
+            else if (asd->getPositionX() < -100.f and scroll->m_touchDown) {
+                scroll->m_touchDown = 0;
+                asd->setPositionX(0.f);
+                onNext(asd);
+            }
+        }
     }
     void controlAndAddStuff() {
         //hide away this unexplored thing
