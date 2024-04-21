@@ -128,7 +128,7 @@ class $modify(PlayLayer) {
 class $modify(LoadingLayer) {
     void loadingFinished() {
         //create some inis
-        LevelSelectLayer::create(0);
+        LevelSelectLayer::create(0)->addChild(CCNode::create(), 999, 701123);
         for (int levelID = 0; levelID < 127; levelID++) {
             if (!ghc::filesystem::exists(FilePathFromModFolder(fmt::format("levels/{}.txt", levelID)))) {
                 //save
@@ -148,12 +148,75 @@ class $modify(LoadingLayer) {
     };
 };
 
+#include <Geode/loader/SettingEvent.hpp>
 #include <Geode/modify/LevelSelectLayer.hpp>
 class $modify(LevelSelectLayerExd, LevelSelectLayer) {
     bool init(int p0) {
         UpdatePagesSetup();
         auto rtn = LevelSelectLayer::init(p0);
-        
+        //if (this->getChildByTag(701123)) return rtn;
+        //getNodes
+        CCObject* obj = nullptr;
+        CCSprite* pBackgroundSprite = nullptr;
+        GJGroundLayer* pGJGroundLayer = nullptr;
+        CCARRAY_FOREACH(this->getChildren(), obj)
+        {
+            auto node = dynamic_cast<CCNode*>(obj);
+            if (node) {
+                //pGJGroundLayer
+                if (typeinfo_cast<GJGroundLayer*>(obj)) 
+                    pGJGroundLayer = (GJGroundLayer*)(obj);
+                //pBackgroundSprite
+                auto sprite = typeinfo_cast<CCSprite*>(obj);
+                if (sprite) {
+                    if (framePath(sprite).find("GJ_gradientBG") != std::string::npos) pBackgroundSprite = sprite;
+                }
+            }
+        }
+        //setup nodes
+        if (pBackgroundSprite) {
+            auto BG_SPRITE_NAME = Mod::get()->getSettingValue<ghc::filesystem::path>("BG_SPRITE_NAME").filename();
+            auto filename = BG_SPRITE_NAME.string();
+            pBackgroundSprite->initWithFile(filename.c_str());
+            pBackgroundSprite->setPosition(CCPointZero);
+            pBackgroundSprite->setScale(CCDirector::get()->getScreenRight() / pBackgroundSprite->getContentSize().width);
+            listenForSettingChanges("BG_SPRITE_NAME", +[](ghc::filesystem::path value) {
+                value = ghc::filesystem::path(value).filename();
+                if (CCDirector::get()->m_pRunningScene->getChildByTag(6481)) return;
+                auto pop = geode::createQuickPopup(
+                    "BG_SPRITE_NAME",
+                    fmt::format("Will be used as:\n<cg>{}</c>\n\n<cr>btw if u dont see selected bg in back to this popup now so ur selection wrong</c>", value.string()),
+                    "OK", nullptr,
+                    nullptr
+                );
+                pop->setTag(6481);
+                if (auto prev = CCSprite::create(value.string().c_str())) {
+                    prev->setScale(CCDirector::get()->getScreenTop() / prev->getContentSize().height);
+                    prev->setPosition(CCMenu::create()->getPosition());
+                    prev->setPositionX(0.f);
+                    prev->setAnchorPoint({ 0.f, 0.5f });
+                    prev->setBlendFunc({ GL_SRC_ALPHA, GL_ONE });
+                    prev->setColor(Mod::get()->getSettingValue<ccColor3B>("MAIN_COLOR"));
+                    pop->addChild(prev, -1, 75289);
+                };
+            });
+            //STRETCH_BG?
+            if (Mod::get()->getSettingValue<bool>("STRETCH_BG")) {
+                pBackgroundSprite->setScaleY(CCDirector::get()->getScreenTop() / pBackgroundSprite->getContentSize().height);
+                pBackgroundSprite->setAnchorPoint(CCPointZero);
+            }
+            //BG_Y
+            else pBackgroundSprite->setAnchorPoint({ 0.f, (float)Mod::get()->getSettingValue<double>("BG_Y") });
+        }
+        if (pGJGroundLayer) {
+            pGJGroundLayer->setVisible(Mod::get()->getSettingValue<bool>("SHOW_GROUND"));
+            int actualLoadedGroundID = GameManager::get()->m_loadedGroundID;
+            pGJGroundLayer->init(
+                Mod::get()->getSettingValue<int64_t>("GROUND_ID"),
+                Mod::get()->getSettingValue<int64_t>("GROUND_LINE")
+            );
+            GameManager::get()->m_loadedGroundID = actualLoadedGroundID;
+        }
         return rtn;
     };
     void updatePageIndicatorNode(ccColor3B _ccColor3B, int page) {
@@ -170,32 +233,38 @@ class $modify(LevelSelectLayerExd, LevelSelectLayer) {
     }
     ccColor3B colorForPage(int page) {
         ccColor3B _ccColor3B = LevelSelectLayer::colorForPage(page);
-        updatePageIndicatorNode(_ccColor3B, page);
 
-        std::string IniPath = FilePathFromModFolder("_PageColors.ini");
-        std::string MainSection = fmt::format("colorForPage");
-        std::string MainVal = fmt::format("{}", page);
+        if (not Mod::get()->getSettingValue<bool>("OVERWRITE_COLOR")) {
 
-        CSimpleIni Ini;
-        Ini.LoadFile(IniPath.c_str());
+            std::string IniPath = FilePathFromModFolder("_PageColors.ini");
+            std::string MainSection = fmt::format("colorForPage");
+            std::string MainVal = fmt::format("{}", page);
 
-        //Color
-        if (!(Ini.KeyExists(MainSection.c_str(), MainVal.c_str())))
-            Ini.SetValue(
-                MainSection.c_str(),
-                MainVal.c_str(),
-                fmt::format("{},{},{}", _ccColor3B.r, _ccColor3B.g, _ccColor3B.b).c_str()
-            );
+            CSimpleIni Ini;
+            Ini.LoadFile(IniPath.c_str());
+
+            //Color
+            if (!(Ini.KeyExists(MainSection.c_str(), MainVal.c_str())))
+                Ini.SetValue(
+                    MainSection.c_str(),
+                    MainVal.c_str(),
+                    fmt::format("{},{},{}", _ccColor3B.r, _ccColor3B.g, _ccColor3B.b).c_str()
+                );
+            else {
+                std::vector<std::string> rgb = explode(Ini.GetValue(MainSection.c_str(), MainVal.c_str()), ',');
+                _ccColor3B.r = atoi(rgb[0].data());
+                _ccColor3B.g = atoi(rgb[1].data());
+                _ccColor3B.b = atoi(rgb[2].data());
+            }
+
+            Ini.SaveFile(IniPath.c_str());
+
+        }
         else {
-            std::vector<std::string> rgb = explode(Ini.GetValue(MainSection.c_str(), MainVal.c_str()), ',');
-            _ccColor3B.r = atoi(rgb[0].data());
-            _ccColor3B.g = atoi(rgb[1].data());
-            _ccColor3B.b = atoi(rgb[2].data());
+            _ccColor3B = Mod::get()->getSettingValue<ccColor3B>("MAIN_COLOR");
         }
 
-        Ini.SaveFile(IniPath.c_str());
-        /**/
-
+        updatePageIndicatorNode(_ccColor3B, page);
         return _ccColor3B;
     }
     /**/

@@ -4,7 +4,7 @@
 		"win": "2.204",
 		"android": "*"
 	},
-	"version": "v6.0.0-beta.6",
+	"version": "v6.0.0-beta.7",
 	"id": "user95401.mainlevelseditor",
 	"name": "Main Levels Editor",
 	"developer": "user95401",
@@ -48,6 +48,60 @@
 			"description": "nothin coming",
 			"type": "bool",
 			"default": false
+		},
+		"COMINGSOON_TEXT": {
+			"name": "Text for \"Coming Soon\" Page",
+			"description": "nothin coming",
+			"type": "string",
+			"default": "Coming Soon!"
+		},
+		"OVERWRITE_COLOR": {
+			"name": "Main color for all pages",
+			"description": "use main color only",
+			"type": "bool",
+			"default": false
+		},
+		"MAIN_COLOR": {
+			"name": "Main color",
+			"type": "rgb",
+			"default": [ 130, 130, 190 ]
+		},
+		"BG_SPRITE_NAME": {
+			"name": "Background FILE NAME",
+			"type": "file",
+			"default": "GJ_gradientBG.png"
+		},
+		"STRETCH_BG": {
+			"name": "Stretch the background",
+			"type": "bool",
+			"default": true
+		},
+		"BG_Y": {
+			"name": "Background Y point",
+			"type": "float",
+			"default": 0.13,
+			"max": 1,
+			"min": -1,
+			"one-of": 0.001
+		},
+		"SHOW_GROUND": {
+			"name": "Show ground",
+			"type": "bool",
+			"default": true
+		},
+		"GROUND_ID": {
+			"name": "Ground",
+			"type": "int",
+			"default": 1,
+			"max": 127,
+			"min": 1
+		},
+		"GROUND_LINE": {
+			"name": "Ground line",
+			"type": "int",
+			"default": 1,
+			"max": 3,
+			"min": 1
 		}
 	}
 }

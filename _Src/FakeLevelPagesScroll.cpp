@@ -22,26 +22,28 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
             auto scroll = typeinfo_cast<ScrollLayer*>(this->getChildByIDRecursive("scroll"));
             auto asd = scroll->m_contentLayer;
             //>>>>>> = <[]
-            if (asd->getPositionX() > 10.f) {
+            if (asd->getPositionX() > 70.f) {
                 scroll->setTouchEnabled(0);
                 asd->stopAllActions();
                 asd->setPositionX(0.f);
                 onPrev(asd);
             }
             //<<<<<< =  []>
-            else if (asd->getPositionX() < -10.f) {
+            else if (asd->getPositionX() < -70.f) {
                 scroll->setTouchEnabled(0);
                 asd->stopAllActions();
                 asd->setPositionX(0.f);
                 onNext(asd);
             }
+            scroll->setTouchEnabled(1);
+            scroll->setTouchPriority(-1);
         }
     }
     void theSchedule(float) {
         //animate
         if (this->m_fields->m_shitcodingmenu->getPosition() != this->m_fields->m_shitcodingmenuPoint) {
             if (!this->m_fields->m_shitcodingmenu->getActionByTag(m_fields->m_page)) {
-                auto moveTo = CCEaseElasticOut::create(CCMoveTo::create(0.5f, this->m_fields->m_shitcodingmenuPoint), 0.6f);
+                auto moveTo = CCEaseElasticOut::create(CCMoveTo::create(0.8f, this->m_fields->m_shitcodingmenuPoint), 0.6f);
                 moveTo->setTag(m_fields->m_page);
                 this->m_fields->m_shitcodingmenu->stopAllActions();
                 this->m_fields->m_shitcodingmenu->runAction(moveTo);
@@ -58,11 +60,6 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         //wah update page on real scroll
         {
             m_fields->m_LevelsScrollLayer->instantMoveToPage(m_fields->m_page);
-        }
-        //swipe
-        if (this->getChildByIDRecursive("scroll")) {
-            auto scroll = typeinfo_cast<ScrollLayer*>(this->getChildByIDRecursive("scroll"));
-            scroll->setTouchEnabled(1);
         }
     }
     void controlAndAddStuff() {
@@ -100,6 +97,19 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
                 lvl->m_levelID = 0;
                 auto cumingsoon = LevelPage::create(lvl);
                 cumingsoon->updateDynamicPage(lvl);
+                auto COMINGSOON_TEXT = (Mod::get()->getSettingValue<std::string>("COMINGSOON_TEXT"));
+                CCObject* obj = nullptr;
+                CCARRAY_FOREACH(cumingsoon->getChildren(), obj)
+                {
+                    auto node = dynamic_cast<CCNode*>(obj);
+                    if (node) {
+                        //pBackgroundSprite
+                        auto label = typeinfo_cast<CCLabelBMFont*>(obj);
+                        if (label) {
+                            label->setString(COMINGSOON_TEXT.data());
+                        }
+                    }
+                }
                 this->m_fields->m_shitcodingmenu->addChild(cumingsoon, i, i);
             };
             //Layout
