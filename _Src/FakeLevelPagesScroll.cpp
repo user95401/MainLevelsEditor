@@ -17,12 +17,24 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
     bool m_waitForTouchFromLeft;
     bool m_waitForTouchFromRight;
     void updSchedule(float) {
-        //ground color
-        /*this->m_fields->m_GJGroundLayer->updateGround01Color(ccColor3B(
-            this->m_fields->m_BackgroundSprite->getColor().r,
-            this->m_fields->m_BackgroundSprite->getColor().g,
-            this->m_fields->m_BackgroundSprite->getColor().b
-        ));*/
+        //swipe
+        if (this->getChildByIDRecursive("scroll")) {
+            auto scroll = typeinfo_cast<ScrollLayer*>(this->getChildByIDRecursive("scroll"));
+            auto asd = scroll->m_contentLayer;
+            bool asdHasNoActions = asd->numberOfRunningActions() == 0;
+            //>>>>>> = <[]
+            if (asd->getPositionX() > 20.f) {
+                asd->stopAllActions();
+                asd->setPositionX(0.f);
+                onPrev(asd);
+            }
+            //<<<<<< =  []>
+            else if (asd->getPositionX() < -20.f) {
+                asd->stopAllActions();
+                asd->setPositionX(0.f);
+                onNext(asd);
+            }
+        }
     }
     void theSchedule(float) {
         //animate
@@ -54,7 +66,6 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         //add updates
         this->schedule(schedule_selector(LevelSelectLayerExt::updSchedule));
         this->schedule(schedule_selector(LevelSelectLayerExt::theSchedule), 0.1f);
-        //a
         //m_shitcodingmenu
         {
             this->m_fields->m_shitcodingmenu = CCMenu::create();
@@ -121,6 +132,12 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
                 CCPoint(CCDirector::get()->getWinSize().width * 0.5f, CCDirector::get()->getScreenBottom() + 16.000f)
             );
         };
+        //scrollin shit
+        {
+            auto asd = geode::ScrollLayer::create(CCDirector::get()->getWinSize(), 1, 0);
+            asd->setID("scroll");
+            this->addChild(asd);
+        }
     }
     void mainSetup(int p0) {
         m_fields->m_page = p0;
