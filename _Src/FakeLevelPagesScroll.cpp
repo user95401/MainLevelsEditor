@@ -46,6 +46,22 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         {
             m_fields->m_LevelsScrollLayer->instantMoveToPage(m_fields->m_page);
         }
+        //swipe
+        if (this->getChildByIDRecursive("scroll")) {
+            auto scroll = typeinfo_cast<ScrollLayer*>(this->getChildByIDRecursive("scroll"));
+            auto asd = scroll->m_contentLayer;
+            //>>>>>> = <[]
+            if (asd->getPositionX() > 100.f and scroll->m_touchDown) {
+                asd->setPositionX(0.f);
+                onPrev(asd);
+            }
+            //<<<<<< =  []>
+            else if (asd->getPositionX() < -100.f and scroll->m_touchDown) {
+                scroll->m_touchDown = 0;
+                asd->setPositionX(0.f);
+                onNext(asd);
+            }
+        }
     }
     void controlAndAddStuff() {
         //hide away this unexplored thing
@@ -54,7 +70,6 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         //add updates
         this->schedule(schedule_selector(LevelSelectLayerExt::updSchedule));
         this->schedule(schedule_selector(LevelSelectLayerExt::theSchedule), 0.1f);
-        //a
         //m_shitcodingmenu
         {
             this->m_fields->m_shitcodingmenu = CCMenu::create();
@@ -121,6 +136,12 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
                 CCPoint(CCDirector::get()->getWinSize().width * 0.5f, CCDirector::get()->getScreenBottom() + 16.000f)
             );
         };
+        //scrollin shit
+        {
+            auto asd = geode::ScrollLayer::create(CCDirector::get()->getWinSize(), 1, 0);
+            asd->setID("scroll");
+            this->addChild(asd);
+        }
     }
     void mainSetup(int p0) {
         m_fields->m_page = p0;
