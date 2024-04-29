@@ -37,6 +37,12 @@
 			"type": "bool",
 			"default": false
 		},
+		"USE_PATCHES": {
+			"name": "Use patches (PC Only)",
+			"description": "<cr>this thing make dont working NO_THETOWER, NO_COMINGSOON, COMINGSOON_TEXT keys\nalso this is for windows only",
+			"type": "bool",
+			"default": false
+		},
 		"NO_THETOWER": {
 			"name": "Remove The Tower Page",
 			"description": "dont add this page yea",

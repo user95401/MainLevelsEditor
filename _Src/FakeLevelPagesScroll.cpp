@@ -94,7 +94,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
             };
             //cumingsoon
             if (not Mod::get()->getSettingValue<bool>("NO_COMINGSOON")) {
-                lvl->m_levelID = 0;
+                lvl->m_levelID = -1;
                 auto cumingsoon = LevelPage::create(lvl);
                 cumingsoon->updateDynamicPage(lvl);
                 auto COMINGSOON_TEXT = (Mod::get()->getSettingValue<std::string>("COMINGSOON_TEXT"));
@@ -189,6 +189,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         instantMoveToCurrentPage();
     }
     void onNext(cocos2d::CCObject* sender) {
+        if (Mod::get()->getSettingValue<bool>("USE_PATCHES")) return LevelSelectLayer::onNext(sender);
         ++m_fields->m_page;
         if (m_fields->m_page >= m_fields->m_shitcodingmenu->getChildrenCount()) {
             m_fields->m_page = 0;
@@ -206,6 +207,7 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
         }
     };
     void onPrev(cocos2d::CCObject* sender) {
+        if (Mod::get()->getSettingValue<bool>("USE_PATCHES")) return LevelSelectLayer::onPrev(sender);
         --m_fields->m_page;
         if (m_fields->m_page < 0) {
             m_fields->m_page = m_fields->m_shitcodingmenu->getChildrenCount() - 1;
@@ -227,9 +229,17 @@ class $modify(LevelSelectLayerExt, LevelSelectLayer) {
             m_fields->m_shitcodingmenuPoint.x = (newPointX);
         }
     };
+    void onInfo(cocos2d::CCObject* sender) {
+        if (Mod::get()->getSettingValue<bool>("USE_PATCHES")) return LevelSelectLayer::onInfo(sender);
+        auto currentPage = dynamic_cast<LevelPage*>(m_fields->m_shitcodingmenu->getChildByTag(m_fields->m_page + 1));
+        if (currentPage) currentPage->onInfo(currentPage);
+    }
     static LevelSelectLayer* create(int p0) {
         auto rtn = LevelSelectLayer::create(p0);
+        if (Mod::get()->getSettingValue<bool>("USE_PATCHES")) return rtn;
+
         ((LevelSelectLayerExt*)rtn)->mainSetup(p0);
+
         return rtn;
     }
 };
