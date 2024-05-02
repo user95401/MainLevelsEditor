@@ -109,14 +109,14 @@ class $modify(PlayLayer) {
     static PlayLayer* create(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
         if (level->m_levelType == GJLevelType::Local) {
             auto levelDataPath = FilePathFromModFolder(fmt::format("levels/{}.txt", level->m_levelID.value()));
-            if (ghc::filesystem::exists(levelDataPath)) {
+            if (checkExistence(levelDataPath)) {
                 level->m_levelString = read_file(levelDataPath);
             }
             else level->m_levelString = LocalLevelManager::get()->getMainLevelString(level->m_levelID.value());
         };
         if (level->m_levelType == GJLevelType::Saved) {
             auto levelDataPath = FilePathFromModFolder(fmt::format("levels/{}.txt", level->m_levelID.value()));
-            if (ghc::filesystem::exists(levelDataPath)) {
+            if (checkExistence(levelDataPath)) {
                 level->m_levelString = read_file(levelDataPath);
             };
         };
@@ -130,7 +130,7 @@ class $modify(LoadingLayer) {
         //create some inis
         LevelSelectLayer::create(0)->addChild(CCNode::create(), 999, 701123);
         for (int levelID = 0; levelID < 127; levelID++) {
-            if (!ghc::filesystem::exists(FilePathFromModFolder(fmt::format("levels/{}.txt", levelID)))) {
+            if (!checkExistence(FilePathFromModFolder(fmt::format("levels/{}.txt", levelID)))) {
                 //save
                 auto levelData = LocalLevelManager::get()->getMainLevelString(levelID);
                 if (std::string(levelData) != "") {

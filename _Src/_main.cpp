@@ -402,7 +402,7 @@ std::string saveToMainLevel(int id, GJGameLevel* pGJGameLevel) {
         std::ofstream dst(newSongPath, std::ios::binary);
         dst << src.rdbuf();
 
-        if (!std::filesystem::exists(pLevel->getAudioFileName().data())) {
+        if (!checkExistence(pLevel->getAudioFileName().data())) {
             resultstr = resultstr.data() + std::string("\n<cr>song wasn't downloaded!</c>\n<co>download it first and retry...</c>");
         }
 

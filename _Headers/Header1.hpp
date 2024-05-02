@@ -15,6 +15,13 @@ std::vector<std::string> explode(const std::string& str, const char& ch);
 std::string framePath(CCNode* node);
 std::string truncate(std::string str, size_t width, bool show_ellipsis = true);
 
+template <typename T>
+inline bool checkExistence(T filename)
+{
+	std::ifstream Infield(filename);
+	return Infield.good();
+}
+
 #define MEMBERBYOFFSET(type, class, offset) *reinterpret_cast<type*>(reinterpret_cast<uintptr_t>(class) + offset)
 #define public_cast(value, member) [](auto* v) { \
 	class FriendClass__; \
