@@ -1,10 +1,10 @@
 {
-	"geode": "2.0.0-beta.25",
+	"geode": "2.0.0-beta.26",
 	"gd": {
 		"win": "2.204",
 		"android": "*"
 	},
-	"version": "v6.0.0-beta.7",
+	"version": "v6.0.0-beta.8",
 	"id": "user95401.mainlevelseditor",
 	"name": "Main Levels Editor",
 	"developer": "user95401",
