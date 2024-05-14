@@ -18,3 +18,11 @@ so play stereo madness to generate all config structure
 #### android releases is unstable i think
 
 </c>
+
+## packed config feature
+u can distribute mod with your config...
+
+Just open .geode file (its zip btw) and pack the config files up to `./config/` folder.
+
+![img](Screenshot_121.png)
+![img](Screenshot_122.png)
