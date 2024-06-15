@@ -175,13 +175,13 @@ class $modify(LevelSelectLayerExd, LevelSelectLayer) {
         }
         //setup nodes
         if (pBackgroundSprite) {
-            auto BG_SPRITE_NAME = Mod::get()->getSettingValue<ghc::filesystem::path>("BG_SPRITE_NAME").filename();
+            auto BG_SPRITE_NAME = Mod::get()->getSettingValue<std::filesystem::path>("BG_SPRITE_NAME").filename();
             auto filename = BG_SPRITE_NAME.string();
             pBackgroundSprite->initWithFile(filename.c_str());
             pBackgroundSprite->setPosition(CCPointZero);
             pBackgroundSprite->setScale(CCDirector::get()->getScreenRight() / pBackgroundSprite->getContentSize().width);
-            listenForSettingChanges("BG_SPRITE_NAME", +[](ghc::filesystem::path value) {
-                value = ghc::filesystem::path(value).filename();
+            listenForSettingChanges("BG_SPRITE_NAME", +[](std::filesystem::path value) {
+                value = std::filesystem::path(value).filename();
                 if (CCDirector::get()->m_pRunningScene->getChildByTag(6481)) return;
                 auto pop = geode::createQuickPopup(
                     "BG_SPRITE_NAME",

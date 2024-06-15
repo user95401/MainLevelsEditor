@@ -1,10 +1,10 @@
 {
-	"geode": "2.0.0-beta.26",
+	"geode": "3.0.0-beta.1",
 	"gd": {
-		"win": "2.204",
+		"win": "2.206",
 		"android": "*"
 	},
-	"version": "v6.0.0-beta.8",
+	"version": "v6.0.0-beta.9",
 	"id": "user95401.mainlevelseditor",
 	"name": "Main Levels Editor",
 	"developer": "user95401",
@@ -26,7 +26,7 @@
 			"default": 22
 		},
 		"SL": {
-			"name": "Saved levels (BETA)",
+			"name": "Saved levels (SHIT)",
 			"description": "<cr>experimental function</c> that allows u replace stuff on online levels",
 			"type": "bool",
 			"default": false

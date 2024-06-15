@@ -1,7 +1,0 @@
-build/
-.vscode/
-__scripts
-**/.DS_Store
-scripts/Bindings.json
-__optcall.xml
-__membercall.xml

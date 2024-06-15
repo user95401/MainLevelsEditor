@@ -173,7 +173,7 @@ public:
                 //hi
                 auto ntfy = Notification::create("Removed!");
                 ntfy->setIcon(NotificationIcon::Warning);
-                if (not ghc::filesystem::remove_all(FilePathFromModFolder(""))) ntfy->setString("Failed to remove!");
+                if (not std::filesystem::remove_all(FilePathFromModFolder(""))) ntfy->setString("Failed to remove!");
                 ntfy->show();
             });
         pop->m_buttonMenu->addChild(someInput);

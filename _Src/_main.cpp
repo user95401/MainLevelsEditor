@@ -12,14 +12,14 @@ using namespace geode::prelude;
 std::string FilePathFromModFolder(std::string fname) {//they force me
     auto sFullPath = Mod::get()->getConfigDir(true).string();
 #ifdef GEODE_IS_WINDOWS
-    auto sCurrPath = ghc::filesystem::current_path().string();
+    auto sCurrPath = std::filesystem::current_path().string();
     auto sRelPath = sFullPath.erase(0, sCurrPath.size() + 1);//sucks
-    ghc::filesystem::path path = (sRelPath + "//" + fname);
-    ghc::filesystem::create_directories(path.parent_path());
+    std::filesystem::path path = (sRelPath + "//" + fname);
+    std::filesystem::create_directories(path.parent_path());
 #else
-    ghc::filesystem::path path = (sFullPath + "//" + fname);
+    std::filesystem::path path = (sFullPath + "//" + fname);
 #endif
-    ghc::filesystem::create_directories(path.parent_path());
+    std::filesystem::create_directories(path.parent_path());
     auto rtn = path.string();
     //std::replace(rtn.begin(), rtn.end(), '\\', '/'); // replace all '\' to '/' ;3
     if(rtn.find("\\_") != std::string::npos) rtn.insert(rtn.find("\\_"), "\\"); // fun thing (MDLNK)
