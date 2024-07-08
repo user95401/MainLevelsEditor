@@ -53,20 +53,20 @@ class $modify(GameLevelManagerExt, GameLevelManager) {
 		level->m_sfxIDs = value.try_get<std::string>("m_sfxIDs").value_or(level->m_sfxIDs.data());
 		//setup json
 		value.try_set("________MAIN_STUFF________", " vvv vvv ");
-		value.try_set("m_levelName", level->m_levelName.data());
+		value.try_set("m_levelName", std::string(level->m_levelName.data()));
 		value.try_set("m_audioTrack", level->m_audioTrack);
 		value.try_set("m_difficulty", (int)level->m_difficulty);
 		value.try_set("m_stars", level->m_stars.value());
 		value.try_set("________SOME_SHIT________", " vvv vvv ");
-		value.try_set("m_levelDesc", level->m_levelDesc.data());
-		value.try_set("m_creatorName", level->m_creatorName.data());
+		value.try_set("m_levelDesc", std::string(level->m_levelDesc.data()));
+		value.try_set("m_creatorName", std::string(level->m_creatorName.data()));;
 		value.try_set("m_songID", level->m_songID);
 		value.try_set("m_levelVersion", level->m_levelVersion);
 		value.try_set("m_gameVersion", level->m_gameVersion);
 		value.try_set("m_levelType", (int)level->m_levelType);
-		value.try_set("m_capacityString", level->m_capacityString.data());
-		value.try_set("m_songIDs", level->m_songIDs.data());
-		value.try_set("m_sfxIDs", level->m_sfxIDs.data());
+		value.try_set("m_capacityString", std::string(level->m_capacityString.data()));
+		value.try_set("m_songIDs", std::string(level->m_songIDs.data()));
+		value.try_set("m_sfxIDs", std::string(level->m_sfxIDs.data()));
 		//save json
 		std::ofstream(level_meta_file) << value.dump(matjson::TAB_INDENTATION);
 	}
