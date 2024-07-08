@@ -99,7 +99,7 @@ class $modify(GameLevelManagerExt, GameLevelManager) {
 		else toRead = dataFile;
 		auto fileContent = read_file(toRead);
 		level->m_levelString.clear();
-		level->m_levelString.append(fileContent);
+		((std::string)level->m_levelString).append(fileContent);
 		return level;
 	}
 };
