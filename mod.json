@@ -4,13 +4,14 @@
 		"win": "2.206",
 		"android": "*"
 	},
-	"version": "v7.0.0-beta.1",
+	"version": "v7.0.0-beta.2",
 	"id": "user95401.mainlevelseditor",
 	"name": "Main Levels Editor",
 	"developer": "user95401",
 	"description": "customizable thing to change main levels uknowya",
 	"repository": "https://github.com/user95401/MainLevelsEditor",
 	"tags": [ "gameplay", "music", "interface", "utility", "customization", "cheats" ],
+	"early-load": true,
 	"dependencies": [
 		{
 			"id": "geode.node-ids",
@@ -19,6 +20,12 @@
 		}
 	],
 	"settings": {
+		"ui": {
+			"name": "Add control UI",
+			"description": "add buttons an other stuff to control things in game",
+			"type": "bool",
+			"default": false
+		},
 		"start_id": {
 			"name": "Start ID",
 			"description": "its about populating the level list",
@@ -45,12 +52,6 @@
 			"description": "shows Coming Soon page",
 			"type": "bool",
 			"default": true
-		},
-		"ui": {
-			"name": "Add control UI",
-			"description": "add buttons an other stuff to control things in game",
-			"type": "bool",
-			"default": false
 		}
 	}
 }

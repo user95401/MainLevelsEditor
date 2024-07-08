@@ -1,23 +1,16 @@
 # Main Levels Editor
 
-u can edit:
-- main levels setup (stars, song, name, difficulty)
-- bg color for page
-- songs
-- pages in level select layer (here is a fake page list)
+currently this mod getting rewrite and port to 2206 
+
+u can edit main levels setup (stars, song, name, difficulty) and other stuff
+
+- ui
+- editor
+- basic work this mod should do ya
 
 and <cr>"Load Failed!"</c> <cl>bypass</c> here
 
 <cg>summary u can add ur own level in level select layer</c>
-
-settings here is generating per hooked functions call 
-so play stereo madness to generate all config structure
-
-<cr>
-
-#### android releases is unstable i think
-
-</c>
 
 ## packed config feature
 u can distribute mod with your config...

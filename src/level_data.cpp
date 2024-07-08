@@ -8,29 +8,46 @@ void Loaded() {
 	std::ofstream(levels_path / "_here u put {id}.txt level data files");
 	//preset all org levels
 	for (int i = 1; i <= 100; i++) {
-		auto level_in_game_path = fmt::format("levels/{}.txt", i);
+		auto level_in_game_path = CCFileUtils::sharedFileUtils()->fullPathForFilename(fmt::format("levels/{}.txt", i).c_str(), 0);
 		auto level_path_to_save = (levels_path / fmt::format("{}.txt", i));
 		auto level_is_exists_in_gd = cocos::fileExistsInSearchPaths(level_in_game_path.c_str());
 		auto level_is_exists_in_mod = cocos::fileExistsInSearchPaths(level_path_to_save.string().c_str());
-		log::debug("level_in_game_path: {}", level_in_game_path);
-		log::debug("level_path_to_save: {}", level_path_to_save);
-		log::debug("level_is_exists_in_gd: {}", level_is_exists_in_gd);
-		log::debug("level_is_exists_in_mod: {}", level_is_exists_in_mod);
 		if (level_is_exists_in_gd and not level_is_exists_in_mod) {
 			log::debug("ofstreamingo...");
-			std::ofstream(level_path_to_save) << read_file(level_in_game_path).c_str();
+			std::ofstream(level_path_to_save) 
+				<< read_file(level_in_game_path);
 		}
+		//add sp ea
+		CCFileUtils::get()->addPriorityPath(Mod::get()->getConfigDir().string().c_str());
 	}
-	//add sp ea
-	CCFileUtils::get()->addPriorityPath(Mod::get()->getConfigDir().string().c_str());
 };
-$execute { Loaded(); };
+#include <Geode/modify/LoadingLayer.hpp>
+class $modify(LoadingLayer) {
+	void loadAssets() {
+		if (m_loadStep == 0) Loaded();
+		LoadingLayer::loadAssets();
+	}
+};
+
+//huh
+#include <Geode/modify/PlayLayer.hpp>
+class $modify(PlayLayer) {
+	bool init(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
+		if (level->m_levelType == GJLevelType::Local) 
+			level->m_levelString = GameLevelManager::get()->getMainLevel(level->m_levelID.value(), 0)->m_levelString;
+		auto oldID = level->m_levelID.value();
+		level->m_levelID = 999; //temp "Load Failed" bypass
+		auto rtn = PlayLayer::init(level, useReplay, dontCreateObjects);
+		level->m_levelID = oldID;
+		return rtn;
+	}
+};
 
 #include <Geode/modify/GameLevelManager.hpp>
 class $modify(GameLevelManagerExt, GameLevelManager) {
 	static void updateLevelByJson(GJGameLevel* level) {
 		auto level_meta_file = levels_meta_path / fmt::format("{}.json", level->m_levelID.value());
-		auto file_content = read_file(level_meta_file);
+		auto file_content = read_file(level_meta_file.string());
 		//json val
 		auto value = matjson::parse("{}");
 		//file parse
@@ -72,7 +89,17 @@ class $modify(GameLevelManagerExt, GameLevelManager) {
 	}
 	GJGameLevel* getMainLevel(int levelID, bool dontGetLevelString) {
 		auto level = GameLevelManager::getMainLevel(levelID, dontGetLevelString);
+		//json meta
 		updateLevelByJson(level);
+		//lvl str
+		auto toRead = std::string();
+		auto dataFile = std::string(CCFileUtils::get()->fullPathForFilename(fmt::format("levels/{}.txt", levelID).c_str(), 1).data());
+		auto dataFileAtMod = (levels_path / fmt::format("{}.txt", levelID)).string();
+		if (cocos::fileExistsInSearchPaths(dataFileAtMod.c_str())) toRead = dataFileAtMod;
+		else toRead = dataFile;
+		auto fileContent = read_file(toRead);
+		level->m_levelString.clear();
+		level->m_levelString.append(fileContent);
 		return level;
 	}
 };
