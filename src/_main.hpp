@@ -23,8 +23,7 @@ inline auto levels_meta_path = levels_path / "_meta";
 	return c.get(reinterpret_cast<FriendeeClass__*>(v)); \
 }(value)
 
-template <typename T>
-inline auto read_file(T path) {
+inline auto read_file(std::string path) {
     if (not fs::exists(path)) {
         auto err = fmt::format("file \"{}\" isnt exists.", path);
         log::error("{}", err);
