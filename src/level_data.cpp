@@ -105,9 +105,12 @@ class $modify(LocalLevelManagerExt, LocalLevelManager) {
 	}
 };
 
+
+//// fffffffffffffuc a here is aaa problematic functions idk lol
+
 #include <Geode/modify/GameLevelManager.hpp>
 class $modify(GameLevelManager) {
-	GJGameLevel* getMainLevel(int levelID, bool dontGetLevelString) {
+	GJGameLevel* NOT_NOW___getMainLevel(int levelID, bool dontGetLevelString) {
 		auto level = GameLevelManager::get()->getMainLevel(levelID, dontGetLevelString);
 		//json meta
 		updateLevelByJson(level);
@@ -122,3 +125,26 @@ class $modify(LevelTools) {
 		return 1;
 	}
 };
+
+GJGameLevel* getMainLevelDet(GameLevelManager* __this, int levelID, bool dontGetLevelString) {
+	auto level = __this->getMainLevel(levelID, dontGetLevelString);
+	//json meta
+	updateLevelByJson(level);
+	return level;
+}
+GEODE_WINDOWS(auto getMainLevelAddr = reinterpret_cast<void*>(geode::base::get() + 0x13fa40));
+GEODE_ANDROID(
+	auto getMainLevelAddr = reinterpret_cast<void*>(
+		// All of this is to get the address of ccDrawCircle
+		geode::addresser::getNonVirtual<int, bool>(&GameLevelManager::getMainLevel)
+	)
+);
+void HookTheGetMainLevelFunc() {
+	Mod::get()->hook(
+		getMainLevelAddr, // address
+		&getMainLevelDet, // detour
+		"GameLevelManager::getMainLevel", // display name, shows up on the console
+		tulip::hook::TulipConvention::Thiscall // calling convention
+	);
+}
+$execute{ HookTheGetMainLevelFunc(); }
