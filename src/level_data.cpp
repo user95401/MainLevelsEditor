@@ -87,7 +87,7 @@ class $modify(GameLevelManagerExt, GameLevelManager) {
 		//save json
 		std::ofstream(level_meta_file) << value.dump(matjson::TAB_INDENTATION);
 	}
-	GJGameLevel* getMainLevel(int levelID, bool dontGetLevelString) {
+	GJGameLevel* NOT_NOW___getMainLevel(int levelID, bool dontGetLevelString) {
 		auto level = GameLevelManager::getMainLevel(levelID, dontGetLevelString);
 		//json meta
 		updateLevelByJson(level);
