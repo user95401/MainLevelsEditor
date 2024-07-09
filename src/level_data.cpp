@@ -33,8 +33,8 @@ class $modify(LoadingLayer) {
 #include <Geode/modify/PlayLayer.hpp>
 class $modify(PlayLayer) {
 	bool init(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
-		if (level->m_levelType == GJLevelType::Local) 
-			level->m_levelString = GameLevelManager::get()->getMainLevel(level->m_levelID.value(), 0)->m_levelString;
+		if (level->m_levelType == GJLevelType::Local)
+			level->m_levelString = GameLevelManager::get()->getMainLevel(level->m_levelID.value(), 0)->m_levelString.c_str();
 		auto oldID = level->m_levelID.value();
 		level->m_levelID = 999; //temp "Load Failed" bypass
 		auto rtn = PlayLayer::init(level, useReplay, dontCreateObjects);
@@ -95,11 +95,12 @@ class $modify(GameLevelManagerExt, GameLevelManager) {
 		auto toRead = std::string();
 		auto dataFile = std::string(CCFileUtils::get()->fullPathForFilename(fmt::format("levels/{}.txt", levelID).c_str(), 1).data());
 		auto dataFileAtMod = (levels_path / fmt::format("{}.txt", levelID)).string();
+		log::debug("dataFile: {}", dataFile);
+		log::debug("dataFileAtMod: {}", dataFileAtMod);
 		if (cocos::fileExistsInSearchPaths(dataFileAtMod.c_str())) toRead = dataFileAtMod;
 		else toRead = dataFile;
 		auto fileContent = read_file(toRead);
-		level->m_levelString.clear();
-		((std::string)level->m_levelString).append(fileContent);
+		level->m_levelString = fileContent;
 		return level;
 	}
 };

@@ -2,6 +2,13 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+//lol
+#define SETTING(type, key_name) Mod::get()->getSettingValue<type>(key_name)
+
+namespace fs = std::filesystem;
+inline auto levels_path = Mod::get()->getConfigDir() / "levels";
+inline auto levels_meta_path = levels_path / "_meta";
+
 #define public_cast(value, member) [](auto* v) { \
 	class FriendClass__; \
 	using T = std::remove_pointer<decltype(v)>::type; \
@@ -17,20 +24,27 @@ using namespace geode::prelude;
 }(value)
 
 template <typename T>
-inline auto read_file(T path) -> std::string {
-    constexpr auto read_size = std::size_t(4096);
-    auto stream = std::ifstream(path);
-    stream.exceptions(std::ios_base::badbit);
-    if (not stream) {
-        return fmt::format("file does not exist ({}({}) error)", __func__, path);
+inline auto read_file(T path) {
+    if (not fs::exists(path)) {
+        auto err = fmt::format("file \"{}\" isnt exists.", path);
+        log::error("{}", err);
+        return err;
     }
-    auto out = std::string();
-    auto buf = std::string(read_size, '\0');
-    while (stream.read(&buf[0], read_size)) {
-        out.append(buf, 0, stream.gcount());
-    }
-    out.append(buf, 0, stream.gcount());
-    return out;
+
+    // Open the stream to 'lock' the file.
+    std::ifstream f(path, std::ios::in | std::ios::binary);
+
+    // Obtain the size of the file.
+    const auto sz = fs::file_size(path);
+
+    // Create a buffer.
+    std::string result(sz, '\0');
+
+    // Read the whole file into the buffer.
+    f.read(result.data(), sz);
+
+    //log::debug("\n{}({}) -> \n{}\n", __FUNCTION__, path, result);
+    return result;
 }
 
 namespace geode::cocos {
@@ -63,10 +77,3 @@ namespace geode::cocos {
         return "CANT_GET_FRAME_NAME";
     }
 };
-
-//lol
-#define SETTING(type, key_name) Mod::get()->getSettingValue<type>(key_name)
-
-namespace fs = std::filesystem;
-inline auto levels_path = Mod::get()->getConfigDir() / "levels";
-inline auto levels_meta_path = levels_path / "_meta";
