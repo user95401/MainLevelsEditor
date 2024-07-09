@@ -24,7 +24,8 @@ inline auto levels_meta_path = levels_path / "_meta";
 }(value)
 
 inline auto read_file(std::string path) {
-    if (not fs::exists(path)) {
+    return std::string("test");
+    /*if (not fs::exists(path)) {
         auto err = fmt::format("file \"{}\" isnt exists.", path);
         log::error("{}", err);
         return err;
@@ -43,7 +44,7 @@ inline auto read_file(std::string path) {
     f.read(result.data(), sz);
 
     //log::debug("\n{}({}) -> \n{}\n", __FUNCTION__, path, result);
-    return result;
+    return result;*/
 }
 
 namespace geode::cocos {
