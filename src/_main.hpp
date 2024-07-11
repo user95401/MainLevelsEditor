@@ -2,6 +2,8 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+#include <regex>
+
 //lol
 #define SETTING(type, key_name) Mod::get()->getSettingValue<type>(key_name)
 
@@ -121,4 +123,150 @@ inline auto jsonFromLevel(GJGameLevel* level) {
     value.try_set("m_songIDs", std::string(level->m_songIDs.data()));
     value.try_set("m_sfxIDs", std::string(level->m_sfxIDs.data()));
     return value;
+}
+
+inline void updateLevelByJson(GJGameLevel* level) {
+    auto level_meta_file = levels_meta_path / fmt::format("{}.json", level->m_levelID.value());
+    auto file_content = my_fs::read(level_meta_file);
+    //json val
+    auto value = matjson::parse("{}");
+    //file parse
+    auto error = std::string();
+    auto parse = matjson::parse(file_content, error);
+    if (parse.has_value()) value = parse.value();
+    //setup level
+    levelFromJson(parse, level);
+    //setup json
+    value = jsonFromLevel(level);
+    //save json
+    std::ofstream(level_meta_file) << value.dump(matjson::TAB_INDENTATION);
+}
+
+namespace MLE_UI {
+    inline auto DeleteButtonSprite() {
+        auto hi = geode::AccountButtonSprite::create(
+            CCSprite::createWithSpriteFrameName("edit_delBtn_001.png"),
+            AccountBaseColor::Gray
+        );
+        hi->setScale(0.8f);
+        typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setScale(1.1f);
+        return hi;
+    }
+    inline auto SettingsButtonSprite() {
+        auto hi = geode::AccountButtonSprite::create(
+            CCSprite::createWithSpriteFrameName("d_cogwheel_04_001.png"),
+            AccountBaseColor::Gray
+        );
+        hi->setScale(0.8f);
+        typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setScale(1.1f);
+        typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setColor({ 20, 20, 20 });
+        hi->addChild(typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0)));//make it darker
+        return hi;
+    }
+    class LevelConfigPopup : public FLAlertLayer, FLAlertLayerProtocol, TextInputDelegate {
+    public:
+        GJGameLevel* m_level;
+        std::function<void()> m_onSave = []() {};
+        inline static auto create(GJGameLevel* for_level = LevelTools::getLevel(1, 0)) {
+            auto rtn = new LevelConfigPopup; 
+            rtn->init(
+                rtn,
+                "Level Meta Config", 
+                "\n \n \n \n \n \n \n \n ", 
+                "Close", "Save", 352.000f, 0, 290.000f, 1.f
+            );
+            rtn->setID("LevelConfigPopup");
+            rtn->m_level = for_level;
+            rtn->customSetup();
+            return rtn;
+        }
+        inline void customSetup() {
+            //form_box
+            auto form_box = CCLayer::create();
+            if (form_box) {
+                //base sets
+                form_box->setID("form_box");
+                form_box->setPosition(CCPoint(0.f, 116.f));
+                form_box->setContentSize(CCSize(255.f, 175.f));
+                form_box->ignoreAnchorPointForPosition(false);
+                //add
+                this->m_buttonMenu->addChild(form_box);
+                //layout
+                auto layout = ColumnLayout::create();
+                layout->setAxisReverse(1);
+                layout->setCrossAxisOverflow(0);
+                form_box->setLayout(layout);
+            }
+            //addInputs
+            auto addInput = [this, form_box](auto label = "", auto id = "", CommonFilter commonFilter = CommonFilter::Any) {
+                //labelNode
+                auto labelNode = CCLabelBMFont::create(label, "bigFont.fnt");
+                labelNode->setID(id + std::string("/label"));
+                form_box->addChild(labelNode);
+                //inputNode
+                auto inputNode = TextInput::create(form_box->getContentWidth(), label, "gjFont41.fnt");
+                inputNode->getInputNode()->setID(id);
+                inputNode->setCommonFilter(commonFilter);
+                inputNode->setDelegate(this);
+                form_box->addChild(inputNode);
+                //upd
+                form_box->updateLayout();
+            };
+            addInput("Name", "m_levelName");
+            addInput("Audio Track", "m_audioTrack", CommonFilter::Int);
+            addInput("Difficulty", "m_difficulty", CommonFilter::Int);
+            addInput("Stars", "m_stars", CommonFilter::Int);
+            loadInputs();
+        }
+        inline void loadInputs() {
+            if (not this->m_level) return;
+            auto m_levelName = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_levelName"));
+            auto m_audioTrack = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_audioTrack"));
+            auto m_difficulty = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_difficulty"));
+            auto m_stars = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_stars"));
+            if (m_levelName) m_levelName->setString(fmt::format("{}", this->m_level->m_levelName.data()));
+            if (m_audioTrack) m_audioTrack->setString(fmt::format("{}", this->m_level->m_audioTrack));
+            if (m_difficulty) m_difficulty->setString(fmt::format("{}", (int)this->m_level->m_difficulty));
+            if (m_stars) m_stars->setString(fmt::format("{}", this->m_level->m_stars.value()));
+        }
+        inline void applyInputs() {
+            if (not this->m_level) return;
+            auto m_levelName = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_levelName"));
+            auto m_audioTrack = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_audioTrack"));
+            auto m_difficulty = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_difficulty"));
+            auto m_stars = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_stars"));
+            if (m_levelName) m_level->m_levelName = m_levelName->getString();
+            if (m_audioTrack) m_level->m_audioTrack = utils::numFromString<int>(m_audioTrack->getString().data()).value_or(m_level->m_audioTrack);
+            if (m_difficulty) m_level->m_difficulty = (GJDifficulty)utils::numFromString<int>(m_difficulty->getString().data()).value_or((int)m_level->m_difficulty);
+            if (m_stars) m_level->m_stars = utils::numFromString<int>(m_stars->getString().data()).value_or(m_level->m_stars.value());
+        }
+        inline void textChanged(CCTextInputNode* p0) {
+            log::debug("{}({}) id: {}", __FUNCTION__, p0, p0->getID());
+            if (p0->getID() == "m_difficulty") {
+                auto difficulty = utils::numFromString<int>(p0->getString().data()).value_or(0);
+                GJDifficultySprite* difficultyPrev;
+                if (difficultyPrev = typeinfo_cast<GJDifficultySprite*>(this->getChildByIDRecursive("difficultyPrev")));
+                else {
+                    difficultyPrev = GJDifficultySprite::create(difficulty, GJDifficultyName::Short);
+                    difficultyPrev->setAnchorPoint(CCPoint(0.f, 0.f));
+                    difficultyPrev->setPosition(CCPoint(260.f, 0.f));
+                    difficultyPrev->setScale(1.2f);
+                    difficultyPrev->setID("difficultyPrev");
+                    p0->getParent()->addChild(difficultyPrev);
+                }
+                difficultyPrev->updateDifficultyFrame(difficulty, GJDifficultyName::Short);
+            }
+        }
+        inline void FLAlert_Clicked(FLAlertLayer* p0, bool p1) {
+            if (not p1) return;
+            applyInputs();
+            //json
+            auto value = jsonFromLevel(this->m_level);
+            //save json
+            auto level_meta_file = levels_meta_path / fmt::format("{}.json", m_level->m_levelID.value());
+            std::ofstream(level_meta_file) << value.dump(matjson::TAB_INDENTATION);
+            //call custom func
+            this->m_onSave();
+        };
+    };
 }
