@@ -8,7 +8,7 @@ void Loaded() {
 	std::ofstream(levels_path / "_here u put {id}.txt level data files");
 	//preset all org levels
 	for (int i = 1; i <= 100; i++) {
-		auto level_in_game_path = CCFileUtils::sharedFileUtils()->fullPathForFilename(fmt::format("levels/{}.txt", i).c_str(), 0);
+		std::string level_in_game_path = CCFileUtils::sharedFileUtils()->fullPathForFilename(fmt::format("levels/{}.txt", i).c_str(), 0);
 		auto level_path_to_save = (levels_path / fmt::format("{}.txt", i));
 		auto level_is_exists_in_gd = cocos::fileExistsInSearchPaths(level_in_game_path.c_str());
 		auto level_is_exists_in_mod = cocos::fileExistsInSearchPaths(level_path_to_save.string().c_str());
