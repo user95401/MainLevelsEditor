@@ -41,25 +41,24 @@ class $modify(LevelPageExt, LevelPage) {
             //asshell
             {
                 //level setup
-                for (size_t levelID = 0; levelID < 500; levelID++) {
+                for (int levelID = 0; levelID < 500; levelID++) {
                     if (levelID > currentID and levelID < 500) {
-                        std::rename(
-                            (levels_meta_path / fmt::format("{}.json", levelID)).string().data(),
-                            (levels_meta_path / fmt::format("{}.json", levelID - 1)).string().data()
-                        );
+                        auto rn1 = levels_meta_path / fmt::format("{}.json", levelID);
+                        auto rn2 = levels_meta_path / fmt::format("{}.json", levelID - 1);
+                        my_fs::rename(rn1, rn2);
                     };
                 }
                 //level data
-                for (size_t levelID = 0; levelID < 500; levelID++) {
+                for (int levelID = 0; levelID < 500; levelID++) {
                     if (levelID > currentID) {
-                        std::rename(
-                            (levels_path / fmt::format("{}.txt", levelID)).string().data(),
-                            (levels_path / fmt::format("{}.txt", levelID - 1)).string().data()
-                        );
+                        auto rn1 = levels_path / fmt::format("{}.txt", levelID);
+                        auto rn2 = levels_path / fmt::format("{}.txt", levelID - 1);
+                        my_fs::rename(rn1, rn2);
                     }
                 }
             }
-            CCDirector::get()->pushScene(LevelSelectLayer::scene(currentID - 1));
+            auto newLevelSelectLayerScene = LevelSelectLayer::scene(currentID - 1);
+            CCDirector::get()->pushScene(CCTransitionCrossFade::create(0.1f, newLevelSelectLayerScene));
             });
     }
     bool init(GJGameLevel* p0) {
