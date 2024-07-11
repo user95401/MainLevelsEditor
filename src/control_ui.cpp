@@ -3,7 +3,7 @@
 #include <Geode/modify/LevelPage.hpp>
 class $modify(LevelPageExt, LevelPage) {
     void editLevel(CCObject*) {
-        auto ae = MLE_UI::LevelConfigPopup::create(this->m_level);
+        auto ae = mle_ui::LevelConfigPopup::create(this->m_level);
         ae->m_onSave = [ae]() {
             CCDirector::get()->pushScene(CCTransitionCrossFade::create(
                 0.15f, LevelSelectLayer::scene(ae->m_level->m_levelID.value() - 1)
@@ -61,14 +61,14 @@ class $modify(LevelPageExt, LevelPage) {
         auto rtn = LevelPage::init(p0);
         if (SETTING(bool, "ui")) {
             CCMenuItemSpriteExtra* deleteLevel; {
-                deleteLevel = CCMenuItemSpriteExtra::create(MLE_UI::DeleteButtonSprite(), this, menu_selector(LevelPageExt::deleteLevel));
+                deleteLevel = CCMenuItemSpriteExtra::create(mle_ui::deleteButtonSprite(), this, menu_selector(LevelPageExt::deleteLevel));
                 deleteLevel->setID("deleteLevel"_spr);
                 deleteLevel->setPosition(CCPoint(190, 30));
                 deleteLevel->m_baseScale = 0.8f;
                 deleteLevel->setScale(deleteLevel->m_baseScale);
             };
             CCMenuItemSpriteExtra* editLevel; {
-                editLevel = CCMenuItemSpriteExtra::create(MLE_UI::SettingsButtonSprite(), this, menu_selector(LevelPageExt::editLevel));
+                editLevel = CCMenuItemSpriteExtra::create(mle_ui::settingsButtonSprite(), this, menu_selector(LevelPageExt::editLevel));
                 editLevel->setID("editLevel"_spr);
                 editLevel->setPosition(CCPoint(190, 0));
                 editLevel->m_baseScale = 0.8f;

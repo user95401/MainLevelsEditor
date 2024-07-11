@@ -9,6 +9,9 @@ using namespace geode::prelude;
 
 inline auto levels_path = Mod::get()->getConfigDir() / "levels";
 inline auto levels_meta_path = levels_path / "_meta";
+inline auto songs_path = Mod::get()->getConfigDir() / "songs";
+inline auto audios_meta_path = songs_path / "_audios";
+inline auto artists_meta_path = songs_path / "_artists";
 namespace my_fs {
     using namespace std::filesystem;
     inline auto last_err = std::string();
@@ -87,63 +90,163 @@ namespace geode::cocos {
     }
 };
 
-inline matjson::Value levelFromJson(matjson::Value value, GJGameLevel* levelToRewrite = nullptr) {
-    GJGameLevel* level = levelToRewrite ? levelToRewrite : LevelTools::getLevel(1, 0);
-    level->m_levelName = value.try_get<std::string>("m_levelName").value_or(level->m_levelName.data());
-    level->m_levelDesc = value.try_get<std::string>("m_levelDesc").value_or(level->m_levelDesc.data());
-    level->m_creatorName = value.try_get<std::string>("m_creatorName").value_or(level->m_creatorName.data());
-    level->m_difficulty = (GJDifficulty)value.try_get<int>("m_difficulty").value_or((int)level->m_difficulty);
-    level->m_stars = value.try_get<int>("m_stars").value_or(level->m_stars.value());
-    level->m_audioTrack = value.try_get<int>("m_audioTrack").value_or(level->m_audioTrack);
-    level->m_songID = value.try_get<int>("m_songID").value_or(level->m_songID);
-    level->m_levelVersion = value.try_get<int>("m_levelVersion").value_or(level->m_levelVersion);
-    level->m_gameVersion = value.try_get<int>("m_gameVersion").value_or(level->m_gameVersion);
-    level->m_levelType = (GJLevelType)value.try_get<int>("m_levelType").value_or((int)level->m_levelType);
-    level->m_capacityString = value.try_get<std::string>("m_capacityString").value_or(level->m_capacityString.data());
-    level->m_songIDs = value.try_get<std::string>("m_songIDs").value_or(level->m_songIDs.data());
-    level->m_sfxIDs = value.try_get<std::string>("m_sfxIDs").value_or(level->m_sfxIDs.data());
-    return value;
+namespace mle_leveltools {
+    inline matjson::Value levelFromJson(matjson::Value value, GJGameLevel* levelToRewrite = nullptr) {
+        GJGameLevel* level = levelToRewrite ? levelToRewrite : LevelTools::getLevel(1, 0);
+        level->m_levelName = value.try_get<std::string>("m_levelName").value_or(level->m_levelName.data());
+        level->m_levelDesc = value.try_get<std::string>("m_levelDesc").value_or(level->m_levelDesc.data());
+        level->m_creatorName = value.try_get<std::string>("m_creatorName").value_or(level->m_creatorName.data());
+        level->m_difficulty = (GJDifficulty)value.try_get<int>("m_difficulty").value_or((int)level->m_difficulty);
+        level->m_stars = value.try_get<int>("m_stars").value_or(level->m_stars.value());
+        level->m_audioTrack = value.try_get<int>("m_audioTrack").value_or(level->m_audioTrack);
+        level->m_songID = value.try_get<int>("m_songID").value_or(level->m_songID);
+        level->m_levelVersion = value.try_get<int>("m_levelVersion").value_or(level->m_levelVersion);
+        level->m_gameVersion = value.try_get<int>("m_gameVersion").value_or(level->m_gameVersion);
+        level->m_levelType = (GJLevelType)value.try_get<int>("m_levelType").value_or((int)level->m_levelType);
+        level->m_capacityString = value.try_get<std::string>("m_capacityString").value_or(level->m_capacityString.data());
+        level->m_songIDs = value.try_get<std::string>("m_songIDs").value_or(level->m_songIDs.data());
+        level->m_sfxIDs = value.try_get<std::string>("m_sfxIDs").value_or(level->m_sfxIDs.data());
+        return value;
+    }
+    inline auto jsonFromLevel(GJGameLevel* level) {
+        auto value = matjson::Value();
+        value.try_set("________MAIN_STUFF________", " vvv vvv ");
+        value.try_set("m_levelName", std::string(level->m_levelName.data()));
+        value.try_set("m_audioTrack", level->m_audioTrack);
+        value.try_set("m_difficulty", (int)level->m_difficulty);
+        value.try_set("m_stars", level->m_stars.value());
+        value.try_set("________SOME_SHIT________", " vvv vvv ");
+        value.try_set("m_levelDesc", std::string(level->m_levelDesc.data()));
+        value.try_set("m_creatorName", std::string(level->m_creatorName.data()));;
+        value.try_set("m_songID", level->m_songID);
+        value.try_set("m_levelVersion", level->m_levelVersion);
+        value.try_set("m_gameVersion", level->m_gameVersion);
+        value.try_set("m_levelType", (int)level->m_levelType);
+        value.try_set("m_capacityString", std::string(level->m_capacityString.data()));
+        value.try_set("m_songIDs", std::string(level->m_songIDs.data()));
+        value.try_set("m_sfxIDs", std::string(level->m_sfxIDs.data()));
+        return value;
+    }
+    inline void updateLevelByJson(GJGameLevel* level) {
+        auto level_meta_file = levels_meta_path / fmt::format("{}.json", level->m_levelID.value());
+        auto file_content = my_fs::read(level_meta_file);
+        //json val
+        auto value = matjson::parse("{}");
+        //file parse
+        auto error = std::string();
+        auto parse = matjson::parse(file_content, error);
+        if (parse.has_value()) value = parse.value();
+        //setup level
+        levelFromJson(parse, level);
+        //setup json
+        value = jsonFromLevel(level);
+        //save json
+        std::ofstream(level_meta_file) << value.dump(matjson::TAB_INDENTATION);
+    }
+};
+
+namespace mle_audiotools {
+    class Audio {
+    public:
+        std::string m_fileName;
+        std::string m_title;
+        std::string m_url;
+        int m_artistID;
+        int m_audioID;
+        matjson::Value m_json;
+        inline static bool CallDefaults = false;
+        inline static void updateFromFile(Audio* pAudio) {
+            //update by existing
+            auto song_meta_file = audios_meta_path / fmt::format("{}.json", pAudio->m_audioID);
+            if (!my_fs::exists(song_meta_file)) return;
+            auto file_content = my_fs::read(song_meta_file);
+            //file parse
+            auto value = matjson::parse("{}");
+            auto error = std::string();
+            auto parse = matjson::parse(file_content, error);
+            if (parse.has_value()) value = parse.value();
+            //set from json json
+            pAudio->m_fileName = value.try_get<std::string>("m_fileName").value_or(pAudio->m_fileName.data()).data();
+            pAudio->m_title = value.try_get<std::string>("m_title").value_or(pAudio->m_title.data()).data();
+            pAudio->m_url = value.try_get<std::string>("m_url").value_or(pAudio->m_url.data()).data();
+            pAudio->m_artistID = value.try_get<int>("m_artistID").value_or(pAudio->m_artistID);
+        }
+        Audio(int id = 1, bool noDefaults = true) {
+            //default
+            this->m_audioID = id;
+            if (not noDefaults) {
+                CallDefaults = 1;
+                this->m_fileName = LevelTools::getAudioFileName(id).data();
+                this->m_title = LevelTools::getAudioTitle(id).data();
+                this->m_url = LevelTools::urlForAudio(id).data();
+                this->m_artistID = LevelTools::artistForAudio(id);
+                CallDefaults = 0;
+            }
+            //set vars from
+            Audio::updateFromFile(this);
+            //json
+            this->m_json = matjson::Value();
+            this->m_json.try_set("m_fileName", this->m_fileName);
+            this->m_json.try_set("m_title", this->m_title);
+            this->m_json.try_set("m_url", this->m_url);
+            this->m_json.try_set("m_artistID", this->m_artistID);
+            //save json
+            if (not noDefaults and this->m_title == "Unknown") return;
+            auto song_meta_file = audios_meta_path / fmt::format("{}.json", id);
+            std::ofstream(song_meta_file) << this->m_json.dump(matjson::TAB_INDENTATION);
+        };
+    };
+    class Artist {
+    public:
+        std::string m_ytURL;
+        std::string m_ngURL;
+        std::string m_name;
+        int m_artistID;
+        matjson::Value m_json;
+        inline static bool CallDefaults = false;
+        inline static void updateFromFile(Artist* pAudio) {
+            //update by existing
+            auto song_meta_file = artists_meta_path / fmt::format("{}.json", pAudio->m_artistID);
+            if (!my_fs::exists(song_meta_file)) return;
+            auto file_content = my_fs::read(song_meta_file);
+            //file parse
+            auto value = matjson::parse("{}");
+            auto error = std::string();
+            auto parse = matjson::parse(file_content, error);
+            if (parse.has_value()) value = parse.value();
+            //set from json json
+            pAudio->m_ytURL = value.try_get<std::string>("m_ytURL").value_or(pAudio->m_ytURL.data()).data();
+            pAudio->m_ngURL = value.try_get<std::string>("m_ngURL").value_or(pAudio->m_ngURL.data()).data();
+            pAudio->m_name = value.try_get<std::string>("m_name").value_or(pAudio->m_name.data()).data();
+            pAudio->m_artistID = value.try_get<int>("m_artistID").value_or(pAudio->m_artistID);
+        }
+        Artist(int id = 1, bool noDefaults = true) {
+            //default
+            this->m_artistID = id;
+            if (not noDefaults) {
+                CallDefaults = 1;
+                this->m_ytURL = LevelTools::ytURLForArtist(id).data();
+                this->m_ngURL = LevelTools::ngURLForArtist(id).data();
+                this->m_name = LevelTools::nameForArtist(id).data();
+                CallDefaults = 0;
+            }
+            //set vars from
+            Artist::updateFromFile(this);
+            //json
+            this->m_json = matjson::Value();
+            this->m_json.try_set("m_ytURL", this->m_ytURL);
+            this->m_json.try_set("m_ngURL", this->m_ngURL);
+            this->m_json.try_set("m_name", this->m_name);
+            //save json
+            if (not noDefaults and this->m_name == " ") return;
+            auto song_meta_file = artists_meta_path / fmt::format("{}.json", id);
+            std::ofstream(song_meta_file) << this->m_json.dump(matjson::TAB_INDENTATION);
+        };
+    };
 }
 
-inline auto jsonFromLevel(GJGameLevel* level) {
-    auto value = matjson::Value();
-    value.try_set("________MAIN_STUFF________", " vvv vvv ");
-    value.try_set("m_levelName", std::string(level->m_levelName.data()));
-    value.try_set("m_audioTrack", level->m_audioTrack);
-    value.try_set("m_difficulty", (int)level->m_difficulty);
-    value.try_set("m_stars", level->m_stars.value());
-    value.try_set("________SOME_SHIT________", " vvv vvv ");
-    value.try_set("m_levelDesc", std::string(level->m_levelDesc.data()));
-    value.try_set("m_creatorName", std::string(level->m_creatorName.data()));;
-    value.try_set("m_songID", level->m_songID);
-    value.try_set("m_levelVersion", level->m_levelVersion);
-    value.try_set("m_gameVersion", level->m_gameVersion);
-    value.try_set("m_levelType", (int)level->m_levelType);
-    value.try_set("m_capacityString", std::string(level->m_capacityString.data()));
-    value.try_set("m_songIDs", std::string(level->m_songIDs.data()));
-    value.try_set("m_sfxIDs", std::string(level->m_sfxIDs.data()));
-    return value;
-}
-
-inline void updateLevelByJson(GJGameLevel* level) {
-    auto level_meta_file = levels_meta_path / fmt::format("{}.json", level->m_levelID.value());
-    auto file_content = my_fs::read(level_meta_file);
-    //json val
-    auto value = matjson::parse("{}");
-    //file parse
-    auto error = std::string();
-    auto parse = matjson::parse(file_content, error);
-    if (parse.has_value()) value = parse.value();
-    //setup level
-    levelFromJson(parse, level);
-    //setup json
-    value = jsonFromLevel(level);
-    //save json
-    std::ofstream(level_meta_file) << value.dump(matjson::TAB_INDENTATION);
-}
-
-namespace MLE_UI {
-    inline auto DeleteButtonSprite() {
+namespace mle_ui {
+    inline auto deleteButtonSprite() {
         auto hi = geode::AccountButtonSprite::create(
             CCSprite::createWithSpriteFrameName("edit_delBtn_001.png"),
             AccountBaseColor::Gray
@@ -152,7 +255,7 @@ namespace MLE_UI {
         typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0))->setScale(1.1f);
         return hi;
     }
-    inline auto SettingsButtonSprite() {
+    inline auto settingsButtonSprite() {
         auto hi = geode::AccountButtonSprite::create(
             CCSprite::createWithSpriteFrameName("d_cogwheel_04_001.png"),
             AccountBaseColor::Gray
@@ -168,11 +271,11 @@ namespace MLE_UI {
         GJGameLevel* m_level;
         std::function<void()> m_onSave = []() {};
         inline static auto create(GJGameLevel* for_level = LevelTools::getLevel(1, 0)) {
-            auto rtn = new LevelConfigPopup; 
+            auto rtn = new LevelConfigPopup;
             rtn->init(
                 rtn,
-                "Level Meta Config", 
-                "\n \n \n \n \n \n \n \n ", 
+                "Level Meta Config",
+                "\n \n \n \n \n \n \n \n ",
                 "Close", "Save", 352.000f, 0, 290.000f, 1.f
             );
             rtn->setID("LevelConfigPopup");
@@ -211,7 +314,7 @@ namespace MLE_UI {
                 form_box->addChild(inputNode);
                 //upd
                 form_box->updateLayout();
-            };
+                };
             addInput("Name", "m_levelName");
             addInput("Audio Track", "m_audioTrack", CommonFilter::Int);
             addInput("Difficulty", "m_difficulty", CommonFilter::Int);
@@ -261,7 +364,7 @@ namespace MLE_UI {
             if (not p1) return;
             applyInputs();
             //json
-            auto value = jsonFromLevel(this->m_level);
+            auto value = mle_leveltools::jsonFromLevel(this->m_level);
             //save json
             auto level_meta_file = levels_meta_path / fmt::format("{}.json", m_level->m_levelID.value());
             std::ofstream(level_meta_file) << value.dump(matjson::TAB_INDENTATION);

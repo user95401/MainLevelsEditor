@@ -1,34 +1,5 @@
 #include "_main.hpp"
-
-void Loaded() {
-	//dirs
-	my_fs::create_directories(levels_meta_path);
-	//add info
-	std::ofstream(levels_meta_path / "_here is {id}.json meta files about names, stars and stuff") << "asd";
-	std::ofstream(levels_path / "_here u put {id}.txt level data files");
-	//preset all org levels
-	for (int i = 1; i <= 100; i++) {
-		std::string level_in_game_path = CCFileUtils::sharedFileUtils()->fullPathForFilename(fmt::format("levels/{}.txt", i).c_str(), 0);
-		auto level_path_to_save = (levels_path / fmt::format("{}.txt", i));
-		auto level_is_exists_in_gd = cocos::fileExistsInSearchPaths(level_in_game_path.c_str());
-		auto level_is_exists_in_mod = cocos::fileExistsInSearchPaths(level_path_to_save.string().c_str());
-		if (level_is_exists_in_gd and not level_is_exists_in_mod) {
-			log::debug("ofstreamingo...");
-			std::ofstream(level_path_to_save) 
-				<< my_fs::read(level_in_game_path);
-		}
-		//add sp ea
-		CCFileUtils::get()->addPriorityPath(Mod::get()->getConfigDir().string().c_str());
-	}
-};
-#include <Geode/modify/LoadingLayer.hpp>
-class $modify(LoadingLayer) {
-	$override void loadAssets() {
-		if (m_loadStep == 0) Loaded();
-		LoadingLayer::loadAssets();
-	}
-};
-
+using namespace mle_leveltools;
 //huh
 #include <Geode/modify/PlayLayer.hpp>
 class $modify(PlayLayer) {

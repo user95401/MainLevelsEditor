@@ -12,11 +12,10 @@ void CopyFromLocal() {
         save_dir, //to game save dir
         std::filesystem::copy_options::overwrite_existing);
     //aaaa
-#ifdef GEODE_IS_WINDOWS
     auto link = Mod::get()->getSaveDir() / "REAL CONFIG DIR LINK";
     if (std::filesystem::exists(link)) std::filesystem::remove(link);
-    std::filesystem::create_directory_symlink(Mod::get()->getConfigDir(), link);
-    std::filesystem::create_directory_symlink(Mod::get()->getConfigDir(), link, errcode);
+    std::error_code err_code;
+    std::filesystem::create_directory_symlink(Mod::get()->getConfigDir(), link, err_code);
 };
 
 void CopyFromData() {
