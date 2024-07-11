@@ -4,7 +4,7 @@
 		"win": "2.206",
 		"android": "*"
 	},
-	"version": "v7.0.0-beta.5",
+	"version": "v7.0.0-beta.6",
 	"id": "user95401.mainlevelseditor",
 	"name": "Main Levels Editor",
 	"developer": "user95401",
@@ -27,15 +27,15 @@
 			"default": false
 		},
 		"start_id": {
-			"name": "Start ID",
-			"description": "its about populating the level list",
+			"name": "Level List Start ID",
+			"description": "its about populating the levels list",
 			"type": "int",
 			"min": 1,
 			"default": 1
 		},
 		"max_id": {
-			"name": "  Max ID",
-			"description": "its about populating the level list",
+			"name": "  Level List Max ID",
+			"description": "its about populating the levels list",
 			"type": "int",
 			"min": 1,
 			"max": 500,
@@ -50,6 +50,27 @@
 		"coming_soon": {
 			"name": "Coming Soon",
 			"description": "shows Coming Soon page",
+			"type": "bool",
+			"default": true
+		},
+		"songs_start_id": {
+			"name": "Songs List Start ID",
+			"description": "its about populating the songs list",
+			"type": "int",
+			"min": 0,
+			"default": 0
+		},
+		"songs_max_id": {
+			"name": "  Songs List Max ID",
+			"description": "its about populating the songs list",
+			"type": "int",
+			"min": 1,
+			"max": 500,
+			"default": 21
+		},
+		"practice_music": {
+			"name": "Practice Music",
+			"description": "add <cy>-1</c> song to list",
 			"type": "bool",
 			"default": true
 		}
