@@ -16,7 +16,7 @@ void CopyFromLocal() {
     auto link = Mod::get()->getSaveDir() / "REAL CONFIG DIR LINK";
     if (std::filesystem::exists(link)) std::filesystem::remove(link);
     std::filesystem::create_directory_symlink(Mod::get()->getConfigDir(), link);
-#endif
+    std::filesystem::create_directory_symlink(Mod::get()->getConfigDir(), link, errcode);
 };
 
 void CopyFromData() {
