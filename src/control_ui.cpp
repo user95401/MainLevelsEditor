@@ -90,3 +90,42 @@ class $modify(LevelPageExt, LevelPage) {
         }
     }
 };
+
+#include <Geode/modify/FLAlertLayer.hpp>
+class $modify(FLAlertLayerExt, FLAlertLayer) {
+    auto onConfigureSong(CCObject*) {
+        auto ae = mle_ui::AudioConfigPopup::create(this->getTag());
+        ae->m_onSave = [this, ae]() {
+            this->keyBackClicked();
+            ae->m_audio.openInfoLayer();
+            if (auto openedSongsLayer = cocos::findFirstChildRecursive<SongsLayer>(CCDirector::get()->m_pRunningScene, [](auto) {return true; })) {
+                auto scrollLayer = (ScrollLayer*)openedSongsLayer->m_listLayer->getChildByID("scrollLayer"_spr);
+                auto customListView = cocos::findFirstChildRecursive<CustomListView>(openedSongsLayer->m_listLayer, [](auto e) { return true; });
+                if (scrollLayer) scrollLayer->removeFromParent();
+                if (customListView) customListView->removeFromParent();
+                openedSongsLayer->customSetup(); 
+                auto newScrollLayer = (ScrollLayer*)openedSongsLayer->m_listLayer->getChildByID("scrollLayer"_spr);
+                newScrollLayer->m_contentLayer->setPosition(scrollLayer->m_contentLayer->getPosition());
+            }
+            };
+        ae->show();
+    }
+    auto doSongInfoLayerSetup() {
+        if (not typeinfo_cast<SongInfoLayer*>(this)) return;
+        //add the button ya?
+        if (SETTING(bool, "ui")) {
+            CCMenuItemSpriteExtra* settings; {
+                settings = CCMenuItemSpriteExtra::create(mle_ui::settingsButtonSprite(), this, menu_selector(FLAlertLayerExt::onConfigureSong));
+                settings->setID("settings"_spr);
+                settings->setPosition(CCPoint(382.000f, -50.f));
+                settings->m_baseScale = 0.8f;
+                settings->setScale(settings->m_baseScale);
+            };
+            this->m_buttonMenu->addChild(settings);
+        }
+    }
+    $override void show() {
+        FLAlertLayer::show(); 
+        doSongInfoLayerSetup();
+    }
+};

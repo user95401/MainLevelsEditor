@@ -153,9 +153,9 @@ namespace mle_audiotools {
         std::string m_url;
         int m_artistID;
         int m_audioID;
-        matjson::Value m_json;
+        matjson::Value m_json = matjson::Value();
         inline static bool CallDefaults = false;
-        inline static void updateFromFile(Audio* pAudio) {
+        static void updateFromFile(Audio* pAudio) {
             //update by existing
             auto song_meta_file = audios_meta_path / fmt::format("{}.json", pAudio->m_audioID);
             if (!my_fs::exists(song_meta_file)) return;
@@ -171,6 +171,14 @@ namespace mle_audiotools {
             pAudio->m_url = value.try_get<std::string>("m_url").value_or(pAudio->m_url.data()).data();
             pAudio->m_artistID = value.try_get<int>("m_artistID").value_or(pAudio->m_artistID);
         }
+        auto resetJson() {
+            this->m_json.try_set("m_fileName", this->m_fileName);
+            this->m_json.try_set("m_title", this->m_title);
+            this->m_json.try_set("m_url", this->m_url);
+            this->m_json.try_set("m_artistID", this->m_artistID);
+            return this->m_json;
+        }
+        void openInfoLayer();
         Audio(int id = 1, bool noDefaults = true) {
             //default
             this->m_audioID = id;
@@ -185,11 +193,7 @@ namespace mle_audiotools {
             //set vars from
             Audio::updateFromFile(this);
             //json
-            this->m_json = matjson::Value();
-            this->m_json.try_set("m_fileName", this->m_fileName);
-            this->m_json.try_set("m_title", this->m_title);
-            this->m_json.try_set("m_url", this->m_url);
-            this->m_json.try_set("m_artistID", this->m_artistID);
+            resetJson();
             //save json
             if (not noDefaults and this->m_title == "Unknown") return;
             auto song_meta_file = audios_meta_path / fmt::format("{}.json", id);
@@ -220,6 +224,12 @@ namespace mle_audiotools {
             pAudio->m_name = value.try_get<std::string>("m_name").value_or(pAudio->m_name.data()).data();
             pAudio->m_artistID = value.try_get<int>("m_artistID").value_or(pAudio->m_artistID);
         }
+        auto resetJson() {
+            this->m_json.try_set("m_ytURL", this->m_ytURL);
+            this->m_json.try_set("m_ngURL", this->m_ngURL);
+            this->m_json.try_set("m_name", this->m_name);
+            return this->m_json;
+        };
         Artist(int id = 1, bool noDefaults = true) {
             //default
             this->m_artistID = id;
@@ -233,15 +243,18 @@ namespace mle_audiotools {
             //set vars from
             Artist::updateFromFile(this);
             //json
-            this->m_json = matjson::Value();
-            this->m_json.try_set("m_ytURL", this->m_ytURL);
-            this->m_json.try_set("m_ngURL", this->m_ngURL);
-            this->m_json.try_set("m_name", this->m_name);
+            resetJson();
             //save json
             if (not noDefaults and this->m_name == " ") return;
             auto song_meta_file = artists_meta_path / fmt::format("{}.json", id);
             std::ofstream(song_meta_file) << this->m_json.dump(matjson::TAB_INDENTATION);
         };
+    }; 
+    inline void Audio::openInfoLayer() {
+        auto artist = Artist(this->m_artistID);
+        auto sobj = SongInfoObject::create(this->m_audioID, this->m_title, artist.m_name, artist.m_artistID, 1337.f, artist.m_ngURL, artist.m_ytURL, this->m_url, 0, "", 0, 0, 0);
+        auto asd = CustomSongWidget::create(sobj, nullptr, 0, 0, 0, 1, 0, 0, 0);
+        asd->onMore(asd);
     };
 }
 
@@ -266,11 +279,148 @@ namespace mle_ui {
         hi->addChild(typeinfo_cast<CCSprite*>(hi->getChildren()->objectAtIndex(0)));//make it darker
         return hi;
     }
+    class ArtistsLayer : public GJDropDownLayer {
+    public:
+        struct FileNumbericSort {
+            bool operator()(const my_fs::path& a, const my_fs::path& b) const {
+                auto stra = std::regex_replace(a.filename().string(), std::regex(a.filename().extension().string()), "");
+                auto strb = std::regex_replace(b.filename().string(), std::regex(b.filename().extension().string()), "");
+                auto inta = utils::numFromString<int>(stra).value_or(0);
+                auto intb = utils::numFromString<int>(strb).value_or(0);
+                return inta <= intb;
+            }
+        };
+        void onView(CCObject* obj);
+        void addArtistsCell(int id, bool& altBg, CCContentLayer* contentLayer) {
+            auto width = contentLayer->getContentWidth();
+            //hr
+            if (altBg) contentLayer->addChild(CCLayerColor::create(
+                ccColor4B(161 - 20, 88 - 20, 44 - 20, 255),
+                width, 1.00f
+            ));
+            //item a 
+            auto entry = CCLayerColor::create(
+                altBg ? ccColor4B(161, 88, 44, 255) : ccColor4B(194, 114, 62, 255),
+                width, 60.000f
+            );
+            entry->setLayout(AnchorLayout::create());
+            //content
+            auto artist = mle_audiotools::Artist(id);
+            auto btnAspectWidth = width - 100.0f;
+            auto nameStr = fmt::format("{}", artist.m_name);
+            if (auto nameLabel = CCLabelBMFont::create(nameStr.c_str(), "bigFont.fnt")) {
+                nameLabel->setScale(0.7f);
+                nameLabel->setAnchorPoint(CCPoint(0.f, 0.5f));
+                //fitUpScale
+                if (nameLabel->getContentWidth() > btnAspectWidth) {
+                    auto fitUpScale = btnAspectWidth / nameLabel->getContentWidth();
+                    if (fitUpScale < nameLabel->getScale()) nameLabel->setScale(fitUpScale);
+                }
+                //point
+                nameLabel->setLayoutOptions(
+                    AnchorLayoutOptions::create()
+                    ->setAnchor(Anchor::TopLeft)
+                    ->setOffset(CCPoint(10.f, -20.f))
+                );
+                //add
+                entry->addChild(nameLabel);
+                entry->updateLayout();
+            }
+            auto idStr = fmt::format("ID: {}", artist.m_artistID);
+            if (auto artistLabel = CCLabelBMFont::create(idStr.c_str(), "goldFont.fnt")) {
+                artistLabel->setScale(0.7f);
+                artistLabel->setAnchorPoint(CCPoint(0.f, 0.5f));
+                //fitUpScale
+                if (artistLabel->getContentWidth() > btnAspectWidth) {
+                    auto fitUpScale = btnAspectWidth / artistLabel->getContentWidth();
+                    if (fitUpScale < artistLabel->getScale()) artistLabel->setScale(fitUpScale);
+                }
+                //point
+                artistLabel->setLayoutOptions(
+                    AnchorLayoutOptions::create()
+                    ->setAnchor(Anchor::BottomLeft)
+                    ->setOffset(CCPoint(10.f, 19.f))
+                );
+                //add
+                entry->addChild(artistLabel);
+                entry->updateLayout();
+            }
+            if (auto viewBtnSprite = ButtonSprite::create("View", 1.f)) {
+                viewBtnSprite->m_BGSprite->setContentSize(CCSize(62.65f, 30.f));
+                viewBtnSprite->m_label->setFntFile("bigFont.fnt");
+                viewBtnSprite->m_label->setScale(0.6f);
+                auto menu = CCMenu::createWithItem(
+                    CCMenuItemSpriteExtra::create(viewBtnSprite, this, menu_selector(ArtistsLayer::onView))
+                );
+                cocos::getChildOfType<CCMenuItemSpriteExtra>(menu, 0)->setTag(id);
+                menu->setLayoutOptions(
+                    AnchorLayoutOptions::create()
+                    ->setAnchor(Anchor::Right)
+                    ->setOffset(CCPoint(-42.f, 0.f))
+                );
+                entry->addChild(menu);
+                entry->updateLayout();
+            }
+            //add
+            contentLayer->addChild(entry);
+            contentLayer->setContentHeight(
+                contentLayer->getContentHeight() + 1.1f + entry->getContentHeight()
+            );
+            //hr
+            if (altBg) contentLayer->addChild(CCLayerColor::create(
+                ccColor4B(161 - 20, 88 - 20, 44 - 20, 255),
+                width, 1.00f
+            ));
+            //sw alt
+            altBg = !altBg;
+        }
+        static auto create() {
+            auto rtn = new ArtistsLayer;
+            rtn->init("Artists Dir");
+            //ScrollLayer::create
+            auto scrollLayer = ScrollLayer::create(rtn->m_listLayer->getContentSize());
+            scrollLayer->setID("scrollLayer"_spr);
+            rtn->m_listLayer->addChild(scrollLayer);
+            //fill contentLayer
+            auto& contentLayer = scrollLayer->m_contentLayer;
+            contentLayer->setContentHeight(0.f);
+            contentLayer->setLayout(
+                ColumnLayout::create()
+                ->setGap(0)
+                ->setAxisReverse(true)
+                ->setAxisAlignment(AxisAlignment::End)
+            );
+            auto altBg = true;
+            std::set<my_fs::path, FileNumbericSort> aFileNumbericSortSet;
+            for (auto& entry : my_fs::directory_iterator(artists_meta_path))
+                aFileNumbericSortSet.insert(entry.path());
+            for (auto& filepath : aFileNumbericSortSet) {
+                if (filepath.filename().extension() == ".json") {
+                    auto name = std::regex_replace(
+                        filepath.filename().string(),
+                        std::regex(filepath.filename().extension().string()),
+                        ""
+                    );
+                    auto id = utils::numFromString<int>(name).value_or(0);
+                    rtn->addArtistsCell(id, altBg, contentLayer);
+                };
+            }
+            //update after adding
+            contentLayer->setContentHeight(
+                contentLayer->getContentHeight() > contentLayer->getParent()->getContentHeight() ?
+                contentLayer->getContentHeight() :
+                contentLayer->getParent()->getContentHeight()
+            );
+            contentLayer->updateLayout();
+            scrollLayer->scrollToTop();
+            return rtn;
+        }
+    };
     class LevelConfigPopup : public FLAlertLayer, FLAlertLayerProtocol, TextInputDelegate {
     public:
-        GJGameLevel* m_level;
+        GJGameLevel* m_level = nullptr;
         std::function<void()> m_onSave = []() {};
-        inline static auto create(GJGameLevel* for_level = LevelTools::getLevel(1, 0)) {
+        static auto create(GJGameLevel* for_level = LevelTools::getLevel(1, 0)) {
             auto rtn = new LevelConfigPopup;
             rtn->init(
                 rtn,
@@ -283,7 +433,20 @@ namespace mle_ui {
             rtn->customSetup();
             return rtn;
         }
-        inline void customSetup() {
+        void onPlayMusic(CCObject* toggleItemObj) {
+            auto m_audioTrack = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_audioTrack")); if (not m_audioTrack) return;
+            int audioTrack = utils::numFromString<int>(m_audioTrack->getString().data()).value_or(m_level->m_audioTrack);
+            auto toggleItem = typeinfo_cast<CCMenuItemToggler*>(toggleItemObj); if (not toggleItem) return;
+            toggleItem->isOn() ?
+                GameManager::get()->fadeInMenuMusic() :
+                GameManager::get()->fadeInMusic(mle_audiotools::Audio(audioTrack).m_fileName);
+        }
+        void onBrowseSongs(CCObject* asd) {
+            this->setZOrder(9);
+            auto downloadsoundtrackbutton = typeinfo_cast<CCMenuItemSpriteExtra*>(LevelSelectLayer::create(1)->getChildByIDRecursive("download-soundtrack-button"));
+            if (downloadsoundtrackbutton) downloadsoundtrackbutton->activate();
+        }
+        void customSetup() {
             //form_box
             auto form_box = CCLayer::create();
             if (form_box) {
@@ -307,21 +470,32 @@ namespace mle_ui {
                 labelNode->setID(id + std::string("/label"));
                 form_box->addChild(labelNode);
                 //inputNode
-                auto inputNode = TextInput::create(form_box->getContentWidth(), label, "gjFont41.fnt");
+                auto inputNode = TextInput::create(form_box->getContentWidth(), label, "chatFont.fnt");
                 inputNode->getInputNode()->setID(id);
+                inputNode->getInputNode()->setMaxLabelScale(1.f);
                 inputNode->setCommonFilter(commonFilter);
                 inputNode->setDelegate(this);
                 form_box->addChild(inputNode);
                 //upd
                 form_box->updateLayout();
-                };
+            };
             addInput("Name", "m_levelName");
             addInput("Audio Track", "m_audioTrack", CommonFilter::Int);
             addInput("Difficulty", "m_difficulty", CommonFilter::Int);
             addInput("Stars", "m_stars", CommonFilter::Int);
             loadInputs();
+            //playMusic
+            if (auto GJ_playMusicBtn_001 = CCSprite::createWithSpriteFrameName("GJ_playMusicBtn_001.png")) {
+                auto GJ_stopMusicBtn_001 = CCSprite::createWithSpriteFrameName("GJ_stopMusicBtn_001.png");
+                auto toggleItem = CCMenuItemToggler::create(
+                    GJ_playMusicBtn_001, GJ_stopMusicBtn_001,
+                    this, menu_selector(LevelConfigPopup::onPlayMusic)
+                );
+                toggleItem->setPosition(CCPoint(138.f, 212.f));
+                this->m_buttonMenu->addChild(toggleItem);
+            }
         }
-        inline void loadInputs() {
+        void loadInputs() {
             if (not this->m_level) return;
             auto m_levelName = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_levelName"));
             auto m_audioTrack = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_audioTrack"));
@@ -332,7 +506,7 @@ namespace mle_ui {
             if (m_difficulty) m_difficulty->setString(fmt::format("{}", (int)this->m_level->m_difficulty));
             if (m_stars) m_stars->setString(fmt::format("{}", this->m_level->m_stars.value()));
         }
-        inline void applyInputs() {
+        void applyInputs() {
             if (not this->m_level) return;
             auto m_levelName = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_levelName"));
             auto m_audioTrack = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_audioTrack"));
@@ -343,8 +517,8 @@ namespace mle_ui {
             if (m_difficulty) m_level->m_difficulty = (GJDifficulty)utils::numFromString<int>(m_difficulty->getString().data()).value_or((int)m_level->m_difficulty);
             if (m_stars) m_level->m_stars = utils::numFromString<int>(m_stars->getString().data()).value_or(m_level->m_stars.value());
         }
-        inline void textChanged(CCTextInputNode* p0) {
-            log::debug("{}({}) id: {}", __FUNCTION__, p0, p0->getID());
+        void textChanged(CCTextInputNode* p0) {
+            //log::debug("{}({}) id: {}", __FUNCTION__, p0, p0->getID());
             if (p0->getID() == "m_difficulty") {
                 auto difficulty = utils::numFromString<int>(p0->getString().data()).value_or(0);
                 GJDifficultySprite* difficultyPrev;
@@ -359,8 +533,27 @@ namespace mle_ui {
                 }
                 difficultyPrev->updateDifficultyFrame(difficulty, GJDifficultyName::Short);
             }
+            if (p0->getID() == "m_audioTrack") {
+                CCMenu* browseBtnMenu;
+                if (browseBtnMenu = typeinfo_cast<CCMenu*>(this->getChildByIDRecursive("browseBtnMenu")));
+                else {
+                    //browseBtnSpr
+                    auto browseBtnSpr = ButtonSprite::create("Browse", 0.5f);
+                    auto browseBtn = CCMenuItemSpriteExtra::create(
+                        browseBtnSpr, this, menu_selector(LevelConfigPopup::onBrowseSongs)
+                    );
+                    browseBtnMenu = CCMenu::createWithItem(browseBtn);
+                    browseBtnMenu->setAnchorPoint(CCPoint(0.f, 0.f));
+                    browseBtnMenu->setPosition(CCPoint(242.f, 6.f));
+                    browseBtnMenu->setScale(0.825f);
+                    browseBtnMenu->setID("browseBtnMenu");
+                    p0->getParent()->addChild(browseBtnMenu);
+                    handleTouchPriority(this);
+                }
+            }
         }
-        inline void FLAlert_Clicked(FLAlertLayer* p0, bool p1) {
+        void FLAlert_Clicked(FLAlertLayer* p0, bool p1) {
+            GameManager::get()->fadeInMenuMusic();
             if (not p1) return;
             applyInputs();
             //json
@@ -371,5 +564,239 @@ namespace mle_ui {
             //call custom func
             this->m_onSave();
         };
+    };
+    class AudioConfigPopup : public FLAlertLayer, FLAlertLayerProtocol, TextInputDelegate {
+    public:
+        std::function<void()> m_onSave = []() {};
+        mle_audiotools::Audio m_audio = mle_audiotools::Audio(0);
+        static auto create(int id = 0) {
+            auto rtn = new AudioConfigPopup;
+            rtn->init(
+                rtn,
+                "Audio Meta Config",
+                "\n \n \n \n \n \n \n \n ",
+                "Close", "Save", 352.000f, 0, 290.000f, 1.f
+            );
+            rtn->setID("AudioConfigPopup");
+            rtn->m_audio = mle_audiotools::Audio(id);
+            rtn->customSetup();
+            return rtn;
+        }
+        void onPlayMusic(CCObject* toggleItemObj) {
+            auto m_fileName = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_fileName")); if (not m_fileName) return;
+            auto toggleItem = typeinfo_cast<CCMenuItemToggler*>(toggleItemObj); if (not toggleItem) return;
+            toggleItem->isOn() ?
+                GameManager::get()->fadeInMenuMusic() :
+                GameManager::get()->fadeInMusic(m_fileName->getString());
+        }
+        void onBrowseArtists(CCObject* asd) {
+            auto pArtistsLayer = ArtistsLayer::create();
+            pArtistsLayer->showLayer(0);
+            pArtistsLayer->setZOrder(this->getZOrder());
+        }
+        void customSetup() {
+            //form_box
+            auto form_box = CCLayer::create();
+            if (form_box) {
+                //base sets
+                form_box->setID("form_box");
+                form_box->setPosition(CCPoint(0.f, 116.f));
+                form_box->setContentSize(CCSize(255.f, 175.f));
+                form_box->ignoreAnchorPointForPosition(false);
+                //add
+                this->m_buttonMenu->addChild(form_box);
+                //layout
+                auto layout = ColumnLayout::create();
+                layout->setAxisReverse(1);
+                layout->setCrossAxisOverflow(0);
+                form_box->setLayout(layout);
+            }
+            //addInputs
+            auto addInput = [this, form_box](auto label = "", auto id = "", CommonFilter commonFilter = CommonFilter::Any) {
+                //labelNode
+                auto labelNode = CCLabelBMFont::create(label, "bigFont.fnt");
+                labelNode->setID(id + std::string("/label"));
+                form_box->addChild(labelNode);
+                //inputNode
+                auto inputNode = TextInput::create(form_box->getContentWidth(), label, "chatFont.fnt");
+                inputNode->getInputNode()->setID(id);
+                inputNode->getInputNode()->setMaxLabelScale(1.f);
+                inputNode->setCommonFilter(commonFilter);
+                inputNode->setDelegate(this);
+                form_box->addChild(inputNode);
+                //upd
+                form_box->updateLayout();
+                }; 
+            addInput("File Name", "m_fileName");
+            addInput("Title", "m_title");
+            addInput("URL", "m_url");
+            addInput("Artist ID", "m_artistID", CommonFilter::Int);
+            loadInputs();
+            //playMusic
+            if (auto GJ_playMusicBtn_001 = CCSprite::createWithSpriteFrameName("GJ_playMusicBtn_001.png")) {
+                auto GJ_stopMusicBtn_001 = CCSprite::createWithSpriteFrameName("GJ_stopMusicBtn_001.png");
+                auto toggleItem = CCMenuItemToggler::create(
+                    GJ_playMusicBtn_001, GJ_stopMusicBtn_001,
+                    this, menu_selector(AudioConfigPopup::onPlayMusic)
+                );
+                toggleItem->setPosition(CCPoint(138.f, 212.f));
+                this->m_buttonMenu->addChild(toggleItem);
+            }
+        }
+        void loadInputs() {
+            auto m_fileName = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_fileName"));
+            auto m_title = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_title"));
+            auto m_url = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_url"));
+            auto m_artistID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_artistID"));
+            if (m_fileName) m_fileName->setString(fmt::format("{}", this->m_audio.m_fileName.data()));
+            if (m_title) m_title->setString(fmt::format("{}", this->m_audio.m_title.data()));
+            if (m_url) m_url->setString(fmt::format("{}", this->m_audio.m_url.data()));
+            if (m_artistID) m_artistID->setString(fmt::format("{}", this->m_audio.m_artistID));
+        }
+        void applyInputs() {
+            auto m_fileName = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_fileName"));
+            auto m_title = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_title"));
+            auto m_url = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_url"));
+            auto m_artistID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_artistID"));
+            if (m_fileName) this->m_audio.m_fileName = m_fileName->getString();
+            if (m_title) this->m_audio.m_title = m_title->getString();
+            if (m_url) this->m_audio.m_url = m_url->getString();
+            if (m_artistID) this->m_audio.m_artistID = utils::numFromString<int>(m_artistID->getString().data()).value_or(this->m_audio.m_artistID);
+        }
+        void textChanged(CCTextInputNode* p0) {
+            //log::debug("{}({}) id: {}", __FUNCTION__, p0, p0->getID());
+            if (p0->getID() == "m_fileName") {
+                CCLabelBMFont* existanceIndicator;
+                if (existanceIndicator = typeinfo_cast<CCLabelBMFont*>(this->getChildByIDRecursive("existanceIndicator")));
+                else {
+                    existanceIndicator = CCLabelBMFont::create("", "bigFont.fnt");
+                    existanceIndicator->setAnchorPoint(CCPoint(0.f, -0.200f));
+                    existanceIndicator->setPosition(CCPoint(260.f, 0.f));
+                    existanceIndicator->setScale(0.3f);
+                    existanceIndicator->setID("existanceIndicator");
+                    p0->getParent()->addChild(existanceIndicator);
+                }
+                auto exist = my_fs::exists(p0->getString().data());
+                existanceIndicator->setString(exist ? "file\nexists." : "file don't\nexists!");
+                existanceIndicator->setColor(exist ? ccColor3B(85, 255, 100) : ccColor3B(255, 85, 85));
+            }
+            if (p0->getID() == "m_artistID") {
+                CCMenu* browseBtnMenu;
+                if (browseBtnMenu = typeinfo_cast<CCMenu*>(this->getChildByIDRecursive("browseBtnMenu")));
+                else {
+                    //browseBtnSpr
+                    auto browseBtnSpr = ButtonSprite::create("Browse", 0.5f);
+                    auto browseBtn = CCMenuItemSpriteExtra::create(
+                        browseBtnSpr, this, menu_selector(AudioConfigPopup::onBrowseArtists)
+                    );
+                    browseBtnMenu = CCMenu::createWithItem(browseBtn);
+                    browseBtnMenu->setAnchorPoint(CCPoint(0.f, 0.f));
+                    browseBtnMenu->setPosition(CCPoint(242.f, 6.f));
+                    browseBtnMenu->setScale(0.825f);
+                    browseBtnMenu->setID("browseBtnMenu");
+                    p0->getParent()->addChild(browseBtnMenu);
+                    handleTouchPriority(this);
+                }
+            }
+        }
+        void FLAlert_Clicked(FLAlertLayer* p0, bool p1) {
+            GameManager::get()->fadeInMenuMusic();
+            if (not p1) return;
+            applyInputs();
+            //json
+            auto value = m_audio.resetJson();
+            //save json
+            auto song_meta_file = audios_meta_path / fmt::format("{}.json", m_audio.m_audioID);
+            std::ofstream(song_meta_file) << value.dump(matjson::TAB_INDENTATION);
+            //call custom func
+            this->m_onSave();
+        };
+    };
+    class ArtistsConfigPopup : public FLAlertLayer, FLAlertLayerProtocol, TextInputDelegate {
+    public:
+        std::function<void()> m_onSave = []() {};
+        mle_audiotools::Artist m_artist = mle_audiotools::Artist(0);
+        static auto create(int id = 0) {
+            auto rtn = new ArtistsConfigPopup;
+            rtn->init(
+                rtn,
+                "Audio Meta Config",
+                "\n \n \n \n \n \n \n \n ",
+                "Close", "Save", 352.000f, 0, 290.000f, 1.f
+            );
+            rtn->setID("ArtistsConfigPopup");
+            rtn->m_artist = mle_audiotools::Artist(id);
+            rtn->customSetup();
+            return rtn;
+        }
+        void customSetup() {
+            //form_box
+            auto form_box = CCLayer::create();
+            if (form_box) {
+                //base sets
+                form_box->setID("form_box");
+                form_box->setPosition(CCPoint(0.f, 116.f));
+                form_box->setContentSize(CCSize(255.f, 175.f));
+                form_box->ignoreAnchorPointForPosition(false);
+                //add
+                this->m_buttonMenu->addChild(form_box);
+                //layout
+                auto layout = ColumnLayout::create();
+                layout->setAxisReverse(1);
+                layout->setCrossAxisOverflow(0);
+                form_box->setLayout(layout);
+            }
+            //addInputs
+            auto addInput = [this, form_box](auto label = "", auto id = "", CommonFilter commonFilter = CommonFilter::Any) {
+                //labelNode
+                auto labelNode = CCLabelBMFont::create(label, "bigFont.fnt");
+                labelNode->setID(id + std::string("/label"));
+                form_box->addChild(labelNode);
+                //inputNode
+                auto inputNode = TextInput::create(form_box->getContentWidth(), label, "chatFont.fnt");
+                inputNode->getInputNode()->setID(id);
+                inputNode->getInputNode()->setMaxLabelScale(1.f);
+                inputNode->setCommonFilter(commonFilter);
+                inputNode->setDelegate(this);
+                form_box->addChild(inputNode);
+                //upd
+                form_box->updateLayout();
+                }; 
+            addInput("ytURL", "m_ytURL");
+            addInput("ngURL", "m_ngURL");
+            addInput("name", "m_name");
+            loadInputs();
+        }
+        void loadInputs() {
+            auto m_ytURL = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_ytURL"));
+            auto m_ngURL = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_ngURL"));
+            auto m_name = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_name"));
+            if (m_ytURL) m_ytURL->setString(fmt::format("{}", this->m_artist.m_ytURL.data()));
+            if (m_ngURL) m_ngURL->setString(fmt::format("{}", this->m_artist.m_ngURL.data()));
+            if (m_name) m_name->setString(fmt::format("{}", this->m_artist.m_name.data()));
+        }
+        void applyInputs() {
+            auto m_ytURL = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_ytURL"));
+            auto m_ngURL = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_ngURL"));
+            auto m_name = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_name"));
+            if (m_ytURL) this->m_artist.m_ytURL = m_ytURL->getString();
+            if (m_ngURL) this->m_artist.m_ngURL = m_ngURL->getString();
+            if (m_name) this->m_artist.m_name = m_name->getString();
+        }
+        void FLAlert_Clicked(FLAlertLayer* p0, bool p1) {
+            GameManager::get()->fadeInMenuMusic();
+            if (not p1) return;
+            applyInputs();
+            //json
+            auto value = m_artist.resetJson();
+            //save json
+            auto artist_meta_file = artists_meta_path / fmt::format("{}.json", m_artist.m_artistID);
+            std::ofstream(artist_meta_file) << value.dump(matjson::TAB_INDENTATION);
+            //call custom func
+            this->m_onSave();
+        };
+    };
+    inline void ArtistsLayer::onView(CCObject* obj) {
+        ArtistsConfigPopup::create(obj->getTag())->show();
     };
 }

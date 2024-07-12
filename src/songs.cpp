@@ -33,10 +33,12 @@ class $modify(LevelTools) {
 class $modify(SongsLayerExt, SongsLayer) {
 	void onView(CCObject* obj) {
 		auto audio = Audio(obj->getTag());
-		auto artist = Artist(audio.m_artistID);
-		auto sobj = SongInfoObject::create(audio.m_audioID, audio.m_title, artist.m_name, artist.m_artistID, 1337.f, artist.m_ngURL, artist.m_ytURL, audio.m_url, 0, "", 0, 0, 0);
-		auto asd = CustomSongWidget::create(sobj, nullptr, 0, 0, 0, 1, 0, 0, 0);
-		asd->onMore(asd);
+		audio.openInfoLayer();
+	}
+	void onViewArtists(CCObject* obj) {
+		auto pArtistsLayer = mle_ui::ArtistsLayer::create();
+		pArtistsLayer->showLayer(0);
+		pArtistsLayer->setZOrder(this->getZOrder());
 	}
 	void addSongCell(int id, bool &altBg, CCContentLayer* contentLayer) {
 		auto width = contentLayer->getContentWidth();
@@ -55,7 +57,9 @@ class $modify(SongsLayerExt, SongsLayer) {
 		auto audio = Audio(id);
 		auto artist = Artist(audio.m_artistID);
 		auto btnAspectWidth = width - 100.0f;
-		if (auto nameLabel = CCLabelBMFont::create(audio.m_title.c_str(), "bigFont.fnt")) {
+		auto nameStr = fmt::format("{}", audio.m_title);
+		if (SETTING(bool, "ui")) nameStr = fmt::format("{} [id: {}]", audio.m_title, audio.m_audioID);
+		if (auto nameLabel = CCLabelBMFont::create(nameStr.c_str(), "bigFont.fnt")) {
 			nameLabel->setScale(0.7f);
 			nameLabel->setAnchorPoint(CCPoint(0.f, 0.5f));
 			//fitUpScale
@@ -73,7 +77,9 @@ class $modify(SongsLayerExt, SongsLayer) {
 			entry->addChild(nameLabel);
 			entry->updateLayout();
 		}
-		if (auto artistLabel = CCLabelBMFont::create(fmt::format("By {}", artist.m_name).c_str(), "goldFont.fnt")) {
+		auto artistStr = fmt::format("By {}", artist.m_name);
+		if (SETTING(bool, "ui")) artistStr = fmt::format("By {} [id: {}]", artist.m_name, audio.m_artistID);
+		if (auto artistLabel = CCLabelBMFont::create(artistStr.c_str(), "goldFont.fnt")) {
 			artistLabel->setScale(0.7f);
 			artistLabel->setAnchorPoint(CCPoint(0.f, 0.5f));
 			//fitUpScale
@@ -128,6 +134,7 @@ class $modify(SongsLayerExt, SongsLayer) {
 		customListView->setPosition(CCPoint(customListView->getContentSize().width, 0.f));
 		//ScrollLayer::create
 		auto scrollLayer = ScrollLayer::create(customListView->getContentSize());
+		scrollLayer->setID("scrollLayer"_spr);
 		this->m_listLayer->addChild(scrollLayer);
 		//fill contentLayer
 		auto& contentLayer = scrollLayer->m_contentLayer; 
@@ -138,7 +145,7 @@ class $modify(SongsLayerExt, SongsLayer) {
 			->setAxisReverse(true)
 			->setAxisAlignment(AxisAlignment::End)
 		);
-		auto altBg = false;
+		auto altBg = true;
 		//amount
 		int id = SETTING(int64_t, "songs_start_id");
 		int max_id = SETTING(int64_t, "songs_max_id");
@@ -153,5 +160,29 @@ class $modify(SongsLayerExt, SongsLayer) {
 		);
 		contentLayer->updateLayout();
 		scrollLayer->scrollToTop();
+		//ui
+		if (SETTING(bool, "ui")) {
+			CCMenuItemSpriteExtra* viewArtists; {
+				viewArtists = CCMenuItemSpriteExtra::create(
+					ButtonSprite::create("View Artists"),
+					this, menu_selector(SongsLayerExt::onViewArtists)
+				);
+				viewArtists->setID("viewArtists"_spr);
+				viewArtists->setPosition(CCPoint(277.f, -270.f));
+				viewArtists->m_baseScale = 0.8f;
+				viewArtists->setScale(viewArtists->m_baseScale);
+			};
+			this->m_buttonMenu->addChild(viewArtists);
+		}
+	}
+};
+
+#include <Geode/modify/CustomSongWidget.hpp>
+class $modify(CustomSongWidgetExt, CustomSongWidget) {
+	void onMore(cocos2d::CCObject * sender) {
+		CustomSongWidget::onMore(sender);
+		if (auto openedJustNowPop = cocos::findFirstChildRecursive<SongInfoLayer>(CCDirector::get()->m_pRunningScene, [](auto) {return true; })) {
+			openedJustNowPop->setTag(this->m_customSongID);
+		}
 	}
 };
