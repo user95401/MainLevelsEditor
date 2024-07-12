@@ -42,13 +42,13 @@
 			"default": 22
 		},
 		"the_tower": {
-			"name": "The Tower",
+			"name": "Add The Tower",
 			"description": "shows The Tower page",
 			"type": "bool",
 			"default": true
 		},
 		"coming_soon": {
-			"name": "Coming Soon",
+			"name": "Add Coming Soon",
 			"description": "shows Coming Soon page",
 			"type": "bool",
 			"default": true
@@ -64,12 +64,12 @@
 			"name": "  Songs List Max ID",
 			"description": "its about populating the songs list",
 			"type": "int",
-			"min": 1,
+			"min": 0,
 			"max": 500,
 			"default": 21
 		},
 		"practice_music": {
-			"name": "Practice Music",
+			"name": "Add Practice Song",
 			"description": "add <cy>-1</c> song to list",
 			"type": "bool",
 			"default": true
