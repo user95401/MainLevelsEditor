@@ -40,7 +40,7 @@ class $modify(SongsLayerExt, SongsLayer) {
 		pArtistsLayer->showLayer(0);
 		pArtistsLayer->setZOrder(this->getZOrder());
 	}
-	void addSongCell(int id, bool &altBg, CCContentLayer* contentLayer) {
+	auto addSongCell(int id, bool &altBg, CCContentLayer* contentLayer) {
 		auto width = contentLayer->getContentWidth();
 		//hr
 		if (altBg) contentLayer->addChild(CCLayerColor::create(
@@ -114,7 +114,7 @@ class $modify(SongsLayerExt, SongsLayer) {
 			entry->updateLayout();
 		}
 		//add
-		contentLayer->addChild(entry);
+		contentLayer->addChild(entry, 0, id);
 		contentLayer->setContentHeight(
 			contentLayer->getContentHeight() + 1.1f + entry->getContentHeight()
 		);
@@ -125,6 +125,7 @@ class $modify(SongsLayerExt, SongsLayer) {
 		));
 		//sw alt
 		altBg = !altBg;
+		return entry;
 	}
 	$override void customSetup() {
 		SongsLayer::customSetup();
@@ -168,7 +169,10 @@ class $modify(SongsLayerExt, SongsLayer) {
 					this, menu_selector(SongsLayerExt::onViewArtists)
 				);
 				viewArtists->setID("viewArtists"_spr);
-				viewArtists->setPosition(CCPoint(277.f, -270.f));
+				viewArtists->setPosition({
+					(this->m_buttonMenu->getContentSize().width / 2) - this->m_buttonMenu->getPositionX(),
+					(this->m_buttonMenu->getContentSize().height / -1) + 48.f
+					});
 				viewArtists->m_baseScale = 0.8f;
 				viewArtists->setScale(viewArtists->m_baseScale);
 			};

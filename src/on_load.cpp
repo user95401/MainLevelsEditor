@@ -2,9 +2,9 @@
 
 void Loaded() {
 	//dirs
-	my_fs::create_directories(levels_meta_path);
-	my_fs::create_directories(audios_meta_path);
-	my_fs::create_directories(artists_meta_path);
+	fs::create_directories(levels_meta_path);
+	fs::create_directories(audios_meta_path);
+	fs::create_directories(artists_meta_path);
 	//add info
 	std::ofstream(levels_meta_path / "_here is {id}.json meta files about names, stars and stuff") << "asd";
 	std::ofstream(levels_path / "_here u put {id}.txt level data files");
@@ -20,7 +20,7 @@ void Loaded() {
 		if (level_is_exists_in_gd and not level_is_exists_in_mod) {
 			log::debug("ofstreamingo...");
 			std::ofstream(level_path_to_save)
-				<< my_fs::read(level_in_game_path);
+				<< fs::read(level_in_game_path);
 		}
 	}
 	//preset all org songs

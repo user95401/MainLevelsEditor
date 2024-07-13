@@ -39,7 +39,7 @@ class $modify(LevelPageExt, LevelPage) {
                     if (levelID > currentID and levelID < 500) {
                         auto rn1 = levels_meta_path / fmt::format("{}.json", levelID);
                         auto rn2 = levels_meta_path / fmt::format("{}.json", levelID - 1);
-                        if (my_fs::exists(rn1)) my_fs::rename(rn1, rn2);
+                        if (fs::exists(rn1)) fs::rename(rn1, rn2);
                     };
                 }
                 //level data
@@ -47,7 +47,7 @@ class $modify(LevelPageExt, LevelPage) {
                     if (levelID > currentID) {
                         auto rn1 = levels_path / fmt::format("{}.txt", levelID);
                         auto rn2 = levels_path / fmt::format("{}.txt", levelID - 1);
-                        if (my_fs::exists(rn1)) my_fs::rename(rn1, rn2);
+                        if (fs::exists(rn1)) fs::rename(rn1, rn2);
                     }
                 }
             }

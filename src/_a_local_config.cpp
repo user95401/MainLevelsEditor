@@ -2,31 +2,32 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+inline std::error_code last_err_code;
 void CopyFromLocal() {
-    auto game_dir = Mod::get()->getConfigDir() / "settings.json"; //from_game_dir
-    auto save_dir = Mod::get()->getSaveDir() / "settings.json"; //from_game_dir
-    if (!std::filesystem::exists(game_dir)) return;
-    //if (!std::filesystem::exists(save_dir)) return;
+    auto at_config_dir = Mod::get()->getConfigDir() / "settings.json"; //from_game_dir
+    auto at_save_dir = Mod::get()->getSaveDir() / "settings.json"; //from_game_dir
+    if (!std::filesystem::exists(at_config_dir, last_err_code)) return;
     std::filesystem::copy(
-        game_dir, //from game dir
-        save_dir, //to game save dir
-        std::filesystem::copy_options::overwrite_existing);
+        at_config_dir, //from game dir
+        at_save_dir, //to game save dir
+        std::filesystem::copy_options::overwrite_existing,
+        last_err_code
+    );
     //aaaa
     auto link = Mod::get()->getSaveDir() / "REAL CONFIG DIR LINK";
-    if (std::filesystem::exists(link)) std::filesystem::remove(link);
-    std::error_code err_code;
-    std::filesystem::create_directory_symlink(Mod::get()->getConfigDir(), link, err_code);
+    if (std::filesystem::exists(link, last_err_code)) std::filesystem::remove(link, last_err_code);
+    std::filesystem::create_directory_symlink(Mod::get()->getConfigDir(), link, last_err_code);
 };
 
 void CopyFromData() {
-    auto game_dir = Mod::get()->getConfigDir() / "settings.json"; //from_game_dir
-    auto save_dir = Mod::get()->getSaveDir() / "settings.json"; //from_game_dir
-    //if (!std::filesystem::exists(game_dir)) return;
-    if (!std::filesystem::exists(save_dir)) return;
-    std::filesystem::copy(
-        save_dir, //to game save dir
-        game_dir, //from game dir
-        std::filesystem::copy_options::overwrite_existing);
+    auto at_config_dir = Mod::get()->getConfigDir() / "settings.json"; //from_game_dir
+    auto at_save_dir = Mod::get()->getSaveDir() / "settings.json"; //from_game_dir
+    if (!std::filesystem::exists(at_save_dir, last_err_code)) return;
+    std::filesystem::rename(
+        at_save_dir, //to game save dir
+        at_config_dir, //from game dir
+        last_err_code
+    );
 };
 
 $on_mod(Loaded) {

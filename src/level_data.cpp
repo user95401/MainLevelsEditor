@@ -21,10 +21,10 @@ class $modify(LocalLevelManagerExt, LocalLevelManager) {
 		auto toRead = std::string();
 		auto dataFile = std::string(CCFileUtils::get()->fullPathForFilename(fmt::format("levels/{}.txt", levelID).c_str(), 0).data());
 		auto dataFileAtMod = (levels_path / fmt::format("{}.txt", levelID)).string();
-		if (my_fs::exists(dataFileAtMod)) toRead = dataFileAtMod;
+		if (fs::exists(dataFileAtMod)) toRead = dataFileAtMod;
 		else toRead = dataFile;
 		//read
-		auto fileContent = my_fs::read(toRead);
+		auto fileContent = fs::read(toRead);
 		//return
 		return gd::string(fileContent.c_str());
 	}
