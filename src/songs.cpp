@@ -187,6 +187,8 @@ class $modify(CustomSongWidgetExt, CustomSongWidget) {
 		CustomSongWidget::onMore(sender);
 		if (auto openedJustNowPop = cocos::findFirstChildRecursive<SongInfoLayer>(CCDirector::get()->m_pRunningScene, [](auto) {return true; })) {
 			openedJustNowPop->setTag(this->m_customSongID);
+			if (this->m_isRobtopSong) openedJustNowPop->addChild(nodeWithID("isRobtopSong"));
+			if (this->m_isMusicLibrary) openedJustNowPop->addChild(nodeWithID("isMusicLibrary"));
 		}
 	}
 };

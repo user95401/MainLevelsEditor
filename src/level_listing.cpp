@@ -45,3 +45,34 @@ class $modify(LevelPage) {
         }
     }
 };
+
+#include <Geode/modify/CCLayer.hpp>
+class $modify(LevelAreaLayerExt, CCLayer) {
+    void onBack(CCObject*) {
+        GameManager::get()->playMenuMusic();
+        switchToScene(LevelSelectLayer::create(SETTING(int64_t, "max_id")));
+    }
+    auto customSetupSch(float) {
+        cocos::findFirstChildRecursive<CCMenuItemSpriteExtra>(
+            this, [](auto node) {
+                if (cocos::getChildBySpriteFrameName(node, "GJ_arrow_03_001.png") == nullptr) return false;
+                
+                node->m_pfnSelector = menu_selector(LevelAreaLayerExt::onBack);
+                node->setID("onBackBtnPatch"_spr);
+                
+                return true;
+            }
+        );
+    }
+    $override bool init() {
+        if (typeinfo_cast<LevelAreaLayer*>(this)) 
+            this->scheduleOnce(schedule_selector(LevelAreaLayerExt::customSetupSch), 0.f);
+        return CCLayer::init();
+    }
+};
+#include <Geode/modify/LevelAreaLayer.hpp>
+class $modify(LevelAreaLayer) {
+    $override void keyBackClicked() {
+        ((LevelAreaLayerExt*)LevelAreaLayerExt::create())->onBack(this);
+    }
+};

@@ -110,22 +110,69 @@ class $modify(FLAlertLayerExt, FLAlertLayer) {
             };
         ae->show();
     }
-    auto doSongInfoLayerSetup() {
-        if (not typeinfo_cast<SongInfoLayer*>(this)) return;
+    auto onCopySong(CCObject*) {
+        auto pCopyLevelPopup = mle_ui::CopyAudioPopup::create(
+            0,0
+        );
+        pCopyLevelPopup->show();
+    }
+    auto songInfoLayerSetupSch(float) {
         //add the button ya?
         if (SETTING(bool, "ui")) {
-            CCMenuItemSpriteExtra* settings; {
+            log::debug("isRobtopSong: {}", this->getChildByID("isRobtopSong"));
+            if (this->getChildByID("isRobtopSong")) {
+                CCMenuItemSpriteExtra* settings;
                 settings = CCMenuItemSpriteExtra::create(mle_ui::settingsButtonSprite(), this, menu_selector(FLAlertLayerExt::onConfigureSong));
                 settings->setID("settings"_spr);
                 settings->setPosition(CCPoint(382.000f, -50.f));
                 settings->m_baseScale = 0.8f;
-                settings->setScale(settings->m_baseScale);
-            };
-            this->m_buttonMenu->addChild(settings);
+                settings->setScale(settings->m_baseScale); 
+                this->m_buttonMenu->addChild(settings);
+            }
+            else {
+                CCMenuItemSpriteExtra* copy;
+                copy = CCMenuItemSpriteExtra::create(
+                    CCSprite::createWithSpriteFrameName("GJ_copyBtn2_001.png"), 
+                    this, menu_selector(FLAlertLayerExt::onCopySong)
+                );
+                copy->setID("copy"_spr);
+                copy->setPosition(CCPoint(382.000f, -50.f));
+                copy->m_baseScale = 0.8f;
+                copy->setScale(copy->m_baseScale);
+                this->m_buttonMenu->addChild(copy);
+            }
         }
     }
     $override void show() {
-        FLAlertLayer::show(); 
-        doSongInfoLayerSetup();
+        FLAlertLayer::show();
+        if (typeinfo_cast<SongInfoLayer*>(this))
+            this->scheduleOnce(schedule_selector(FLAlertLayerExt::songInfoLayerSetupSch), 0.f);
+    }
+};
+
+#include <Geode/modify/PauseLayer.hpp>
+class $modify(PauseLayerExt, PauseLayer) {
+    void copyLevel(CCObject*) {
+        auto pCopyLevelPopup = mle_ui::CopyLevelPopup::create(
+            GameManager::get()->getPlayLayer()->m_level
+        );
+        pCopyLevelPopup->show();
+    }
+    $override void customSetup() {
+        PauseLayer::customSetup();
+        if (auto menu = typeinfo_cast<CCMenu*>(this->getChildByIDRecursive("right-button-menu"))) {
+            CCMenuItemSpriteExtra* copyLevel; {
+                copyLevel = CCMenuItemSpriteExtra::create(
+                    CCSprite::createWithSpriteFrameName("GJ_copyBtn_001.png"),
+                    this, menu_selector(PauseLayerExt::copyLevel)
+                );
+                copyLevel->setID("copyLevel"_spr);
+                copyLevel->m_baseScale = 0.575f;
+                copyLevel->setScale(copyLevel->m_baseScale);
+                copyLevel->setLayoutOptions(AxisLayoutOptions::create()->setAutoScale(false));
+                menu->addChild(copyLevel);
+                menu->updateLayout();
+            };
+        }
     }
 };

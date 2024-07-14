@@ -1,5 +1,6 @@
 #pragma once
 #include <Geode/Geode.hpp>
+#include <Geode/ui/GeodeUI.hpp>
 using namespace geode::prelude;
 
 #include <regex>
@@ -88,6 +89,12 @@ namespace geode::cocos {
             ) return btnSpriteTry;
         return "CANT_GET_FRAME_NAME";
     }
+    inline auto nodeWithID(std::string id, int tag = 0) {
+        auto node = CCNode::create();
+        node->setID(id);
+        if (tag != 0) node->setTag(tag);
+        return node;
+    }
 };
 
 namespace mle_leveltools {
@@ -98,6 +105,7 @@ namespace mle_leveltools {
         level->m_creatorName = value.try_get<std::string>("m_creatorName").value_or(level->m_creatorName.data());
         level->m_difficulty = (GJDifficulty)value.try_get<int>("m_difficulty").value_or((int)level->m_difficulty);
         level->m_stars = value.try_get<int>("m_stars").value_or(level->m_stars.value());
+        level->m_requiredCoins = value.try_get<int>("m_requiredCoins").value_or(level->m_requiredCoins);
         level->m_audioTrack = value.try_get<int>("m_audioTrack").value_or(level->m_audioTrack);
         level->m_songID = value.try_get<int>("m_songID").value_or(level->m_songID);
         level->m_levelVersion = value.try_get<int>("m_levelVersion").value_or(level->m_levelVersion);
@@ -115,6 +123,7 @@ namespace mle_leveltools {
         value.try_set("m_audioTrack", level->m_audioTrack);
         value.try_set("m_difficulty", (int)level->m_difficulty);
         value.try_set("m_stars", level->m_stars.value());
+        value.try_set("m_requiredCoins", level->m_requiredCoins);
         value.try_set("________SOME_SHIT________", " vvv vvv ");
         value.try_set("m_levelDesc", std::string(level->m_levelDesc.data()));
         value.try_set("m_creatorName", std::string(level->m_creatorName.data()));;
@@ -493,6 +502,82 @@ namespace mle_ui {
             newArtistsLayer->m_scrollLayer->m_contentLayer->setPositionY(0.f);
         }
     };
+    class LevelsListMDPopup : public FLAlertLayer, FLAlertLayerProtocol, CCScrollLayerExtDelegate {
+    public:
+        inline static CCPoint lastScrollPos = CCPoint(999.f, 0.f);
+        MDTextArea* m_md = nullptr;
+        struct FileNumbericSort {
+            bool operator()(const fs::path& a, const fs::path& b) const {
+                auto stra = std::regex_replace(a.filename().string(), std::regex(a.filename().extension().string()), "");
+                auto strb = std::regex_replace(b.filename().string(), std::regex(b.filename().extension().string()), "");
+                auto inta = utils::numFromString<int>(stra).value_or(0);
+                auto intb = utils::numFromString<int>(strb).value_or(0);
+                return inta <= intb;
+            }
+        };
+        static auto create() {
+            auto rtn = new LevelsListMDPopup;
+            rtn->FLAlertLayer::init(
+                rtn,
+                "Listing all levels in dir",
+                "\n \n \n \n \n \n \n \n ",
+                "Close", nullptr, 375.000f, 0, 0.000f, 1.f
+            );
+            rtn->setID("LevelsListMDPopup");
+            rtn->customSetup();
+            return rtn;
+        }
+        void customSetup() {
+            auto md_size = this->getChildByIDRecursive("background")->getContentSize() - 110;
+            auto md_str = std::string("# Dir Iter"); {
+                std::set<fs::path, FileNumbericSort> aFileNumbericSortSet;
+                for (auto& entry : fs::directory_iterator(levels_meta_path, fs::last_err_code))
+                    aFileNumbericSortSet.insert(entry.path());
+                for (auto& filepath : aFileNumbericSortSet) {
+                    if (filepath.extension() == ".json") {
+                        //json val
+                        auto value = matjson::parse("{}");
+                        auto error = std::string();
+                        auto parse = matjson::parse(fs::read(filepath), error);
+                        if (parse.has_value()) {
+                            value = parse.value();
+                            mle_leveltools::levelFromJson(value);
+                            md_str.append(std::format(
+                                "\n - {}: {}",
+                                filepath.filename().string(),
+                                value["m_levelName"].dump()
+                            ));
+                        }
+                    };
+                }
+                for (auto& filepath : aFileNumbericSortSet) {
+                    if (filepath.extension() == ".json") {
+                        md_str.append(
+                            "\n```\n" +
+                            filepath.string().replace(
+                                0, Mod::get()->getConfigDir().string().size() + 1, ""
+                            ) +
+                            ": " +
+                            fs::read(filepath) +
+                            "\n```\n\n---\n\n"
+                        );
+                    };
+                }
+            };
+            if (m_md = MDTextArea::create(md_str, md_size)) {
+                this->m_mainLayer->addChild(m_md, 1);
+                m_md->setPosition(this->getContentSize() / 2);
+                m_md->getScrollLayer()->m_delegate = this;
+                if (lastScrollPos.x == 0.f)
+                    m_md->getScrollLayer()->m_contentLayer->setPosition(lastScrollPos);
+            }
+            handleTouchPriority(this);
+        }
+        virtual void scrollViewDidEndMoving(CCScrollLayerExt* p0) {
+            if (p0->m_contentLayer->getPositionY() < 0)
+                lastScrollPos = p0->m_contentLayer->getPosition();
+        }
+    };
     class LevelConfigPopup : public FLAlertLayer, FLAlertLayerProtocol, TextInputDelegate {
     public:
         GJGameLevel* m_level = nullptr;
@@ -557,24 +642,36 @@ namespace mle_ui {
             }
             //addInputs
             auto addInput = [this, form_box](auto label = "", auto id = "", CommonFilter commonFilter = CommonFilter::Any) {
+                auto input_box = CCLayer::create();
+                input_box->setContentSize(CCSize(255.f, 45.000f));
+                //layout
+                auto layout = ColumnLayout::create();
+                layout->setAxisReverse(1);
+                layout->setCrossAxisOverflow(0);
+                input_box->setLayout(layout);
                 //labelNode
                 auto labelNode = CCLabelBMFont::create(label, "bigFont.fnt");
                 labelNode->setID(id + std::string("/label"));
-                form_box->addChild(labelNode);
+                input_box->addChild(labelNode);
                 //inputNode
                 auto inputNode = TextInput::create(form_box->getContentWidth(), label, "chatFont.fnt");
                 inputNode->getInputNode()->setID(id);
                 inputNode->getInputNode()->setMaxLabelScale(1.f);
                 inputNode->setCommonFilter(commonFilter);
                 inputNode->setDelegate(this);
-                form_box->addChild(inputNode);
+                input_box->addChild(inputNode);
                 //upd
+                input_box->updateLayout();
+                //add
+                input_box->updateLayout();
+                form_box->addChild(input_box);
                 form_box->updateLayout();
             };
             addInput("Name", "m_levelName");
             addInput("Audio Track", "m_audioTrack", CommonFilter::Int);
             addInput("Difficulty", "m_difficulty", CommonFilter::Int);
             addInput("Stars", "m_stars", CommonFilter::Int);
+            addInput("Required Coins", "m_requiredCoins", CommonFilter::Int);
             loadInputs();
             //playMusic
             if (auto GJ_playMusicBtn_001 = CCSprite::createWithSpriteFrameName("GJ_playMusicBtn_001.png")) {
@@ -604,10 +701,12 @@ namespace mle_ui {
             auto m_audioTrack = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_audioTrack"));
             auto m_difficulty = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_difficulty"));
             auto m_stars = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_stars"));
+            auto m_requiredCoins = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_requiredCoins"));
             if (m_levelName) m_levelName->setString(fmt::format("{}", this->m_level->m_levelName.data()));
             if (m_audioTrack) m_audioTrack->setString(fmt::format("{}", this->m_level->m_audioTrack));
             if (m_difficulty) m_difficulty->setString(fmt::format("{}", (int)this->m_level->m_difficulty));
             if (m_stars) m_stars->setString(fmt::format("{}", this->m_level->m_stars.value()));
+            if (m_requiredCoins) m_requiredCoins->setString(fmt::format("{}", this->m_level->m_requiredCoins));
         }
         void applyInputs() {
             if (not this->m_level) return;
@@ -615,10 +714,12 @@ namespace mle_ui {
             auto m_audioTrack = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_audioTrack"));
             auto m_difficulty = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_difficulty"));
             auto m_stars = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_stars"));
+            auto m_requiredCoins = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_requiredCoins"));
             if (m_levelName) m_level->m_levelName = m_levelName->getString();
             if (m_audioTrack) m_level->m_audioTrack = utils::numFromString<int>(m_audioTrack->getString().data()).value_or(m_level->m_audioTrack);
             if (m_difficulty) m_level->m_difficulty = (GJDifficulty)utils::numFromString<int>(m_difficulty->getString().data()).value_or((int)m_level->m_difficulty);
             if (m_stars) m_level->m_stars = utils::numFromString<int>(m_stars->getString().data()).value_or(m_level->m_stars.value());
+            if (m_requiredCoins) m_level->m_requiredCoins = utils::numFromString<int>(m_requiredCoins->getString().data()).value_or(m_level->m_requiredCoins);
         }
         void textChanged(CCTextInputNode* p0) {
             //log::debug("{}({}) id: {}", __FUNCTION__, p0, p0->getID());
@@ -925,5 +1026,206 @@ namespace mle_ui {
             newArtistsLayer->showLayer(1);
             };
         pArtistsConfigPopup->show();
+    };
+    class CopyLevelPopup : public FLAlertLayer, FLAlertLayerProtocol, TextInputDelegate {
+    public:
+        GJGameLevel* m_level = nullptr;
+        std::function<void()> m_onSave = []() {};
+        static auto create(GJGameLevel* for_level = LevelTools::getLevel(1, 0)) {
+            auto rtn = new CopyLevelPopup;
+            rtn->init(
+                rtn,
+                "Grab Level To \"Main Levels\"...",
+                "\n \n \n \n \n \n \n \n ",
+                "Close", "Save", 375.000f, 0, 0.000f, 1.f
+            );
+            rtn->setID("CopyLevelPopup");
+            rtn->m_level = for_level;
+            rtn->customSetup();
+            return rtn;
+        }
+        void customSetup() {
+            //form_box
+            auto form_box = CCLayer::create();
+            if (form_box) {
+                //base sets
+                form_box->setID("form_box");
+                form_box->setPosition(CCPoint(0.f, 116.f));
+                form_box->setContentSize(CCSize(255.f, 175.f));
+                form_box->ignoreAnchorPointForPosition(false);
+                //add
+                this->m_buttonMenu->addChild(form_box);
+                //layout
+                auto layout = ColumnLayout::create();
+                layout->setAxisReverse(1);
+                form_box->setLayout(layout);
+            }
+            //addInputs
+            auto addInput = [this, form_box](auto label = "", auto id = "", CommonFilter commonFilter = CommonFilter::Any) {
+                //labelNode
+                auto labelNode = CCLabelBMFont::create(label, "bigFont.fnt");
+                labelNode->setID(id + std::string("/label"));
+                form_box->addChild(labelNode);
+                //inputNode
+                auto inputNode = TextInput::create(form_box->getContentWidth(), label, "chatFont.fnt");
+                inputNode->getInputNode()->setID(id);
+                inputNode->getInputNode()->setMaxLabelScale(1.f);
+                inputNode->setCommonFilter(commonFilter);
+                inputNode->setDelegate(this);
+                form_box->addChild(inputNode);
+                //upd
+                form_box->updateLayout();
+                };
+            addInput("Target ID", "m_levelID");
+            loadInputs();
+            //help
+            form_box->addChild(CCLabelBMFont::create("Help", "bigFont.fnt"));
+            form_box->updateLayout();
+            if (auto menu = CCMenu::create()) {
+                //layout
+                auto layout = RowLayout::create();
+                menu->setLayout(layout);
+                //Levels List
+                menu->addChild(CCMenuItemExt::createSpriteExtra(
+                    ButtonSprite::create("Levels List", 0.6f),
+                    [](auto) {
+                        LevelsListMDPopup::create()->show();
+                    }
+                ));
+                //Settings
+                menu->addChild(CCMenuItemExt::createSpriteExtra(
+                    ButtonSprite::create("Settings", 0.6f),
+                    [](auto) {
+                        openSettingsPopup(Mod::get());
+                    }
+                ));
+                //lyupd
+                menu->updateLayout();
+                //add
+                form_box->addChild(menu);
+                form_box->updateLayout();
+                handleTouchPriority(this);
+            }
+        }
+        void loadInputs() {
+            if (not this->m_level) return;
+            auto m_levelID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_levelID"));
+            if (m_levelID) m_levelID->setString(fmt::format("{}", this->m_level->m_levelID.value()));
+        }
+        void applyInputs() {
+            if (not this->m_level) return;
+            auto m_levelID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_levelID"));
+            if (m_levelID) m_level->m_levelID = utils::numFromString<int>(m_levelID->getString().data()).value_or(m_level->m_levelID.value());
+        }
+        void FLAlert_Clicked(FLAlertLayer* p0, bool p1) {
+            if (not p1) return;
+            applyInputs();
+            //save json
+            mle_leveltools::updateLevelDataAndMetaFiles(m_level->m_levelString, m_level);
+            //call custom func
+            this->m_onSave();
+        };
+    };
+    class CopyAudioPopup : public FLAlertLayer, FLAlertLayerProtocol, TextInputDelegate {
+    public:
+        std::function<void()> m_onSave = []() {};
+        mle_audiotools::Audio m_audio = mle_audiotools::Audio(0);
+        mle_audiotools::Artist m_artist = mle_audiotools::Artist(0);
+        static auto create(int audioid = 0, int artistid = 0) {
+            auto rtn = new CopyAudioPopup;
+            rtn->init(
+                rtn,
+                "Convert To Audio and Artist...",
+                "\n \n \n \nLATER... \n \n \n \n ",
+                "Close", "Save", 395.000f, 0, 0.000f, 1.f
+            );
+            rtn->setID("CopyAudioPopup");
+            rtn->m_audio = mle_audiotools::Audio(audioid);
+            rtn->m_artist = mle_audiotools::Artist(artistid);
+            //rtn->customSetup();
+            return rtn;
+        }
+        /*
+        void customSetup() {
+            //form_box
+            auto form_box = CCLayer::create();
+            if (form_box) {
+                //base sets
+                form_box->setID("form_box");
+                form_box->setPosition(CCPoint(0.f, 116.f));
+                form_box->setContentSize(CCSize(255.f, 175.f));
+                form_box->ignoreAnchorPointForPosition(false);
+                //add
+                this->m_buttonMenu->addChild(form_box);
+                //layout
+                auto layout = ColumnLayout::create();
+                layout->setAxisReverse(1);
+                form_box->setLayout(layout);
+            }
+            //addInputs
+            auto addInput = [this, form_box](auto label = "", auto id = "", CommonFilter commonFilter = CommonFilter::Any) {
+                //labelNode
+                auto labelNode = CCLabelBMFont::create(label, "bigFont.fnt");
+                labelNode->setID(id + std::string("/label"));
+                form_box->addChild(labelNode);
+                //inputNode
+                auto inputNode = TextInput::create(form_box->getContentWidth(), label, "chatFont.fnt");
+                inputNode->getInputNode()->setID(id);
+                inputNode->getInputNode()->setMaxLabelScale(1.f);
+                inputNode->setCommonFilter(commonFilter);
+                inputNode->setDelegate(this);
+                form_box->addChild(inputNode);
+                //upd
+                form_box->updateLayout();
+                };
+            addInput("Target ID", "m_levelID");
+            //loadInputs();
+            //help
+            form_box->addChild(CCLabelBMFont::create("Help", "bigFont.fnt"));
+            form_box->updateLayout();
+            if (auto menu = CCMenu::create()) {
+                //layout
+                auto layout = RowLayout::create();
+                menu->setLayout(layout);
+                //Levels List
+                menu->addChild(CCMenuItemExt::createSpriteExtra(
+                    ButtonSprite::create("Levels List", 0.6f),
+                    [](auto) {
+                        LevelsListMDPopup::create()->show();
+                    }
+                ));
+                //Settings
+                menu->addChild(CCMenuItemExt::createSpriteExtra(
+                    ButtonSprite::create("Settings", 0.6f),
+                    [](auto) {
+                        openSettingsPopup(Mod::get());
+                    }
+                ));
+                //lyupd
+                menu->updateLayout();
+                //add
+                form_box->addChild(menu);
+                form_box->updateLayout();
+                handleTouchPriority(this);
+            }
+        }
+        void loadInputs() {
+            if (not this->m_level) return;
+            auto m_levelID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_levelID"));
+            if (m_levelID) m_levelID->setString(fmt::format("{}", this->m_level->m_levelID.value()));
+        }
+        void applyInputs() {
+            if (not this->m_level) return;
+            auto m_levelID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_levelID"));
+            if (m_levelID) m_level->m_levelID = utils::numFromString<int>(m_levelID->getString().data()).value_or(m_level->m_levelID.value());
+        }
+        void FLAlert_Clicked(FLAlertLayer* p0, bool p1) {
+            if (not p1) return;
+            applyInputs();
+            //save json
+            mle_leveltools::updateLevelDataAndMetaFiles(m_level->m_levelString, m_level);
+            //call custom func
+            this->m_onSave();
+        };*/
     };
 }
