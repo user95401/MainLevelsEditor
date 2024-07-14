@@ -155,10 +155,10 @@ namespace mle_leveltools {
 #endif // DEBUG
         //user coin id 1329, 142 secret coin
         gd::string decompressed = ZipUtils::decompressString(
-            level->m_levelString, false, 0
+            level->m_levelString, true, 0
         );
-        decompressed = std::regex_replace(decompressed.data(), std::regex(",142,"), ",1329,").data();
-        level->m_levelString = ZipUtils::compressString(decompressed, false, 0);
+        decompressed = std::regex_replace(std::string(decompressed.data()), std::regex(",142,"), ",1329,").data();
+        level->m_levelString = ZipUtils::compressString(decompressed, true, 0);
         return level;
     }
     inline auto replaceUserCoinsBySecretOnesInLevel(GJGameLevel* level) {
@@ -173,17 +173,17 @@ namespace mle_leveltools {
 #endif // DEBUG
         //user coin id 1329, 142 secret coin
         gd::string decompressed = ZipUtils::decompressString(
-            level->m_levelString, false, 0
+            level->m_levelString, true, 0
         );
-        decompressed = std::regex_replace(decompressed.data(), std::regex(",1329,"), ",142,").data();
-        level->m_levelString = ZipUtils::compressString(decompressed, false, 0);
+        decompressed = std::regex_replace(std::string(decompressed.data()), std::regex(",1329,"), ",142,").data();
+        level->m_levelString = ZipUtils::compressString(decompressed, true, 0);
         return level;
     }
     inline auto updateLevelDataAndMetaFiles(gd::string str, GJGameLevel* level) {
         level->m_levelString = str;
         level = replaceUserCoinsBySecretOnesInLevel(level);
         auto level_path_to_save = (levels_path / fmt::format("{}.txt", level->m_levelID.value()));
-        std::ofstream(level_path_to_save) << level->m_levelString.data();
+        std::ofstream(level_path_to_save) << std::string(level->m_levelString.data());
         auto level_meta_file = levels_meta_path / fmt::format("{}.json", level->m_levelID.value());
         std::ofstream(level_meta_file) << jsonFromLevel(level).dump(matjson::TAB_INDENTATION);
     }
