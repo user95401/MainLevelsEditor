@@ -154,10 +154,8 @@ namespace mle_leveltools {
         return level;
 #endif // DEBUG
         //user coin id 1329, 142 secret coin
-        gd::string decompressed = ZipUtils::decompressString(
-            level->m_levelString, true, 0
-        );
-        decompressed = std::regex_replace(std::string(decompressed.data()), std::regex(",142,"), ",1329,").data();
+        gd::string decompressed = ZipUtils::decompressString(level->m_levelString, true, 0);
+        decompressed = gd::string(std::regex_replace(std::string(decompressed.data()), std::regex(",142,"), ",1329,").data());
         level->m_levelString = ZipUtils::compressString(decompressed, true, 0);
         return level;
     }
@@ -173,7 +171,7 @@ namespace mle_leveltools {
 #endif // DEBUG
         //user coin id 1329, 142 secret coin
         gd::string decompressed = ZipUtils::decompressString(level->m_levelString, true, 0);
-        //decompressed = std::regex_replace(std::string(decompressed.data()), std::regex(",1329,"), ",142,").data();
+        decompressed = gd::string(std::regex_replace(std::string(decompressed.data()), std::regex(",1329,"), ",142,").data());
         level->m_levelString = ZipUtils::compressString(decompressed, true, 0);
         return level;
     }
