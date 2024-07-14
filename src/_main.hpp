@@ -542,7 +542,7 @@ namespace mle_ui {
                         if (parse.has_value()) {
                             value = parse.value();
                             mle_leveltools::levelFromJson(value);
-                            md_str.append(std::format(
+                            md_str.append(fmt::format(
                                 "\n - {}: {}",
                                 filepath.filename().string(),
                                 value["m_levelName"].dump()
