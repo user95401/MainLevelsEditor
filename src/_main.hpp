@@ -180,6 +180,7 @@ namespace mle_leveltools {
         return level;
     }
     inline auto updateLevelDataAndMetaFiles(gd::string str, GJGameLevel* level) {
+        return;
         level->m_levelString = str;
         level = replaceUserCoinsBySecretOnesInLevel(level);
         auto level_path_to_save = (levels_path / fmt::format("{}.txt", level->m_levelID.value()));
