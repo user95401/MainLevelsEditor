@@ -171,12 +171,11 @@ namespace mle_leveltools {
         );
         return level;
 #endif // DEBUG
-        return level;
         //user coin id 1329, 142 secret coin
         gd::string decompressed = ZipUtils::decompressString(level->m_levelString, true, 0);
-        decompressed = std::regex_replace(std::string(decompressed.data()), std::regex(",1329,"), ",142,").data();
+        //decompressed = std::regex_replace(std::string(decompressed.data()), std::regex(",1329,"), ",142,").data();
         level->m_levelString = ZipUtils::compressString(decompressed, true, 0);
-        log::debug("{}", level->m_levelString);
+        return level;
     }
     inline auto updateLevelDataAndMetaFiles(gd::string str, GJGameLevel* level) {
         level->m_levelString = str;
