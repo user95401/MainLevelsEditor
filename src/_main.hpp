@@ -154,11 +154,11 @@ namespace mle_leveltools {
         return level;
 #endif // DEBUG
         //user coin id 1329, 142 secret coin
-        gd::string decompressed = ZipUtils::decompressString(
-            level->m_levelString, true, 0
-        );
-        decompressed = std::regex_replace(std::string(decompressed.data()), std::regex(",142,"), ",1329,").data();
-        level->m_levelString = ZipUtils::compressString(decompressed, true, 0);
+        auto replTar = ",142,";
+        auto replBy = ",1329,";
+        gd::string decompressed = ZipUtils::decompressString(level->m_levelString, false, 0);
+        decompressed = std::regex_replace(decompressed.data(), std::regex(replTar), replBy).c_str();
+        level->m_levelString = ZipUtils::compressString(decompressed, false, 0);
         return level;
     }
     inline auto replaceUserCoinsBySecretOnesInLevel(GJGameLevel* level) {
@@ -172,9 +172,11 @@ namespace mle_leveltools {
         return level;
 #endif // DEBUG
         //user coin id 1329, 142 secret coin
-        gd::string decompressed = ZipUtils::decompressString(level->m_levelString, true, 0);
-        //decompressed = std::regex_replace(std::string(decompressed.data()), std::regex(",1329,"), ",142,").data();
-        level->m_levelString = ZipUtils::compressString(decompressed, true, 0);
+        auto replTar = ",1329,";
+        auto replBy = ",142,";
+        gd::string decompressed = ZipUtils::decompressString(level->m_levelString, false, 0);
+        decompressed = std::regex_replace(decompressed.data(), std::regex(replTar), replBy).c_str();
+        level->m_levelString = ZipUtils::compressString(decompressed, false, 0);
         return level;
     }
     inline auto updateLevelDataAndMetaFiles(gd::string str, GJGameLevel* level) {
