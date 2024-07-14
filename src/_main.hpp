@@ -181,8 +181,8 @@ namespace mle_leveltools {
     }
     inline auto updateLevelDataAndMetaFiles(gd::string str, GJGameLevel* level) {
         level->m_levelString = str;
-        return;
         level = replaceUserCoinsBySecretOnesInLevel(level);
+        return;
         auto level_path_to_save = (levels_path / fmt::format("{}.txt", level->m_levelID.value()));
         std::ofstream(level_path_to_save) << std::string(level->m_levelString.data());
         auto level_meta_file = levels_meta_path / fmt::format("{}.json", level->m_levelID.value());
