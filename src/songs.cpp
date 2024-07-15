@@ -151,6 +151,11 @@ class $modify(SongsLayerExt, SongsLayer) {
 		int id = SETTING(int64_t, "songs_start_id");
 		int max_id = SETTING(int64_t, "songs_max_id");
 		for (id; id <= max_id; id++) addSongCell(id, altBg, contentLayer);
+		//songs_special_ids
+		for (auto strID : string::explode(",", SETTING(std::string, "songs_special_ids"))) {
+			auto id_num = utils::numFromString<int>(strID);
+			if (id_num.has_value()) addSongCell(id_num.value(), altBg, contentLayer);
+		}
 		//practice
         if (SETTING(bool, "practice_music")) addSongCell(-1, altBg, contentLayer);
 		//update after adding
@@ -187,8 +192,16 @@ class $modify(CustomSongWidgetExt, CustomSongWidget) {
 		CustomSongWidget::onMore(sender);
 		if (auto openedJustNowPop = cocos::findFirstChildRecursive<SongInfoLayer>(CCDirector::get()->m_pRunningScene, [](auto) {return true; })) {
 			openedJustNowPop->setTag(this->m_customSongID);
-			if (this->m_isRobtopSong) openedJustNowPop->addChild(nodeWithID("isRobtopSong"));
-			if (this->m_isMusicLibrary) openedJustNowPop->addChild(nodeWithID("isMusicLibrary"));
+			if (this->m_isRobtopSong) openedJustNowPop->addChild(createDataNode("m_isRobtopSong"));
+			if (this->m_isMusicLibrary) openedJustNowPop->addChild(createDataNode("m_isMusicLibrary"));
+			if (m_songInfoObject->m_isUnkownSong) openedJustNowPop->addChild(createDataNode("m_isUnkownSong"));
+			openedJustNowPop->addChild(createDataNode("m_songID", "", m_songInfoObject->m_songID));
+			openedJustNowPop->addChild(createDataNode("m_songName", m_songInfoObject->m_songName.data()));
+			openedJustNowPop->addChild(createDataNode("m_artistName", m_songInfoObject->m_artistName.data()));
+			openedJustNowPop->addChild(createDataNode("m_youtubeVideo", m_songInfoObject->m_youtubeVideo.data()));
+			openedJustNowPop->addChild(createDataNode("m_youtubeChannel", m_songInfoObject->m_youtubeChannel.data()));
+			openedJustNowPop->addChild(createDataNode("m_songUrl", m_songInfoObject->m_songUrl.data()));
+			openedJustNowPop->addChild(createDataNode("m_artistID", "", m_songInfoObject->m_artistID));
 		}
 	}
 };

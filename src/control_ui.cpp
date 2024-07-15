@@ -111,16 +111,13 @@ class $modify(FLAlertLayerExt, FLAlertLayer) {
         ae->show();
     }
     auto onCopySong(CCObject*) {
-        auto pCopyLevelPopup = mle_ui::CopyAudioPopup::create(
-            0,0
-        );
-        pCopyLevelPopup->show();
+        auto pCopyAudioPopup = mle_ui::CopyAudioPopup::create(this);
+        pCopyAudioPopup->show();
     }
     auto songInfoLayerSetupSch(float) {
         //add the button ya?
         if (SETTING(bool, "ui")) {
-            log::debug("isRobtopSong: {}", this->getChildByID("isRobtopSong"));
-            if (this->getChildByID("isRobtopSong")) {
+            if (findDataNode(this, "m_isRobtopSong")) {
                 CCMenuItemSpriteExtra* settings;
                 settings = CCMenuItemSpriteExtra::create(mle_ui::settingsButtonSprite(), this, menu_selector(FLAlertLayerExt::onConfigureSong));
                 settings->setID("settings"_spr);

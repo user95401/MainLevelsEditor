@@ -4,7 +4,7 @@
 		"win": "2.206",
 		"android": "*"
 	},
-	"version": "v7.0.0-beta.9",
+	"version": "v7.0.0-beta.10",
 	"id": "user95401.mainlevelseditor",
 	"name": "Main Levels Editor",
 	"developer": "user95401",
@@ -41,6 +41,13 @@
 			"max": 500,
 			"default": 22
 		},
+		"special_ids": {
+			"name": "Special Level IDs",
+			"description": "add exact ids to level list\n<cy>111</c><cr>,</c><cy>112</c><cr>,</c><cy>5001</c><cr>,</c>",
+			"type": "string",
+			"filter": "0123456789,",
+			"default": ""
+		},
 		"the_tower": {
 			"name": "Add The Tower",
 			"description": "shows The Tower page",
@@ -67,6 +74,13 @@
 			"min": 0,
 			"max": 500,
 			"default": 21
+		},
+		"songs_special_ids": {
+			"name": "Special Song IDs",
+			"description": "add exact ids to audio list\n<cy>111</c><cr>,</c><cy>112</c><cr>,</c><cy>5001</c><cr>,</c>",
+			"type": "string",
+			"filter": "0123456789,",
+			"default": ""
 		},
 		"practice_music": {
 			"name": "Add Practice Song",

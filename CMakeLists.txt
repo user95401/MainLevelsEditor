@@ -12,6 +12,17 @@ else()
     message(STATUS "Found Geode: $ENV{GEODE_SDK}")
 endif()
 
+#my bindings...
+include("$ENV{GEODE_SDK}/cmake/CPM.cmake")
+CPMAddPackage(NAME "bindings"
+	GITHUB_REPOSITORY "user95401/bindings"
+	GIT_TAG "main"
+	DOWNLOAD_ONLY YES
+	NO_CACHE YES
+)
+
+set(GEODE_BINDINGS_REPO_PATH ${bindings_SOURCE_DIR})
+
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
 #mod

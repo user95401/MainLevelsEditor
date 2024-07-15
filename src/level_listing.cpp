@@ -14,11 +14,18 @@ class $modify(BoomScrollLayerExt, BoomScrollLayer) {
 
             auto myLevelsArray = CCArray::create();
 
-            //add levels
+            //add levels range
             int id = SETTING(int64_t, "start_id");
             int max_id = SETTING(int64_t, "max_id");
             for (id; id <= max_id; id++)
                 myLevelsArray->addObject(LevelTools::getLevel(id, 0));
+
+            //special_ids
+            for (auto strID : string::explode(",", SETTING(std::string, "special_ids"))) {
+                auto id_num = utils::numFromString<int>(strID);
+                if (id_num.has_value()) 
+                    myLevelsArray->addObject(LevelTools::getLevel(id_num.value(), 0));
+            }
 
             //the_tower
             if (SETTING(bool, "the_tower")) myLevelsArray->addObject(unk3->objectAtIndex(unk3->count() - 2));
@@ -50,7 +57,10 @@ class $modify(LevelPage) {
 class $modify(LevelAreaLayerExt, CCLayer) {
     void onBack(CCObject*) {
         GameManager::get()->playMenuMusic();
-        switchToScene(LevelSelectLayer::create(SETTING(int64_t, "max_id")));
+        switchToScene(LevelSelectLayer::create(
+            SETTING(int64_t, "max_id") 
+            + string::explode(",", SETTING(std::string, "special_ids")).size()
+        ));
     }
     auto customSetupSch(float) {
         cocos::findFirstChildRecursive<CCMenuItemSpriteExtra>(
@@ -58,7 +68,7 @@ class $modify(LevelAreaLayerExt, CCLayer) {
                 if (cocos::getChildBySpriteFrameName(node, "GJ_arrow_03_001.png") == nullptr) return false;
                 
                 node->m_pfnSelector = menu_selector(LevelAreaLayerExt::onBack);
-                node->setID("onBackBtnPatch"_spr);
+                if (node->getID() == "") node->setID("onBackBtnPatch"_spr);
                 
                 return true;
             }

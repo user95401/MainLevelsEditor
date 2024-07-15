@@ -89,13 +89,39 @@ namespace geode::cocos {
             ) return btnSpriteTry;
         return "CANT_GET_FRAME_NAME";
     }
-    inline auto nodeWithID(std::string id, int tag = 0) {
-        auto node = CCNode::create();
+    inline auto createDataNode(std::string id, std::string text = "", int tag = 0) {
+        auto node = CCLabelBMFont::create("", "chatFont.fnt");
         node->setID(id);
+        node->setString(text.c_str());
         if (tag != 0) node->setTag(tag);
+        node->setVisible(0);
+        return node;
+    }
+    inline auto findDataNode(CCNode* parent, std::string id) {
+        auto node = typeinfo_cast<CCLabelBMFont*>(parent->getChildByIDRecursive(id));
+        if (node) log::warn("FAILED TO FIND DATA NODE! id: {}", id);
         return node;
     }
 };
+
+namespace geode::utils::string {
+    inline std::vector<std::string> explode(std::string separator, std::string input) {
+        std::vector<std::string> vec;
+        for (int i{ 0 }; i < input.length(); ++i) {
+            int pos = input.find(separator, i);
+            if (pos < 0) { vec.push_back(input.substr(i)); break; }
+            int count = pos - i;
+            vec.push_back(input.substr(i, count));
+            i = pos + separator.length() - 1;
+        }
+        if (vec.size() == 0) vec.push_back(input);/*
+        std::stringstream log;
+        for (auto item : vec)
+            log << std::endl << item << std::endl;
+        log::debug("{}(separator \"{}\", input \"{}\").rtn({})", __FUNCTION__, separator, input, log.str());*/
+        return vec;
+    }
+}
 
 namespace mle_leveltools {
     inline matjson::Value levelFromJson(matjson::Value value, GJGameLevel* levelToRewrite = nullptr) {
@@ -578,6 +604,82 @@ namespace mle_ui {
                 lastScrollPos = p0->m_contentLayer->getPosition();
         }
     };
+    class AudiosListMDPopup : public FLAlertLayer, FLAlertLayerProtocol, CCScrollLayerExtDelegate {
+    public:
+        inline static CCPoint lastScrollPos = CCPoint(999.f, 0.f);
+        MDTextArea* m_md = nullptr;
+        struct FileNumbericSort {
+            bool operator()(const fs::path& a, const fs::path& b) const {
+                auto stra = std::regex_replace(a.filename().string(), std::regex(a.filename().extension().string()), "");
+                auto strb = std::regex_replace(b.filename().string(), std::regex(b.filename().extension().string()), "");
+                auto inta = utils::numFromString<int>(stra).value_or(0);
+                auto intb = utils::numFromString<int>(strb).value_or(0);
+                return inta <= intb;
+            }
+        };
+        static auto create() {
+            auto rtn = new AudiosListMDPopup;
+            rtn->FLAlertLayer::init(
+                rtn,
+                "Listing all audios in dir",
+                "\n \n \n \n \n \n \n \n ",
+                "Close", nullptr, 375.000f, 0, 0.000f, 1.f
+            );
+            rtn->setID("AudiosListMDPopup");
+            rtn->customSetup();
+            return rtn;
+        }
+        void customSetup() {
+            auto md_size = this->getChildByIDRecursive("background")->getContentSize() - 110;
+            auto md_str = std::string("# Dir Iter"); {
+                std::set<fs::path, FileNumbericSort> aFileNumbericSortSet;
+                for (auto& entry : fs::directory_iterator(audios_meta_path, fs::last_err_code))
+                    aFileNumbericSortSet.insert(entry.path());
+                for (auto& filepath : aFileNumbericSortSet) {
+                    if (filepath.extension() == ".json") {
+                        //json val
+                        auto value = matjson::parse("{}");
+                        auto error = std::string();
+                        auto parse = matjson::parse(fs::read(filepath), error);
+                        if (parse.has_value()) {
+                            value = parse.value();
+                            mle_leveltools::levelFromJson(value);
+                            md_str.append(fmt::format(
+                                "\n - {}: {}",
+                                filepath.filename().string(),
+                                value["m_title"].dump()
+                            ));
+                        }
+                    };
+                }
+                for (auto& filepath : aFileNumbericSortSet) {
+                    if (filepath.extension() == ".json") {
+                        md_str.append(
+                            "\n```\n" +
+                            filepath.string().replace(
+                                0, Mod::get()->getConfigDir().string().size() + 1, ""
+                            ) +
+                            ": " +
+                            fs::read(filepath) +
+                            "\n```\n\n---\n\n"
+                        );
+                    };
+                }
+            };
+            if (m_md = MDTextArea::create(md_str, md_size)) {
+                this->m_mainLayer->addChild(m_md, 1);
+                m_md->setPosition(this->getContentSize() / 2);
+                m_md->getScrollLayer()->m_delegate = this;
+                if (lastScrollPos.x == 0.f)
+                    m_md->getScrollLayer()->m_contentLayer->setPosition(lastScrollPos);
+            }
+            handleTouchPriority(this);
+        }
+        virtual void scrollViewDidEndMoving(CCScrollLayerExt* p0) {
+            if (p0->m_contentLayer->getPositionY() < 0)
+                lastScrollPos = p0->m_contentLayer->getPosition();
+        }
+    };
     class LevelConfigPopup : public FLAlertLayer, FLAlertLayerProtocol, TextInputDelegate {
     public:
         GJGameLevel* m_level = nullptr;
@@ -604,15 +706,7 @@ namespace mle_ui {
                 GameManager::get()->fadeInMusic(mle_audiotools::Audio(audioTrack).m_fileName);
         }
         void onBrowseSongs(CCObject* asd) {
-            this->setZOrder(9);
-            auto optsl = new OptionsLayer;
-            optsl->init("nh67b");
-            optsl->customSetup();
-            optsl->showLayer(0);
-            auto songsbutton = typeinfo_cast<CCMenuItemSpriteExtra*>(
-                optsl->getChildByIDRecursive("songs-button")
-            );
-            if (songsbutton) songsbutton->activate();
+            AudiosListMDPopup::create()->show();
         }
         void onLevelEdit(CCObject*) {
             auto layer = LevelEditorLayer::create(
@@ -1008,9 +1102,8 @@ namespace mle_ui {
             GameManager::get()->fadeInMenuMusic();
             if (not p1) return;
             applyInputs();
-            //json
+            //save artist
             auto value = m_artist.resetJson();
-            //save json
             auto artist_meta_file = artists_meta_path / fmt::format("{}.json", m_artist.m_artistID);
             std::ofstream(artist_meta_file) << value.dump(matjson::TAB_INDENTATION);
             //call custom func
@@ -1131,21 +1224,28 @@ namespace mle_ui {
         std::function<void()> m_onSave = []() {};
         mle_audiotools::Audio m_audio = mle_audiotools::Audio(0);
         mle_audiotools::Artist m_artist = mle_audiotools::Artist(0);
-        static auto create(int audioid = 0, int artistid = 0) {
+        Ref<CCNode> refSongInfoLayer;
+        static auto create(CCNode* pSongInfoLayer) {
             auto rtn = new CopyAudioPopup;
             rtn->init(
                 rtn,
                 "Convert To Audio and Artist...",
-                "\n \n \n \nLATER... \n \n \n \n ",
+                "\n \n \n \n \n \n \n \n ",
                 "Close", "Save", 395.000f, 0, 0.000f, 1.f
             );
             rtn->setID("CopyAudioPopup");
-            rtn->m_audio = mle_audiotools::Audio(audioid);
-            rtn->m_artist = mle_audiotools::Artist(artistid);
-            //rtn->customSetup();
+            rtn->refSongInfoLayer = pSongInfoLayer;
+            rtn->m_artist = mle_audiotools::Artist(findDataNode(pSongInfoLayer, "m_artistID")->getTag());
+            rtn->m_artist.m_name = findDataNode(pSongInfoLayer, "m_artistName")->getString();
+            rtn->m_artist.m_ngURL = fmt::format("https://{}.newgrounds.com/audio", rtn->m_artist.m_name);
+            rtn->m_audio = mle_audiotools::Audio(findDataNode(pSongInfoLayer, "m_songID")->getTag());
+            rtn->m_audio.m_title = findDataNode(pSongInfoLayer, "m_songName")->getString();
+            rtn->m_audio.m_url = fmt::format("https://www.newgrounds.com/audio/listen/{}", rtn->m_audio.m_audioID);
+            rtn->m_audio.m_fileName = fmt::format("{}.mp3", rtn->m_audio.m_title);
+            rtn->m_audio.m_artistID = rtn->m_artist.m_artistID;
+            rtn->customSetup();
             return rtn;
         }
-        /*
         void customSetup() {
             //form_box
             auto form_box = CCLayer::create();
@@ -1178,8 +1278,8 @@ namespace mle_ui {
                 //upd
                 form_box->updateLayout();
                 };
-            addInput("Target ID", "m_levelID");
-            //loadInputs();
+            addInput("Target ID", "m_songID");
+            loadInputs();
             //help
             form_box->addChild(CCLabelBMFont::create("Help", "bigFont.fnt"));
             form_box->updateLayout();
@@ -1187,11 +1287,11 @@ namespace mle_ui {
                 //layout
                 auto layout = RowLayout::create();
                 menu->setLayout(layout);
-                //Levels List
+                //Audios List
                 menu->addChild(CCMenuItemExt::createSpriteExtra(
-                    ButtonSprite::create("Levels List", 0.6f),
+                    ButtonSprite::create("Audios List", 0.6f),
                     [](auto) {
-                        LevelsListMDPopup::create()->show();
+                        AudiosListMDPopup::create()->show();
                     }
                 ));
                 //Settings
@@ -1210,22 +1310,33 @@ namespace mle_ui {
             }
         }
         void loadInputs() {
-            if (not this->m_level) return;
-            auto m_levelID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_levelID"));
-            if (m_levelID) m_levelID->setString(fmt::format("{}", this->m_level->m_levelID.value()));
+            auto m_songID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_songID"));
+            if (m_songID) m_songID->setString(fmt::format("{}", m_audio.m_audioID));
         }
         void applyInputs() {
-            if (not this->m_level) return;
-            auto m_levelID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_levelID"));
-            if (m_levelID) m_level->m_levelID = utils::numFromString<int>(m_levelID->getString().data()).value_or(m_level->m_levelID.value());
+            auto m_songID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_songID"));
+            if (m_songID) m_audio.m_audioID = utils::numFromString<int>(m_songID->getString().data()).value_or(m_audio.m_audioID);
         }
         void FLAlert_Clicked(FLAlertLayer* p0, bool p1) {
             if (not p1) return;
             applyInputs();
-            //save json
-            mle_leveltools::updateLevelDataAndMetaFiles(m_level->m_levelString, m_level);
+            //save artist
+            auto artist_meta_file = artists_meta_path / fmt::format("{}.json", m_artist.m_artistID);
+            std::ofstream(artist_meta_file) << m_artist.resetJson().dump(matjson::TAB_INDENTATION);
+            //save audio
+            auto audio_meta_file = audios_meta_path / fmt::format("{}.json", m_audio.m_audioID);
+            std::ofstream(audio_meta_file) << m_audio.resetJson().dump(matjson::TAB_INDENTATION);
+            //save music file
+            fs::copy_file(
+                MusicDownloadManager::sharedState()->pathForSong(
+                    findDataNode(refSongInfoLayer, "m_songID")->getTag()
+                ),
+                songs_path / m_audio.m_fileName,
+                fs::copy_options::overwrite_existing,
+                fs::last_err_code
+            );
             //call custom func
             this->m_onSave();
-        };*/
+        };
     };
 }
