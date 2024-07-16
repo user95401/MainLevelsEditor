@@ -12,7 +12,7 @@ else()
     message(STATUS "Found Geode: $ENV{GEODE_SDK}")
 endif()
 
-#my bindings...
+# my bindings...
 include("$ENV{GEODE_SDK}/cmake/CPM.cmake")
 CPMAddPackage(NAME "bindings"
 	GITHUB_REPOSITORY "user95401/bindings"
