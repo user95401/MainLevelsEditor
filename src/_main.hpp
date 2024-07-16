@@ -1327,7 +1327,7 @@ namespace mle_ui {
             auto audio_meta_file = audios_meta_path / fmt::format("{}.json", m_audio.m_audioID);
             std::ofstream(audio_meta_file) << m_audio.resetJson().dump(matjson::TAB_INDENTATION);
             //save music file
-            fs::copy(
+            std::filesystem::copy(
                 MusicDownloadManager::sharedState()->pathForSong(
                     findDataNode(refSongInfoLayer, "m_songID")->getTag()
                 ),
