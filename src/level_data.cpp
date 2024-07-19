@@ -4,12 +4,19 @@ using namespace mle_leveltools;
 #include <Geode/modify/PlayLayer.hpp>
 class $modify(PlayLayer) {
 	$override bool init(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
-		auto oldID = level->m_levelID.value();
-		level->m_levelID = 999; //temp "Load Failed" bypass
+		auto levelType = level->m_levelType;
+		level->m_levelType = GJLevelType::Saved; //temp "Load Failed" bypass
 		auto rtn = PlayLayer::init(level, useReplay, dontCreateObjects);
-		level->m_levelID = oldID;
+		level->m_levelType = levelType;
 		return rtn;
 	}
+	$override void resetLevel() {
+		PlayLayer::resetLevel();
+		//fuck
+		auto lm = GameLevelManager::sharedState();
+		lm->m_mainLevels->setObject(m_level, lm->getLevelKey(m_level->m_levelID.value()));
+		GameManager::get()->save();
+	};
 };
 
 #include <Geode/modify/LocalLevelManager.hpp>
@@ -41,11 +48,29 @@ class $modify(LevelTools) {
 			level->m_levelString = LocalLevelManager::get()->getMainLevelString(levelID);
 		}
 		level->m_levelID = levelID;
+		//progress
+		auto manager = GameLevelManager::sharedState();
+		if (GJGameLevel* lvlFromDict = (GJGameLevel*)manager->m_mainLevels->objectForKey(manager->getLevelKey(levelID))) {
+			level->m_attempts = lvlFromDict->m_attempts;
+			level->m_jumps = lvlFromDict->m_jumps;
+			level->m_clicks = lvlFromDict->m_clicks;
+			level->m_attemptTime = lvlFromDict->m_attemptTime;
+			level->m_chk = lvlFromDict->m_chk;
+			level->m_isChkValid = lvlFromDict->m_isChkValid;
+			level->m_isCompletionLegitimate = lvlFromDict->m_isCompletionLegitimate;
+			level->m_normalPercent = lvlFromDict->m_normalPercent;
+			level->m_orbCompletion = lvlFromDict->m_orbCompletion;
+			level->m_newNormalPercent2 = lvlFromDict->m_newNormalPercent2;
+			level->m_practicePercent = lvlFromDict->m_practicePercent;
+			level->m_bestTime = lvlFromDict->m_bestTime;
+			level->m_bestPoints = lvlFromDict->m_bestPoints;
+			level->m_k111 = lvlFromDict->m_k111;
+		};
 		//json meta
 		updateLevelByJson(level);
 		return level;
 	};
-	$override static bool NOT_NOW___verifyLevelIntegrity(gd::string p0, int p1) {
+	$override static bool /*NOT_NOW___*/verifyLevelIntegrity(int p0, int p1) {
 		//hooking error lol
 		return 1;
 	}

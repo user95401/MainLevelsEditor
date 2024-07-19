@@ -57,9 +57,11 @@ class $modify(LevelPage) {
 class $modify(LevelAreaLayerExt, CCLayer) {
     void onBack(CCObject*) {
         GameManager::get()->playMenuMusic();
+        auto levelsCount = SETTING(int64_t, "max_id");
+        auto specialLevels = string::explode(",", SETTING(std::string, "special_ids"));
+        auto specialLevelsCount = specialLevels[0].empty() ? 0 : specialLevels.size();
         switchToScene(LevelSelectLayer::create(
-            SETTING(int64_t, "max_id") 
-            + string::explode(",", SETTING(std::string, "special_ids")).size()
+            levelsCount + specialLevelsCount
         ));
     }
     auto customSetupSch(float) {
