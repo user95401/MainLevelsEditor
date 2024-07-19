@@ -92,7 +92,7 @@ class $modify(LevelPageExt, LevelPage) {
 };
 
 #include <Geode/modify/FLAlertLayer.hpp>
-class $modify(FLAlertLayerExt, FLAlertLayer) {
+class $modify(SongInfoLayerExt, FLAlertLayer) {
     auto onConfigureSong(CCObject*) {
         auto ae = mle_ui::AudioConfigPopup::create(this->getTag());
         ae->m_onSave = [this, ae]() {
@@ -119,7 +119,7 @@ class $modify(FLAlertLayerExt, FLAlertLayer) {
         if (SETTING(bool, "ui")) {
             if (findDataNode(this, "m_isRobtopSong")) {
                 CCMenuItemSpriteExtra* settings;
-                settings = CCMenuItemSpriteExtra::create(mle_ui::settingsButtonSprite(), this, menu_selector(FLAlertLayerExt::onConfigureSong));
+                settings = CCMenuItemSpriteExtra::create(mle_ui::settingsButtonSprite(), this, menu_selector(SongInfoLayerExt::onConfigureSong));
                 settings->setID("settings"_spr);
                 settings->setPosition(CCPoint(382.000f, -50.f));
                 settings->m_baseScale = 0.8f;
@@ -130,7 +130,7 @@ class $modify(FLAlertLayerExt, FLAlertLayer) {
                 CCMenuItemSpriteExtra* copy;
                 copy = CCMenuItemSpriteExtra::create(
                     CCSprite::createWithSpriteFrameName("GJ_copyBtn2_001.png"), 
-                    this, menu_selector(FLAlertLayerExt::onCopySong)
+                    this, menu_selector(SongInfoLayerExt::onCopySong)
                 );
                 copy->setID("copy"_spr);
                 copy->setPosition(CCPoint(382.000f, -50.f));
@@ -142,8 +142,8 @@ class $modify(FLAlertLayerExt, FLAlertLayer) {
     }
     $override void show() {
         FLAlertLayer::show();
-        if (typeinfo_cast<SongInfoLayer*>(this))
-            this->scheduleOnce(schedule_selector(FLAlertLayerExt::songInfoLayerSetupSch), 0.f);
+        if (typeinfo_cast<SongInfoLayer*>(this)) //schedule is for data nodes setup!!!
+            this->scheduleOnce(schedule_selector(SongInfoLayerExt::songInfoLayerSetupSch), 0.f);
     }
 };
 
