@@ -1,14 +1,18 @@
 #include "_main.hpp"
 using namespace mle_leveltools;
+
 //huh
 #include <Geode/modify/PlayLayer.hpp>
 class $modify(PlayLayer) {
 	$override bool init(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
 		auto levelType = level->m_levelType;
-		level->m_levelType = GJLevelType::Saved; //temp "Load Failed" bypass
-		auto rtn = PlayLayer::init(level, useReplay, dontCreateObjects);
-		level->m_levelType = levelType;
-		return rtn;
+		if (levelType == GJLevelType::Local) {
+			level->m_levelType = GJLevelType::Saved; //temp "Load Failed" bypass
+			auto rtn = PlayLayer::init(level, useReplay, dontCreateObjects);
+			level->m_levelType = levelType;
+			return rtn;
+		};
+		return PlayLayer::init(level, useReplay, dontCreateObjects);
 	}
 	$override void resetLevel() {
 		PlayLayer::resetLevel();
@@ -70,7 +74,7 @@ class $modify(LevelTools) {
 		updateLevelByJson(level);
 		return level;
 	};
-	$override static bool /*NOT_NOW___*/verifyLevelIntegrity(int p0, int p1) {
+	$override static bool NOT_NOW___verifyLevelIntegrity(std::string p0, int p1) {
 		//hooking error lol
 		return 1;
 	}

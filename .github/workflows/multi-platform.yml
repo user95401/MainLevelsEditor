@@ -1,62 +1,79 @@
 name: Build Geode Mod
+
 permissions:
   contents: write
+
 on:
   workflow_dispatch:
   push:
     branches:
-      - "**"
+      - '**'
+
 jobs:
+
   build:
+    continue-on-error: true # continue even if build failed for some platform
     strategy:
+    
       fail-fast: false
       matrix:
         config:
         - name: Windows
           os: windows-latest
-
-        - name: Android32
-          os: ubuntu-latest
-          target: Android32
+          
+        - name: macOS
+          os: macos-latest
 
         - name: Android64
           os: ubuntu-latest
           target: Android64
 
+        - name: Android32
+          os: ubuntu-latest
+          target: Android32
+          
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
-
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
+      
       - name: Build the mod
         uses: geode-sdk/build-geode-mod@main
         with:
-          combine: true
           target: ${{ matrix.config.target }}
-
-  package:
-    name: Package and release builds
+          combine: true
+          
+  upload:
+    name: Combine and upload builds
     runs-on: ubuntu-latest
     needs: ['build']
     steps:
-      - uses: geode-sdk/build-geode-mod/combine@main
-        with: 
-          delete-artifacts: false
+          
+      - name: "Combine builds"
+        uses: geode-sdk/build-geode-mod/combine@main
         id: build
-      - uses: actions/upload-artifact@v4
+        
+      - name: "Upload artifact"
+        uses: actions/upload-artifact@v4
         with:
           name: Build Output
-          path: ${{ steps.build.outputs.build-output }} 
-      - name: Set up Git repository
+          path: ${{ steps.build.outputs.build-output }}
+          
+      - name: "Set up Git repository"
         uses: actions/checkout@v2
-      - name: Get mod properties
+        
+      - name: "Get mod properties"
         id: json_properties
         uses: ActionsTools/read-json-action@main
         with:
           file_path: "mod.json"
-      - uses: softprops/action-gh-release@v2
-        name: "Release"
+        
+      - name: "Release"
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: "${{steps.json_properties.outputs.version}}"
-          files: "${{steps.build.outputs.build-output}}/*"
+          body: "${{ steps.changelog.outputs.changelog}}"
+          tag: "${{steps.json_properties.outputs.version}}"
+          artifacts: "${{steps.build.outputs.build-output}}/*"
+          artifactErrorsFailBuild: true
+          allowUpdates: false
           
