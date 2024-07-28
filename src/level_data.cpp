@@ -4,29 +4,18 @@ using namespace mle_leveltools;
 //huh
 #include <Geode/modify/PlayLayer.hpp>
 class $modify(PlayLayer) {
-	$override bool init(GJGameLevel * level, bool useReplay, bool dontCreateObjects) {
-		auto levelType = level->m_levelType;
-		if (levelType == GJLevelType::Local) {
-			level->m_levelType = GJLevelType::Saved; //temp "Load Failed" bypass
-			auto rtn = PlayLayer::init(level, useReplay, dontCreateObjects);
-			level->m_levelType = levelType;
-			return rtn;
-		};
-		return PlayLayer::init(level, useReplay, dontCreateObjects);
-	}
 	$override void resetLevel() {
-		PlayLayer::resetLevel();
-		//fuck
+		//new ones dont saved by game idk why
 		auto lm = GameLevelManager::sharedState();
 		lm->m_mainLevels->setObject(m_level, lm->getLevelKey(m_level->m_levelID.value()));
-		GameManager::get()->save();
+		return PlayLayer::resetLevel();
 	};
 };
 
 #include <Geode/modify/LocalLevelManager.hpp>
 class $modify(LocalLevelManagerExt, LocalLevelManager) {
 	$override gd::string getMainLevelString(int p0) {
-		log::debug("{}({})", __func__, p0);
+		//log::debug("{}({})", __func__, p0);
 		//LocalLevelManager::getMainLevelString(p0);
 		auto levelID = p0;
 		//get data file path
@@ -41,8 +30,6 @@ class $modify(LocalLevelManagerExt, LocalLevelManager) {
 		return gd::string(fileContent.c_str());
 	}
 };
-
-//// fffffffffffffuc a here is aaa problematic functions idk lol
 
 #include <Geode/modify/LevelTools.hpp>
 class $modify(LevelTools) {
@@ -74,8 +61,8 @@ class $modify(LevelTools) {
 		updateLevelByJson(level);
 		return level;
 	};
-	$override static bool NOT_NOW___verifyLevelIntegrity(std::string p0, int p1) {
-		//hooking error lol
+	$override static bool verifyLevelIntegrity(gd::string p0, int p1) {
+		LevelTools::verifyLevelIntegrity(p0, p1);
 		return 1;
 	}
 };

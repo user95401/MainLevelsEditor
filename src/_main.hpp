@@ -12,42 +12,11 @@ using namespace geode::prelude;
 template<typename T, typename U> constexpr size_t OFFSET_BY_MEMBER(U T::* member) { return (char*)&((T*)nullptr->*member) - (char*)nullptr; }
 
 inline auto levels_path = Mod::get()->getConfigDir() / "levels";
-inline auto levels_meta_path = levels_path / "_meta";
+inline auto levels_meta_path = levels_path / "_meta-v2";
 inline auto songs_path = Mod::get()->getConfigDir() / "songs";
 inline auto audios_meta_path = songs_path / "_audios";
 inline auto artists_meta_path = songs_path / "_artists";
-namespace fs {
-    using namespace std::filesystem;
-    inline auto last_err = std::string();
-    inline std::error_code last_err_code;
-    template <typename T> inline auto rtnWithErrLog(T rtn, std::string log) { log::error("{}", log); return rtn; }
-    inline auto exists(path path, std::string& err = last_err) {
-        return cocos::fileExistsInSearchPaths(path.string().c_str());
-    }
-    inline auto read(path path, std::string& err = last_err) {
-        err = fmt::format("{}(path \"{}\") err: path dnt exists", __func__, path);
-        if (not fs::exists(path)) return rtnWithErrLog(err, err); err = "";
-
-        unsigned long file_size = 0;
-        auto buffer = CCFileUtils::sharedFileUtils()->getFileData(path.string().c_str(), "rb", &file_size);
-
-        std::string data = "read failed...";
-        if (buffer && file_size != 0) data = std::string(reinterpret_cast<char*>(buffer), file_size);
-        else return rtnWithErrLog(data, err);
-
-        return data;
-    }
-    inline auto rename(path old_path, path new_path, std::string& err = last_err) {
-        err = fmt::format("{}(old_path \"{}\", old_path \"{}\") err: old path dnt exists", __func__, old_path, new_path);
-        if (not fs::exists(old_path)) return rtnWithErrLog(false, err);
-        err = fmt::format("{}(old_path \"{}\", old_path \"{}\") err: new path exists", __func__, old_path, new_path);
-        if (fs::exists(new_path)) return rtnWithErrLog(false, err);
-        err = "";
-        std::filesystem::rename(old_path, new_path, last_err_code);
-        log::debug("{}(old_path \"{}\", old_path \"{}\"): last_err_code={}", __func__, old_path, new_path, last_err_code);
-        return true;
-    }
-}
+#include <_fs.hpp>
 
 #define public_cast(value, member) [](auto* v) { \
 	class FriendClass__; \
@@ -117,52 +86,66 @@ namespace geode::utils::string {
             vec.push_back(input.substr(i, count));
             i = pos + separator.length() - 1;
         }
-        if (vec.size() == 0) vec.push_back(input);/*
-        std::stringstream log;
-        for (auto item : vec)
-            log << std::endl << item << std::endl;
-        log::debug("{}(separator \"{}\", input \"{}\").rtn({})", __FUNCTION__, separator, input, log.str());*/
+        if (vec.size() == 0) vec.push_back(input);
         return vec;
     }
 }
 
 namespace mle_leveltools {
-    inline matjson::Value levelFromJson(matjson::Value value, GJGameLevel* levelToRewrite = nullptr) {
+    inline GJGameLevel* levelFromJson(matjson::Value value, GJGameLevel* levelToRewrite = nullptr) {
         GJGameLevel* level = levelToRewrite ? levelToRewrite : LevelTools::getLevel(1, 0);
-        level->m_levelName = value.try_get<std::string>("m_levelName").value_or(level->m_levelName.data());
-        level->m_levelDesc = value.try_get<std::string>("m_levelDesc").value_or(level->m_levelDesc.data());
-        level->m_creatorName = value.try_get<std::string>("m_creatorName").value_or(level->m_creatorName.data());
-        level->m_difficulty = (GJDifficulty)value.try_get<int>("m_difficulty").value_or((int)level->m_difficulty);
-        level->m_stars = value.try_get<int>("m_stars").value_or(level->m_stars.value());
-        level->m_requiredCoins = value.try_get<int>("m_requiredCoins").value_or(level->m_requiredCoins);
-        level->m_audioTrack = value.try_get<int>("m_audioTrack").value_or(level->m_audioTrack);
-        level->m_songID = value.try_get<int>("m_songID").value_or(level->m_songID);
-        level->m_levelVersion = value.try_get<int>("m_levelVersion").value_or(level->m_levelVersion);
-        level->m_gameVersion = value.try_get<int>("m_gameVersion").value_or(level->m_gameVersion);
-        level->m_levelType = (GJLevelType)value.try_get<int>("m_levelType").value_or((int)level->m_levelType);
-        level->m_capacityString = value.try_get<std::string>("m_capacityString").value_or(level->m_capacityString.data());
-        level->m_songIDs = value.try_get<std::string>("m_songIDs").value_or(level->m_songIDs.data());
-        level->m_sfxIDs = value.try_get<std::string>("m_sfxIDs").value_or(level->m_sfxIDs.data());
-        return value;
+
+        auto try_get_main = value.try_get<matjson::Value>("main");
+        if (try_get_main.has_value()) {
+            auto main = try_get_main.value();
+            level->m_levelName = main.try_get<std::string>("m_levelName").value_or(level->m_levelName.data());
+            level->m_audioTrack = main.try_get<int>("m_audioTrack").value_or(level->m_audioTrack);
+            level->m_difficulty = (GJDifficulty)main.try_get<int>("m_difficulty").value_or((int)level->m_difficulty);
+            level->m_stars = main.try_get<int>("m_stars").value_or(level->m_stars.value());
+            level->m_requiredCoins = main.try_get<int>("m_requiredCoins").value_or(level->m_requiredCoins);
+            level->m_levelLength = main.try_get<int>("m_levelLength").value_or(level->m_levelLength);
+        }
+
+        auto try_get_other = value.try_get<matjson::Value>("other");
+        if (try_get_other.has_value()) {
+            auto other = try_get_other.value();
+            level->m_levelDesc = value.try_get<std::string>("m_levelDesc").value_or(level->m_levelDesc.data());
+            level->m_creatorName = value.try_get<std::string>("m_creatorName").value_or(level->m_creatorName.data());
+            level->m_songID = value.try_get<int>("m_songID").value_or(level->m_songID);
+            level->m_levelVersion = value.try_get<int>("m_levelVersion").value_or(level->m_levelVersion);
+            level->m_gameVersion = value.try_get<int>("m_gameVersion").value_or(level->m_gameVersion);
+            level->m_levelType = (GJLevelType)value.try_get<int>("m_levelType").value_or((int)level->m_levelType);
+            level->m_capacityString = value.try_get<std::string>("m_capacityString").value_or(level->m_capacityString.data());
+            level->m_songIDs = value.try_get<std::string>("m_songIDs").value_or(level->m_songIDs.data());
+            level->m_sfxIDs = value.try_get<std::string>("m_sfxIDs").value_or(level->m_sfxIDs.data());
+        }
+
+        return level;
     }
     inline auto jsonFromLevel(GJGameLevel* level) {
         auto value = matjson::Value();
-        value.try_set("________MAIN_STUFF________", " vvv vvv ");
-        value.try_set("m_levelName", std::string(level->m_levelName.data()));
-        value.try_set("m_audioTrack", level->m_audioTrack);
-        value.try_set("m_difficulty", (int)level->m_difficulty);
-        value.try_set("m_stars", level->m_stars.value());
-        value.try_set("m_requiredCoins", level->m_requiredCoins);
-        value.try_set("________SOME_SHIT________", " vvv vvv ");
-        value.try_set("m_levelDesc", std::string(level->m_levelDesc.data()));
-        value.try_set("m_creatorName", std::string(level->m_creatorName.data()));;
-        value.try_set("m_songID", level->m_songID);
-        value.try_set("m_levelVersion", level->m_levelVersion);
-        value.try_set("m_gameVersion", level->m_gameVersion);
-        value.try_set("m_levelType", (int)level->m_levelType);
-        value.try_set("m_capacityString", std::string(level->m_capacityString.data()));
-        value.try_set("m_songIDs", std::string(level->m_songIDs.data()));
-        value.try_set("m_sfxIDs", std::string(level->m_sfxIDs.data()));
+
+        auto main = matjson::Value();
+        main.try_set("m_levelName", std::string(level->m_levelName.data()));
+        main.try_set("m_audioTrack", level->m_audioTrack);
+        main.try_set("m_difficulty", (int)level->m_difficulty);
+        main.try_set("m_stars", level->m_stars.value());
+        main.try_set("m_requiredCoins", level->m_requiredCoins);
+        main.try_set("m_levelLength", level->m_levelLength);
+        value.try_set("main", main);
+
+        auto other = matjson::Value();
+        other.try_set("m_levelDesc", std::string(level->m_levelDesc.data()));
+        other.try_set("m_creatorName", std::string(level->m_creatorName.data()));;
+        other.try_set("m_songID", level->m_songID);
+        other.try_set("m_levelVersion", level->m_levelVersion);
+        other.try_set("m_gameVersion", level->m_gameVersion);
+        other.try_set("m_levelType", (int)level->m_levelType);
+        other.try_set("m_capacityString", std::string(level->m_capacityString.data()));
+        other.try_set("m_songIDs", std::string(level->m_songIDs.data()));
+        other.try_set("m_sfxIDs", std::string(level->m_sfxIDs.data()));
+        value.try_set("other", other);
+
         return value;
     }
     inline void updateLevelByJson(GJGameLevel* level) {
@@ -225,6 +208,348 @@ namespace mle_leveltools {
         auto level_meta_file = levels_meta_path / fmt::format("{}.json", level->m_levelID.value());
         std::ofstream(level_meta_file) << jsonFromLevel(level).dump(matjson::TAB_INDENTATION);
         return;
+    }
+    inline auto levelFromLevel(GJGameLevel* org_level) {
+        auto new_level = GJGameLevel::create();
+        new_level->m_lastBuildSave = org_level->m_lastBuildSave;
+        new_level->m_levelID = org_level->m_levelID;
+        new_level->m_levelName = org_level->m_levelName;
+        new_level->m_levelDesc = org_level->m_levelDesc;
+        new_level->m_levelString = org_level->m_levelString;
+        new_level->m_creatorName = org_level->m_creatorName;
+        new_level->m_recordString = org_level->m_recordString;
+        new_level->m_uploadDate = org_level->m_uploadDate;
+        new_level->m_updateDate = org_level->m_updateDate;
+        new_level->m_unkString1 = org_level->m_unkString1;
+        new_level->m_unkString2 = org_level->m_unkString2;
+        new_level->m_unkPoint = org_level->m_unkPoint;
+        new_level->m_userID = org_level->m_userID;
+        new_level->m_accountID = org_level->m_accountID;
+        new_level->m_difficulty = org_level->m_difficulty;
+        new_level->m_audioTrack = org_level->m_audioTrack;
+        new_level->m_songID = org_level->m_songID;
+        new_level->m_levelRev = org_level->m_levelRev;
+        new_level->m_unlisted = org_level->m_unlisted;
+        new_level->m_friendsOnly = org_level->m_friendsOnly;
+        new_level->m_objectCount = org_level->m_objectCount;
+        new_level->m_levelIndex = org_level->m_levelIndex;
+        new_level->m_ratings = org_level->m_ratings;
+        new_level->m_ratingsSum = org_level->m_ratingsSum;
+        new_level->m_downloads = org_level->m_downloads;
+        new_level->m_isEditable = org_level->m_isEditable;
+        new_level->m_gauntletLevel = org_level->m_gauntletLevel;
+        new_level->m_gauntletLevel2 = org_level->m_gauntletLevel2;
+        new_level->m_workingTime = org_level->m_workingTime;
+        new_level->m_workingTime2 = org_level->m_workingTime2;
+        new_level->m_lowDetailMode = org_level->m_lowDetailMode;
+        new_level->m_lowDetailModeToggled = org_level->m_lowDetailModeToggled;
+        new_level->m_disableShakeToggled = org_level->m_disableShakeToggled;
+        new_level->m_selected = org_level->m_selected;
+        new_level->m_localOrSaved = org_level->m_localOrSaved;
+        new_level->m_disableShake = org_level->m_disableShake;
+        new_level->m_isVerified = org_level->m_isVerified;
+        new_level->m_isVerifiedRaw = org_level->m_isVerifiedRaw;
+        new_level->m_isUploaded = org_level->m_isUploaded;
+        new_level->m_hasBeenModified = org_level->m_hasBeenModified;
+        new_level->m_levelVersion = org_level->m_levelVersion;
+        new_level->m_gameVersion = org_level->m_gameVersion;
+        new_level->m_attempts = org_level->m_attempts;
+        new_level->m_jumps = org_level->m_jumps;
+        new_level->m_clicks = org_level->m_clicks;
+        new_level->m_attemptTime = org_level->m_attemptTime;
+        new_level->m_chk = org_level->m_chk;
+        new_level->m_isChkValid = org_level->m_isChkValid;
+        new_level->m_isCompletionLegitimate = org_level->m_isCompletionLegitimate;
+        new_level->m_normalPercent = org_level->m_normalPercent;
+        new_level->m_orbCompletion = org_level->m_orbCompletion;
+        new_level->m_newNormalPercent2 = org_level->m_newNormalPercent2;
+        new_level->m_practicePercent = org_level->m_practicePercent;
+        new_level->m_likes = org_level->m_likes;
+        new_level->m_dislikes = org_level->m_dislikes;
+        new_level->m_levelLength = org_level->m_levelLength;
+        new_level->m_featured = org_level->m_featured;
+        new_level->m_isEpic = org_level->m_isEpic;
+        new_level->m_levelFavorited = org_level->m_levelFavorited;
+        new_level->m_levelFolder = org_level->m_levelFolder;
+        new_level->m_dailyID = org_level->m_dailyID;
+        new_level->m_demon = org_level->m_demon;
+        new_level->m_demonDifficulty = org_level->m_demonDifficulty;
+        new_level->m_stars = org_level->m_stars;
+        new_level->m_autoLevel = org_level->m_autoLevel;
+        new_level->m_coins = org_level->m_coins;
+        new_level->m_coinsVerified = org_level->m_coinsVerified;
+        new_level->m_password = org_level->m_password;
+        new_level->m_originalLevel = org_level->m_originalLevel;
+        new_level->m_twoPlayerMode = org_level->m_twoPlayerMode;
+        new_level->m_failedPasswordAttempts = org_level->m_failedPasswordAttempts;
+        new_level->m_firstCoinVerified = org_level->m_firstCoinVerified;
+        new_level->m_secondCoinVerified = org_level->m_secondCoinVerified;
+        new_level->m_thirdCoinVerified = org_level->m_thirdCoinVerified;
+        new_level->m_starsRequested = org_level->m_starsRequested;
+        new_level->m_showedSongWarning = org_level->m_showedSongWarning;
+        new_level->m_starRatings = org_level->m_starRatings;
+        new_level->m_starRatingsSum = org_level->m_starRatingsSum;
+        new_level->m_maxStarRatings = org_level->m_maxStarRatings;
+        new_level->m_minStarRatings = org_level->m_minStarRatings;
+        new_level->m_demonVotes = org_level->m_demonVotes;
+        new_level->m_rateStars = org_level->m_rateStars;
+        new_level->m_rateFeature = org_level->m_rateFeature;
+        new_level->m_rateUser = org_level->m_rateUser;
+        new_level->m_dontSave = org_level->m_dontSave;
+        new_level->m_levelNotDownloaded = org_level->m_levelNotDownloaded;
+        new_level->m_requiredCoins = org_level->m_requiredCoins;
+        new_level->m_isUnlocked = org_level->m_isUnlocked;
+        new_level->m_lastCameraPos = org_level->m_lastCameraPos;
+        new_level->m_fastEditorZoom = org_level->m_fastEditorZoom;
+        new_level->m_lastBuildTab = org_level->m_lastBuildTab;
+        new_level->m_lastBuildPage = org_level->m_lastBuildPage;
+        new_level->m_lastBuildGroupID = org_level->m_lastBuildGroupID;
+        new_level->m_levelType = org_level->m_levelType;
+        new_level->m_M_ID = org_level->m_M_ID;
+        new_level->m_tempName = org_level->m_tempName;
+        new_level->m_capacityString = org_level->m_capacityString;
+        new_level->m_highObjectsEnabled = org_level->m_highObjectsEnabled;
+        new_level->m_unlimitedObjectsEnabled = org_level->m_unlimitedObjectsEnabled;
+        new_level->m_personalBests = org_level->m_personalBests;
+        new_level->m_timestamp = org_level->m_timestamp;
+        new_level->m_unkInt = org_level->m_unkInt;
+        new_level->m_songIDs = org_level->m_songIDs;
+        new_level->m_sfxIDs = org_level->m_sfxIDs;
+        new_level->m_54 = org_level->m_54;
+        new_level->m_bestTime = org_level->m_bestTime;
+        new_level->m_bestPoints = org_level->m_bestPoints;
+        new_level->m_k111 = org_level->m_k111;
+        new_level->m_unkString3 = org_level->m_unkString3;
+        new_level->m_unkString4 = org_level->m_unkString4;
+        return new_level;
+    }
+    inline void logLevel(GJGameLevel* level) {
+        log::debug( 
+            {
+            "{}:\n"
+            "cocos2d::CCDictionary* m_lastBuildSave = {}\n"
+            "geode::SeedValueRSV level->m_levelID = {}\n"
+            "gd::string level->m_levelName = {}\n"
+            "gd::string level->m_levelDesc = {}\n"
+            "gd::string level->m_levelString = {}\n"
+            "gd::string level->m_creatorName = {}\n"
+            "gd::string level->m_recordString = {}\n"
+            "gd::string level->m_uploadDate = {}\n"
+            "gd::string level->m_updateDate = {}\n"
+            "gd::string level->m_unkString1 = {}\n"
+            "gd::string level->m_unkString2 = {}\n"
+            "cocos2d::CCPoint level->m_unkPoint = {}\n"
+            "geode::SeedValueRSV level->m_userID = {}\n"
+            "geode::SeedValueRSV level->m_accountID = {}\n"
+            "GJDifficulty level->m_difficulty = {}\n"
+            "int level->m_audioTrack = {}\n"
+            "int level->m_songID = {}\n"
+            "int level->m_levelRev = {}\n"
+            "bool level->m_unlisted = {}\n"
+            "bool level->m_friendsOnly = {}\n"
+            "geode::SeedValueRSV level->m_objectCount = {}\n"
+            "int level->m_levelIndex = {}\n"
+            "int level->m_ratings = {}\n"
+            "int level->m_ratingsSum = {}\n"
+            "int level->m_downloads = {}\n"
+            "bool level->m_isEditable = {}\n"
+            "bool level->m_gauntletLevel = {}\n"
+            "bool level->m_gauntletLevel2 = {}\n"
+            "int level->m_workingTime = {}\n"
+            "int level->m_workingTime2 = {}\n"
+            "bool level->m_lowDetailMode = {}\n"
+            "bool level->m_lowDetailModeToggled = {}\n"
+            "bool level->m_disableShakeToggled = {}\n"
+            "bool level->m_selected = {}\n"
+            "bool level->m_localOrSaved = {}\n"
+            "bool level->m_disableShake = {}\n"
+            "geode::SeedValueRS level->m_isVerified = {}\n"
+            "bool level->m_isVerifiedRaw = {}\n"
+            "bool level->m_isUploaded = {}\n"
+            "bool level->m_hasBeenModified = {}\n"
+            "int level->m_levelVersion = {}\n"
+            "int level->m_gameVersion = {}\n"
+            "geode::SeedValueRSV level->m_attempts = {}\n"
+            "geode::SeedValueRSV level->m_jumps = {}\n"
+            "geode::SeedValueRSV level->m_clicks = {}\n"
+            "geode::SeedValueRSV level->m_attemptTime = {}\n"
+            "int level->m_chk = {}\n"
+            "bool level->m_isChkValid = {}\n"
+            "bool level->m_isCompletionLegitimate = {}\n"
+            "geode::SeedValueVSR level->m_normalPercent = {}\n"
+            "geode::SeedValueRSV level->m_orbCompletion = {}\n"
+            "geode::SeedValueRSV level->m_newNormalPercent2 = {}\n"
+            "int level->m_practicePercent = {}\n"
+            "int level->m_likes = {}\n"
+            "int level->m_dislikes = {}\n"
+            "int level->m_levelLength = {}\n"
+            "int level->m_featured = {}\n"
+            "int level->m_isEpic = {}\n"
+            "bool level->m_levelFavorited = {}\n"
+            "int level->m_levelFolder = {}\n"
+            "geode::SeedValueRSV level->m_dailyID = {}\n"
+            "geode::SeedValueRSV level->m_demon = {}\n"
+            "int level->m_demonDifficulty = {}\n"
+            "geode::SeedValueRSV level->m_stars = {}\n"
+            "bool level->m_autoLevel = {}\n"
+            "int level->m_coins = {}\n"
+            "geode::SeedValueRSV level->m_coinsVerified = {}\n"
+            "geode::SeedValueRS level->m_password = {}\n"
+            "geode::SeedValueRSV level->m_originalLevel = {}\n"
+            "bool level->m_twoPlayerMode = {}\n"
+            "int level->m_failedPasswordAttempts = {}\n"
+            "geode::SeedValueRSV level->m_firstCoinVerified = {}\n"
+            "geode::SeedValueRSV level->m_secondCoinVerified = {}\n"
+            "geode::SeedValueRSV level->m_thirdCoinVerified = {}\n"
+            "int level->m_starsRequested = {}\n"
+            "bool level->m_showedSongWarning = {}\n"
+            "int level->m_starRatings = {}\n"
+            "int level->m_starRatingsSum = {}\n"
+            "int level->m_maxStarRatings = {}\n"
+            "int level->m_minStarRatings = {}\n"
+            "int level->m_demonVotes = {}\n"
+            "int level->m_rateStars = {}\n"
+            "int level->m_rateFeature = {}\n"
+            "gd::string level->m_rateUser = {}\n"
+            "bool level->m_dontSave = {}\n"
+            "bool level->m_levelNotDownloaded = {}\n"
+            "int level->m_requiredCoins = {}\n"
+            "bool level->m_isUnlocked = {}\n"
+            "cocos2d::CCPoint level->m_lastCameraPos = {}\n"
+            "float level->m_fastEditorZoom = {}\n"
+            "int level->m_lastBuildTab = {}\n"
+            "int level->m_lastBuildPage = {}\n"
+            "int level->m_lastBuildGroupID = {}\n"
+            "GJLevelType level->m_levelType = {}\n"
+            "int level->m_level->m_ID = {}\n"
+            "gd::string level->m_tempName = {}\n"
+            "gd::string level->m_capacityString = {}\n"
+            "bool level->m_highObjectsEnabled = {}\n"
+            "bool level->m_unlimitedObjectsEnabled = {}\n"
+            "gd::string level->m_personalBests = {}\n"
+            "int level->m_timestamp = {}\n"
+            "int level->m_unkInt = {}\n"
+            "gd::string level->m_songIDs = {}\n"
+            "gd::string level->m_sfxIDs = {}\n"
+            "int level->m_54 = {}\n"
+            "int level->m_bestTime = {}\n"
+            "int level->m_bestPoints = {}\n"
+            "int level->m_k111 = {}\n"
+            "gd::string level->m_unkString3 = {}\n"
+            "gd::string level->m_unkString4 = {}\n"
+            },
+level,
+level->m_lastBuildSave,//level->m_lastBuildSave;
+level->m_levelID.value(),//level->m_levelID;
+level->m_levelName,//level->m_levelName;
+level->m_levelDesc,//level->m_levelDesc;
+level->m_levelString,//level->m_levelString;
+level->m_creatorName,//level->m_creatorName;
+level->m_recordString,//level->m_recordString;
+level->m_uploadDate,//level->m_uploadDate;
+level->m_updateDate,//level->m_updateDate;
+level->m_unkString1,//level->m_unkString1;
+level->m_unkString2,//level->m_unkString2;
+level->m_unkPoint,//level->m_unkPoint;
+level->m_userID.value(),//level->m_userID;
+level->m_accountID.value(),//level->m_accountID;
+(int)level->m_difficulty,//level->m_difficulty;
+level->m_audioTrack,//level->m_audioTrack;
+level->m_songID,//level->m_songID;
+level->m_levelRev,//level->m_levelRev;
+level->m_unlisted,//level->m_unlisted;
+level->m_friendsOnly,//level->m_friendsOnly;
+level->m_objectCount.value(),//level->m_objectCount;
+level->m_levelIndex,//level->m_levelIndex;
+level->m_ratings,//level->m_ratings;
+level->m_ratingsSum,//level->m_ratingsSum;
+level->m_downloads,//level->m_downloads;
+level->m_isEditable,//level->m_isEditable;
+level->m_gauntletLevel,//level->m_gauntletLevel;
+level->m_gauntletLevel2,//level->m_gauntletLevel2;
+level->m_workingTime,//level->m_workingTime;
+level->m_workingTime2,//level->m_workingTime2;
+level->m_lowDetailMode,//level->m_lowDetailMode;
+level->m_lowDetailModeToggled,//level->m_lowDetailModeToggled;
+level->m_disableShakeToggled,//level->m_disableShakeToggled;
+level->m_selected,//level->m_selected;
+level->m_localOrSaved,//level->m_localOrSaved;
+level->m_disableShake,//level->m_disableShake;
+level->m_isVerified.value(),//level->m_isVerified;
+level->m_isVerifiedRaw,//level->m_isVerifiedRaw;
+level->m_isUploaded,//level->m_isUploaded;
+level->m_hasBeenModified,//level->m_hasBeenModified;
+level->m_levelVersion,//level->m_levelVersion;
+level->m_gameVersion,//level->m_gameVersion;
+level->m_attempts.value(),//level->m_attempts;
+level->m_jumps.value(),//level->m_jumps;
+level->m_clicks.value(),//level->m_clicks;
+level->m_attemptTime.value(),//level->m_attemptTime;
+level->m_chk,//level->m_chk;
+level->m_isChkValid,//level->m_isChkValid;
+level->m_isCompletionLegitimate,//level->m_isCompletionLegitimate;
+level->m_normalPercent.value(),//level->m_normalPercent;
+level->m_orbCompletion.value(),//level->m_orbCompletion;
+level->m_newNormalPercent2.value(),//level->m_newNormalPercent2;
+level->m_practicePercent,//level->m_practicePercent;
+level->m_likes,//level->m_likes;
+level->m_dislikes,//level->m_dislikes;
+level->m_levelLength,//level->m_levelLength;
+level->m_featured,//level->m_featured;
+level->m_isEpic,//level->m_isEpic;
+level->m_levelFavorited,//level->m_levelFavorited;
+level->m_levelFolder,//level->m_levelFolder;
+level->m_dailyID.value(),//level->m_dailyID;
+level->m_demon.value(),//level->m_demon;
+level->m_demonDifficulty,//level->m_demonDifficulty;
+level->m_stars.value(),//level->m_stars;
+level->m_autoLevel,//level->m_autoLevel;
+level->m_coins,//level->m_coins;
+level->m_coinsVerified.value(),//level->m_coinsVerified;
+level->m_password.value(),//level->m_password;
+level->m_originalLevel.value(),//level->m_originalLevel;
+level->m_twoPlayerMode,//level->m_twoPlayerMode;
+level->m_failedPasswordAttempts,//level->m_failedPasswordAttempts;
+level->m_firstCoinVerified.value(),//level->m_firstCoinVerified;
+level->m_secondCoinVerified.value(),//level->m_secondCoinVerified;
+level->m_thirdCoinVerified.value(),//level->m_thirdCoinVerified;
+level->m_starsRequested,//level->m_starsRequested;
+level->m_showedSongWarning,//level->m_showedSongWarning;
+level->m_starRatings,//level->m_starRatings;
+level->m_starRatingsSum,//level->m_starRatingsSum;
+level->m_maxStarRatings,//level->m_maxStarRatings;
+level->m_minStarRatings,//level->m_minStarRatings;
+level->m_demonVotes,//level->m_demonVotes;
+level->m_rateStars,//level->m_rateStars;
+level->m_rateFeature,//level->m_rateFeature;
+level->m_rateUser,//level->m_rateUser;
+level->m_dontSave,//level->m_dontSave;
+level->m_levelNotDownloaded,//level->m_levelNotDownloaded;
+level->m_requiredCoins,//level->m_requiredCoins;
+level->m_isUnlocked,//level->m_isUnlocked;
+level->m_lastCameraPos,//level->m_lastCameraPos;
+level->m_fastEditorZoom,//level->m_fastEditorZoom;
+level->m_lastBuildTab,//level->m_lastBuildTab;
+level->m_lastBuildPage,//level->m_lastBuildPage;
+level->m_lastBuildGroupID,//level->m_lastBuildGroupID;
+(int)level->m_levelType,//level->m_levelType;
+level->m_levelID.value(),//level->m_level->m_ID;
+level->m_tempName,//level->m_tempName;
+level->m_capacityString,//level->m_capacityString;
+level->m_highObjectsEnabled,//level->m_highObjectsEnabled;
+level->m_unlimitedObjectsEnabled,//level->m_unlimitedObjectsEnabled;
+level->m_personalBests,//level->m_personalBests;
+level->m_timestamp,//level->m_timestamp;
+level->m_unkInt,//level->m_unkInt;
+level->m_songIDs,//level->m_songIDs;
+level->m_sfxIDs,//level->m_sfxIDs;
+level->m_54,//level->m_54;
+level->m_bestTime,//level->m_bestTime;
+level->m_bestPoints,//level->m_bestPoints;
+level->m_k111,//level->m_k111;
+level->m_unkString3,//level->m_unkString3;
+level->m_unkString4//level->m_unkString4;
+                );
     }
 };
 
@@ -574,7 +899,7 @@ namespace mle_ui {
                             md_str.append(fmt::format(
                                 "\n - {}: {}",
                                 filepath.filename().string(),
-                                value["m_levelName"].dump()
+                                value["main"]["m_levelName"].dump()
                             ));
                         }
                     };
@@ -1125,9 +1450,8 @@ namespace mle_ui {
     };
     class CopyLevelPopup : public FLAlertLayer, FLAlertLayerProtocol, TextInputDelegate {
     public:
-        GJGameLevel* m_level = nullptr;
         std::function<void()> m_onSave = []() {};
-        static auto create(GJGameLevel* for_level = LevelTools::getLevel(1, 0)) {
+        static auto create(GJGameLevel* for_level) {
             auto rtn = new CopyLevelPopup;
             rtn->init(
                 rtn,
@@ -1136,7 +1460,10 @@ namespace mle_ui {
                 "Close", "Save", 375.000f, 0, 0.000f, 1.f
             );
             rtn->setID("CopyLevelPopup");
-            rtn->m_level = for_level;
+            auto level = mle_leveltools::levelFromLevel(for_level);
+            //mle_leveltools::logLevel(level);
+            level->setID("level");
+            rtn->addChild(level);
             rtn->customSetup();
             return rtn;
         }
@@ -1204,23 +1531,31 @@ namespace mle_ui {
             }
         }
         void loadInputs() {
-            if (not this->m_level) return;
+            auto level = typeinfo_cast<GJGameLevel*>(this->getChildByIDRecursive("level"));
+            if (not level) return;
             auto m_levelID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_levelID"));
-            if (m_levelID) m_levelID->setString(fmt::format("{}", this->m_level->m_levelID.value()));
+            if (m_levelID) m_levelID->setString(fmt::format("{}", level->m_levelID.value()));
         }
         void applyInputs() {
-            if (not this->m_level) return;
+            auto level = typeinfo_cast<GJGameLevel*>(this->getChildByIDRecursive("level"));
+            if (not level) return;
             auto m_levelID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_levelID"));
-            if (m_levelID) m_level->m_levelID = utils::numFromString<int>(m_levelID->getString().data()).value_or(m_level->m_levelID.value());
+            if (m_levelID) level->m_levelID = utils::numFromString<int>(m_levelID->getString().data()).value_or(level->m_levelID.value());
         }
         void FLAlert_Clicked(FLAlertLayer* p0, bool p1) {
-            if (not p1) return;
-            applyInputs();
+            auto __this = typeinfo_cast<CopyLevelPopup*>(p0);
+            if (not __this) return;
+            auto level = typeinfo_cast<GJGameLevel*>(__this->getChildByIDRecursive("level"));
+            if (not level) return; 
+            __this->applyInputs();
+            //update level
+            level->m_levelType = GJLevelType::Local;
+            level->m_difficulty = (GJDifficulty)level->getAverageDifficulty();
+            if (level->m_demon.value()) level->m_difficulty = (GJDifficulty)(4 + level->m_demonDifficulty);
             //save json
-            m_level->m_levelType = GJLevelType::Local;
-            mle_leveltools::updateLevelDataAndMetaFiles(m_level->m_levelString, m_level);
+            mle_leveltools::updateLevelDataAndMetaFiles(level->m_levelString, level);
             //call custom func
-            this->m_onSave();
+            __this->m_onSave();
         };
     };
     class CopyAudioPopup : public FLAlertLayer, FLAlertLayerProtocol, TextInputDelegate {

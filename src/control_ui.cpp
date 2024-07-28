@@ -157,6 +157,7 @@ class $modify(PauseLayerExt, PauseLayer) {
     }
     $override void customSetup() {
         PauseLayer::customSetup();
+        if (not SETTING(bool, "ui")) return;
         if (auto menu = typeinfo_cast<CCMenu*>(this->getChildByIDRecursive("right-button-menu"))) {
             CCMenuItemSpriteExtra* copyLevel; {
                 copyLevel = CCMenuItemSpriteExtra::create(

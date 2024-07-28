@@ -114,7 +114,7 @@ class $modify(LevelSettingsLayerExt, FLAlertLayer) {
         newCurrentAudioNode->setVisible(1);
         //set audio
         auto editorLayer = GameManager::get()->getEditorLayer();
-        editorLayer->m_levelSettings->m_defaultSongID = newCurrentAudioNode->getTag();
+        editorLayer->m_level->m_audioTrack = newCurrentAudioNode->getTag();
         editorLayer->m_level->m_audioTrack = newCurrentAudioNode->getTag();
         updateLabel();
     }
@@ -133,7 +133,7 @@ class $modify(LevelSettingsLayerExt, FLAlertLayer) {
         newCurrentAudioNode->setVisible(1);
         //set audio
         auto editorLayer = GameManager::get()->getEditorLayer();
-        editorLayer->m_levelSettings->m_defaultSongID = newCurrentAudioNode->getTag();
+        editorLayer->m_level->m_audioTrack = newCurrentAudioNode->getTag();
         editorLayer->m_level->m_audioTrack = newCurrentAudioNode->getTag();
         updateLabel();
     }

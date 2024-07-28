@@ -18,7 +18,6 @@ void Loaded() {
 		auto level_is_exists_in_gd = cocos::fileExistsInSearchPaths(level_in_game_path.c_str());
 		auto level_is_exists_in_mod = cocos::fileExistsInSearchPaths(level_path_to_save.string().c_str());
 		if (level_is_exists_in_gd and not level_is_exists_in_mod) {
-			log::debug("ofstreamingo...");
 			std::ofstream(level_path_to_save)
 				<< fs::read(level_in_game_path);
 		}

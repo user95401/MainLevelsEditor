@@ -85,7 +85,7 @@ jobs:
       - name: "Try Release Version"
         uses: ncipollo/release-action@v1
         with:
-          body: "${{ steps.changelog.outputs.changelog}}"
+          generateReleaseNotes: true
           tag: "${{steps.json_properties.outputs.version}}"
           artifacts: "${{steps.build.outputs.build-output}}/*"
           artifactErrorsFailBuild: true
