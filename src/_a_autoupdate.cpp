@@ -16,7 +16,7 @@ inline void download(std::string url = "", fs::path path = "", std::function<voi
     SceneManager::get()->keepAcrossScenes(layer);
 
     auto downloadingLabel = CCLabelBMFont::create(
-        std::format("Downloading {}...", fs::path(url).filename().string()).c_str(),
+        fmt::format("Downloading {}...", fs::path(url).filename().string()).c_str(),
         "goldFont.fnt"
     );
     layer->setID("downloadingLabel"_spr);
