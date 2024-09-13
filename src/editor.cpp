@@ -42,36 +42,33 @@ class $modify(EditorPauseLayerExt, EditorPauseLayer) {
 
 #include <Geode/modify/EditorUI.hpp>
 class $modify(EditorUIExt, EditorUI) {
-    struct Fields {
-        SEL_MenuHandler m_orgEditObjectSpecialSel;
-    };
-    void callEditObjectSpecial() {
-        if (auto editSpecialButton = typeinfo_cast<CCMenuItemSpriteExtra*>(this->getChildByIDRecursive("edit-special-button"))) {
-            editSpecialButton->m_pfnSelector = m_fields->m_orgEditObjectSpecialSel;
-            editSpecialButton->activate();
-            editSpecialButton->m_pfnSelector = menu_selector(EditorUIExt::customEditObjectSpecial);
-        }
-    }
-    void customEditObjectSpecial(CCObject* p0) {
-        if (not this->m_selectedObject) return;
-        if (not this->m_editorLayer->getChildByIDRecursive("IsMainLevelEditor")) {
-            return callEditObjectSpecial();
-        }
-        //user coin id 1329, 142 secret coin
-        if (this->m_selectedObject->m_objectID == 1329) {
-            this->m_selectedObject->m_objectID = 142;
-            this->editObject(p0);
-            this->m_selectedObject->m_objectID = 1329;
-            return;
-        }
-    };
     bool init(LevelEditorLayer* editorLayer) {
         auto rtn = EditorUI::init(editorLayer);
 
         //wasnt bindings for that yet
         if (auto editSpecialButton = typeinfo_cast<CCMenuItemSpriteExtra*>(this->getChildByIDRecursive("edit-special-button"))) {
-            m_fields->m_orgEditObjectSpecialSel = editSpecialButton->m_pfnSelector;
-            editSpecialButton->m_pfnSelector = menu_selector(EditorUIExt::customEditObjectSpecial);
+            auto& org_pfnSelector = editSpecialButton->m_pfnSelector;
+            auto& org_pListener = editSpecialButton->m_pListener;
+            CCMenuItemExt::assignCallback<CCMenuItemSpriteExtra>(
+                editSpecialButton, [this, editSpecialButton, org_pfnSelector, org_pListener](
+                    CCMenuItemSpriteExtra* item) {
+                        if (not this->m_selectedObject) return;
+                        if (not this->m_editorLayer->getChildByIDRecursive("IsMainLevelEditor")) {
+                            return (org_pListener->*org_pfnSelector)(editSpecialButton);
+                        }
+
+                        //user coin id 1329, 142 secret coin
+                        if (this->m_selectedObject->m_objectID == 1329) {
+                            this->m_selectedObject->m_objectID = 142;
+                            this->editObject(item);
+                            this->m_selectedObject->m_objectID = 1329;
+                            return;
+                        }
+
+                        (org_pListener->*org_pfnSelector)(editSpecialButton);
+                }
+            );
+
         }
 
         return rtn;

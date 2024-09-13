@@ -1,10 +1,10 @@
 {
-	"geode": "3.3.0",
+	"geode": "3.6.0",
 	"gd": {
 		"win": "2.206",
 		"android": "2.206"
 	},
-	"version": "v7.0.0-beta.14",
+	"version": "v7.0.0-beta.15",
 	"id": "user95401.mainlevelseditor",
 	"name": "Main Levels Editor",
 	"developer": "user95401",
@@ -26,6 +26,16 @@
 			"type": "bool",
 			"default": false
 		},
+		"LevelTools::artistForAudio moment": {
+			"name": "Avoid crash at LevelTools::artistForAudio",
+			"description": "dont get original at hook of that function (since geode v3.6.0)",
+			"type": "bool",
+			"default": false
+		},
+		"Levels Listing": {
+			"type": "title",
+			"name": "Levels Listing"
+		},
 		"start_id": {
 			"name": "Level List Start ID",
 			"description": "its about populating the levels list",
@@ -34,7 +44,7 @@
 			"default": 1
 		},
 		"max_id": {
-			"name": "  Level List Max ID",
+			"name": "Level List Max ID",
 			"description": "its about populating the levels list",
 			"type": "int",
 			"min": 1,
@@ -60,6 +70,10 @@
 			"type": "bool",
 			"default": true
 		},
+		"Songs Listing": {
+			"type": "title",
+			"name": "Songs Listing"
+		},
 		"songs_start_id": {
 			"name": "Songs List Start ID",
 			"description": "its about populating the songs list",
@@ -68,7 +82,7 @@
 			"default": 0
 		},
 		"songs_max_id": {
-			"name": "  Songs List Max ID",
+			"name": "Songs List Max ID",
 			"description": "its about populating the songs list",
 			"type": "int",
 			"min": 0,

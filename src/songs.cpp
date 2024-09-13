@@ -15,7 +15,10 @@ class $modify(LevelTools) {
 		return not Audio::CallDefaults ? gd::string(Audio(p0).m_url.data()) : LevelTools::urlForAudio(p0);
 	};
 	$override static int artistForAudio(int p0) {
-		return not Audio::CallDefaults ? Audio(p0).m_artistID : LevelTools::artistForAudio(p0);
+		if (SETTING(bool, "LevelTools::artistForAudio moment")) {
+			return not Audio::CallDefaults ? Audio(p0).m_artistID : 1;
+		}
+		else return not Audio::CallDefaults ? Audio(p0).m_artistID : LevelTools::artistForAudio(p0);
 	};
 	/// ARTIST
 	$override static gd::string ytURLForArtist(int p0) {
