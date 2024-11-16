@@ -10,7 +10,7 @@
 	"developer": "user95401",
 	"description": "customizable thing to change main levels uknowya",
 	"repository": "https://github.com/user95401/MainLevelsEditor",
-	"tags": [ "gameplay", "music", "interface", "utility", "customization", "cheats" ],
+	"tags": [ "gameplay", "music", "interface", "utility", "customization", "cheat" ],
 	"early-load": true,
 	"dependencies": [
 		{
