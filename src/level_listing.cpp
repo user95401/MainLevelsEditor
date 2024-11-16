@@ -23,8 +23,8 @@ class $modify(BoomScrollLayerExt, BoomScrollLayer) {
             //special_ids
             for (auto strID : string::explode(",", SETTING(std::string, "special_ids"))) {
                 auto id_num = utils::numFromString<int>(strID);
-                if (id_num.has_value()) 
-                    myLevelsArray->addObject(LevelTools::getLevel(id_num.value(), 0));
+                if (id_num.isOk()) 
+                    myLevelsArray->addObject(LevelTools::getLevel(id_num.unwrapOrDefault(), 0));
             }
 
             //the_tower

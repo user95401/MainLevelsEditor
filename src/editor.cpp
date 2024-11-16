@@ -5,6 +5,7 @@ class $modify(EditorPauseLayerExt, EditorPauseLayer) {
     $override void saveLevel() {
         EditorPauseLayer::saveLevel();
         if (not this->m_editorLayer->getChildByIDRecursive("IsMainLevelEditor")) return;
+        this->m_editorLayer->m_level->m_levelType = GJLevelType::Local;
         mle_leveltools::updateLevelDataAndMetaFiles(
             this->m_editorLayer->getLevelString(),
             this->m_editorLayer->m_level
@@ -79,7 +80,7 @@ class $modify(EditorUIExt, EditorUI) {
 class $modify(LevelSettingsLayerExt, FLAlertLayer) {
     auto audioIdFromLabel(CCLabelBMFont * songLabel) {
         auto str_expl = string::explode(":", songLabel->getString());
-        auto audioID = utils::numFromString<int>(str_expl[0]).value_or(0);
+        auto audioID = utils::numFromString<int>(str_expl[0]).unwrapOr(0);
         return audioID;
     }
     auto getCurrentAudioNode() {
@@ -192,7 +193,7 @@ class $modify(LevelSettingsLayerExt, FLAlertLayer) {
         audioList->setID("audioList");
         audioList->setVisible(0);
         for (auto file : availableAudioFiles) {
-            auto id = utils::numFromString<int>(file.filename().string()).value_or(0);
+            auto id = utils::numFromString<int>(file.filename().string()).unwrapOr(0);
             auto audio = createDataNode(
                 "audio",
                 fmt::format("{}: {}", id, LevelTools::getAudioTitle(id).data()).data(),

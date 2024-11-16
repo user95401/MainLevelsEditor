@@ -76,6 +76,14 @@ namespace geode::cocos {
     }
 };
 
+namespace matjson {
+    inline auto parse(std::string file_content, std::string& error) {
+        auto parse = matjson::parse(file_content);
+        if (parse.isErr()) error == parse.unwrapErr().message;
+        return parse;
+    };
+}
+
 namespace geode::utils::string {
     inline std::vector<std::string> explode(std::string separator, std::string input) {
         std::vector<std::string> vec;
@@ -95,29 +103,29 @@ namespace mle_leveltools {
     inline GJGameLevel* levelFromJson(matjson::Value value, GJGameLevel* levelToRewrite = nullptr) {
         GJGameLevel* level = levelToRewrite ? levelToRewrite : LevelTools::getLevel(1, 0);
 
-        auto try_get_main = value.try_get<matjson::Value>("main");
-        if (try_get_main.has_value()) {
-            auto main = try_get_main.value();
-            level->m_levelName = main.try_get<std::string>("m_levelName").value_or(level->m_levelName.data());
-            level->m_audioTrack = main.try_get<int>("m_audioTrack").value_or(level->m_audioTrack);
-            level->m_difficulty = (GJDifficulty)main.try_get<int>("m_difficulty").value_or((int)level->m_difficulty);
-            level->m_stars = main.try_get<int>("m_stars").value_or(level->m_stars.value());
-            level->m_requiredCoins = main.try_get<int>("m_requiredCoins").value_or(level->m_requiredCoins);
-            level->m_levelLength = main.try_get<int>("m_levelLength").value_or(level->m_levelLength);
+        auto try_get_main = value["main"];
+        if (try_get_main.isObject()) {
+            auto main = try_get_main;
+            level->m_levelName = main["m_levelName"].asString().unwrapOr(level->m_levelName.data());
+            level->m_audioTrack = main["m_audioTrack"].asInt().unwrapOr(level->m_audioTrack);
+            level->m_difficulty = (GJDifficulty)main["m_difficulty"].asInt().unwrapOr((int)level->m_difficulty);
+            level->m_stars = main["m_stars"].asInt().unwrapOr(level->m_stars.value());
+            level->m_requiredCoins = main["m_requiredCoins"].asInt().unwrapOr(level->m_requiredCoins);
+            level->m_levelLength = main["m_levelLength"].asInt().unwrapOr(level->m_levelLength);
         }
 
-        auto try_get_other = value.try_get<matjson::Value>("other");
-        if (try_get_other.has_value()) {
-            auto other = try_get_other.value();
-            level->m_levelDesc = value.try_get<std::string>("m_levelDesc").value_or(level->m_levelDesc.data());
-            level->m_creatorName = value.try_get<std::string>("m_creatorName").value_or(level->m_creatorName.data());
-            level->m_songID = value.try_get<int>("m_songID").value_or(level->m_songID);
-            level->m_levelVersion = value.try_get<int>("m_levelVersion").value_or(level->m_levelVersion);
-            level->m_gameVersion = value.try_get<int>("m_gameVersion").value_or(level->m_gameVersion);
-            level->m_levelType = (GJLevelType)value.try_get<int>("m_levelType").value_or((int)level->m_levelType);
-            level->m_capacityString = value.try_get<std::string>("m_capacityString").value_or(level->m_capacityString.data());
-            level->m_songIDs = value.try_get<std::string>("m_songIDs").value_or(level->m_songIDs.data());
-            level->m_sfxIDs = value.try_get<std::string>("m_sfxIDs").value_or(level->m_sfxIDs.data());
+        auto try_get_other = value["other"];
+        if (try_get_other.isObject()) {
+            auto other = try_get_other;
+            level->m_levelDesc = value["m_levelDesc"].asString().unwrapOr(level->m_levelDesc.data());
+            level->m_creatorName = value["m_creatorName"].asString().unwrapOr(level->m_creatorName.data());
+            level->m_songID = value["m_songID"].asInt().unwrapOr(level->m_songID);
+            level->m_levelVersion = value["m_levelVersion"].asInt().unwrapOr(level->m_levelVersion);
+            level->m_gameVersion = value["m_gameVersion"].asInt().unwrapOr(level->m_gameVersion);
+            level->m_levelType = (GJLevelType)value["m_levelType"].asInt().unwrapOr((int)level->m_levelType);
+            level->m_capacityString = value["m_capacityString"].asString().unwrapOr(level->m_capacityString.data());
+            level->m_songIDs = value["m_songIDs"].asString().unwrapOr(level->m_songIDs.data());
+            level->m_sfxIDs = value["m_sfxIDs"].asString().unwrapOr(level->m_sfxIDs.data());
         }
 
         return level;
@@ -126,25 +134,25 @@ namespace mle_leveltools {
         auto value = matjson::Value();
 
         auto main = matjson::Value();
-        main.try_set("m_levelName", std::string(level->m_levelName.data()));
-        main.try_set("m_audioTrack", level->m_audioTrack);
-        main.try_set("m_difficulty", (int)level->m_difficulty);
-        main.try_set("m_stars", level->m_stars.value());
-        main.try_set("m_requiredCoins", level->m_requiredCoins);
-        main.try_set("m_levelLength", level->m_levelLength);
-        value.try_set("main", main);
+        main.set("m_levelName", std::string(level->m_levelName.data()));
+        main.set("m_audioTrack", level->m_audioTrack);
+        main.set("m_difficulty", (int)level->m_difficulty);
+        main.set("m_stars", level->m_stars.value());
+        main.set("m_requiredCoins", level->m_requiredCoins);
+        main.set("m_levelLength", level->m_levelLength);
+        value.set("main", main);
 
         auto other = matjson::Value();
-        other.try_set("m_levelDesc", std::string(level->m_levelDesc.data()));
-        other.try_set("m_creatorName", std::string(level->m_creatorName.data()));;
-        other.try_set("m_songID", level->m_songID);
-        other.try_set("m_levelVersion", level->m_levelVersion);
-        other.try_set("m_gameVersion", level->m_gameVersion);
-        other.try_set("m_levelType", (int)level->m_levelType);
-        other.try_set("m_capacityString", std::string(level->m_capacityString.data()));
-        other.try_set("m_songIDs", std::string(level->m_songIDs.data()));
-        other.try_set("m_sfxIDs", std::string(level->m_sfxIDs.data()));
-        value.try_set("other", other);
+        other.set("m_levelDesc", std::string(level->m_levelDesc.data()));
+        other.set("m_creatorName", std::string(level->m_creatorName.data()));;
+        other.set("m_songID", level->m_songID);
+        other.set("m_levelVersion", level->m_levelVersion);
+        other.set("m_gameVersion", level->m_gameVersion);
+        other.set("m_levelType", (int)level->m_levelType);
+        other.set("m_capacityString", std::string(level->m_capacityString.data()));
+        other.set("m_songIDs", std::string(level->m_songIDs.data()));
+        other.set("m_sfxIDs", std::string(level->m_sfxIDs.data()));
+        value.set("other", other);
 
         return value;
     }
@@ -152,13 +160,13 @@ namespace mle_leveltools {
         auto level_meta_file = levels_meta_path / fmt::format("{}.json", level->m_levelID.value());
         auto file_content = fs::read(level_meta_file);
         //json val
-        auto value = matjson::parse("{}");
+        auto value = matjson::parse("{}").unwrapOrDefault();
         //file parse
         auto error = std::string();
         auto parse = matjson::parse(file_content, error);
-        if (parse.has_value()) value = parse.value();
+        if (parse.isOk()) value = parse.unwrapOrDefault();
         //setup level
-        levelFromJson(parse, level);
+        levelFromJson(value, level);
         //setup json
         value = jsonFromLevel(level);
         //save json
@@ -312,7 +320,7 @@ namespace mle_leveltools {
         new_level->m_unlimitedObjectsEnabled = org_level->m_unlimitedObjectsEnabled;
         new_level->m_personalBests = org_level->m_personalBests;
         new_level->m_timestamp = org_level->m_timestamp;
-        new_level->m_unkInt = org_level->m_unkInt;
+        new_level->m_listPosition = org_level->m_listPosition;
         new_level->m_songIDs = org_level->m_songIDs;
         new_level->m_sfxIDs = org_level->m_sfxIDs;
         new_level->m_54 = org_level->m_54;
@@ -428,7 +436,7 @@ namespace mle_leveltools {
             "bool level->m_unlimitedObjectsEnabled = {}\n"
             "gd::string level->m_personalBests = {}\n"
             "int level->m_timestamp = {}\n"
-            "int level->m_unkInt = {}\n"
+            "int level->m_listPosition = {}\n"
             "gd::string level->m_songIDs = {}\n"
             "gd::string level->m_sfxIDs = {}\n"
             "int level->m_54 = {}\n"
@@ -540,7 +548,7 @@ level->m_highObjectsEnabled,//level->m_highObjectsEnabled;
 level->m_unlimitedObjectsEnabled,//level->m_unlimitedObjectsEnabled;
 level->m_personalBests,//level->m_personalBests;
 level->m_timestamp,//level->m_timestamp;
-level->m_unkInt,//level->m_unkInt;
+level->m_listPosition,//level->m_listPosition;
 level->m_songIDs,//level->m_songIDs;
 level->m_sfxIDs,//level->m_sfxIDs;
 level->m_54,//level->m_54;
@@ -569,21 +577,21 @@ namespace mle_audiotools {
             if (!fs::exists(song_meta_file)) return;
             auto file_content = fs::read(song_meta_file);
             //file parse
-            auto value = matjson::parse("{}");
+            auto value = matjson::parse("{}").unwrapOrDefault();
             auto error = std::string();
             auto parse = matjson::parse(file_content, error);
-            if (parse.has_value()) value = parse.value();
+            if (parse.isOk()) value = parse.unwrapOrDefault();
             //set from json json
-            pAudio->m_fileName = value.try_get<std::string>("m_fileName").value_or(pAudio->m_fileName.data()).data();
-            pAudio->m_title = value.try_get<std::string>("m_title").value_or(pAudio->m_title.data()).data();
-            pAudio->m_url = value.try_get<std::string>("m_url").value_or(pAudio->m_url.data()).data();
-            pAudio->m_artistID = value.try_get<int>("m_artistID").value_or(pAudio->m_artistID);
+            pAudio->m_fileName = value["m_fileName"].asString().unwrapOr(pAudio->m_fileName.data()).data();
+            pAudio->m_title = value["m_title"].asString().unwrapOr(pAudio->m_title.data()).data();
+            pAudio->m_url = value["m_url"].asString().unwrapOr(pAudio->m_url.data()).data();
+            pAudio->m_artistID = value["m_artistID"].asInt().unwrapOr(pAudio->m_artistID);
         }
         auto resetJson() {
-            this->m_json.try_set("m_fileName", this->m_fileName);
-            this->m_json.try_set("m_title", this->m_title);
-            this->m_json.try_set("m_url", this->m_url);
-            this->m_json.try_set("m_artistID", this->m_artistID);
+            this->m_json.set("m_fileName", this->m_fileName);
+            this->m_json.set("m_title", this->m_title);
+            this->m_json.set("m_url", this->m_url);
+            this->m_json.set("m_artistID", this->m_artistID);
             return this->m_json;
         }
         void openInfoLayer();
@@ -622,20 +630,20 @@ namespace mle_audiotools {
             if (!fs::exists(song_meta_file)) return;
             auto file_content = fs::read(song_meta_file);
             //file parse
-            auto value = matjson::parse("{}");
+            auto value = matjson::parse("{}").unwrapOrDefault();
             auto error = std::string();
             auto parse = matjson::parse(file_content, error);
-            if (parse.has_value()) value = parse.value();
+            if (parse.isOk()) value = parse.unwrapOrDefault();
             //set from json json
-            pAudio->m_ytURL = value.try_get<std::string>("m_ytURL").value_or(pAudio->m_ytURL.data()).data();
-            pAudio->m_ngURL = value.try_get<std::string>("m_ngURL").value_or(pAudio->m_ngURL.data()).data();
-            pAudio->m_name = value.try_get<std::string>("m_name").value_or(pAudio->m_name.data()).data();
-            pAudio->m_artistID = value.try_get<int>("m_artistID").value_or(pAudio->m_artistID);
+            pAudio->m_ytURL = value["m_ytURL"].asString().unwrapOr(pAudio->m_ytURL.data()).data();
+            pAudio->m_ngURL = value["m_ngURL"].asString().unwrapOr(pAudio->m_ngURL.data()).data();
+            pAudio->m_name = value["m_name"].asString().unwrapOr(pAudio->m_name.data()).data();
+            pAudio->m_artistID = value["m_artistID"].asInt().unwrapOr(pAudio->m_artistID);
         }
         auto resetJson() {
-            this->m_json.try_set("m_ytURL", this->m_ytURL);
-            this->m_json.try_set("m_ngURL", this->m_ngURL);
-            this->m_json.try_set("m_name", this->m_name);
+            this->m_json.set("m_ytURL", this->m_ytURL);
+            this->m_json.set("m_ngURL", this->m_ngURL);
+            this->m_json.set("m_name", this->m_name);
             return this->m_json;
         };
         Artist(int id = 1, bool noDefaults = true) {
@@ -695,8 +703,8 @@ namespace mle_ui {
             bool operator()(const fs::path& a, const fs::path& b) const {
                 auto stra = std::regex_replace(a.filename().string(), std::regex(a.filename().extension().string()), "");
                 auto strb = std::regex_replace(b.filename().string(), std::regex(b.filename().extension().string()), "");
-                auto inta = utils::numFromString<int>(stra).value_or(0);
-                auto intb = utils::numFromString<int>(strb).value_or(0);
+                auto inta = utils::numFromString<int>(stra).unwrapOr(0);
+                auto intb = utils::numFromString<int>(strb).unwrapOr(0);
                 return inta <= intb;
             }
         };
@@ -761,7 +769,7 @@ namespace mle_ui {
                 auto menu = CCMenu::createWithItem(
                     CCMenuItemSpriteExtra::create(viewBtnSprite, this, menu_selector(ArtistsLayer::onView))
                 );
-                cocos::getChildOfType<CCMenuItemSpriteExtra>(menu, 0)->setTag(id);
+                menu->getChildByType<CCMenuItemSpriteExtra>(0)->setTag(id);
                 menu->setLayoutOptions(
                     AnchorLayoutOptions::create()
                     ->setAnchor(Anchor::Right)
@@ -812,7 +820,7 @@ namespace mle_ui {
                         std::regex(filepath.filename().extension().string()),
                         ""
                     );
-                    auto id = utils::numFromString<int>(name).value_or(0);
+                    auto id = utils::numFromString<int>(name).unwrapOr(0);
                     rtn->addArtistsCell(id, altBg, contentLayer);
                 };
             }
@@ -864,8 +872,8 @@ namespace mle_ui {
             bool operator()(const fs::path& a, const fs::path& b) const {
                 auto stra = std::regex_replace(a.filename().string(), std::regex(a.filename().extension().string()), "");
                 auto strb = std::regex_replace(b.filename().string(), std::regex(b.filename().extension().string()), "");
-                auto inta = utils::numFromString<int>(stra).value_or(0);
-                auto intb = utils::numFromString<int>(strb).value_or(0);
+                auto inta = utils::numFromString<int>(stra).unwrapOr(0);
+                auto intb = utils::numFromString<int>(strb).unwrapOr(0);
                 return inta <= intb;
             }
         };
@@ -890,11 +898,11 @@ namespace mle_ui {
                 for (auto& filepath : aFileNumbericSortSet) {
                     if (filepath.extension() == ".json") {
                         //json val
-                        auto value = matjson::parse("{}");
+                        auto value = matjson::parse("{}").unwrapOrDefault();
                         auto error = std::string();
                         auto parse = matjson::parse(fs::read(filepath), error);
-                        if (parse.has_value()) {
-                            value = parse.value();
+                        if (parse.isOk()) {
+                            value = parse.unwrapOrDefault();
                             mle_leveltools::levelFromJson(value);
                             md_str.append(fmt::format(
                                 "\n - {}: {}",
@@ -940,8 +948,8 @@ namespace mle_ui {
             bool operator()(const fs::path& a, const fs::path& b) const {
                 auto stra = std::regex_replace(a.filename().string(), std::regex(a.filename().extension().string()), "");
                 auto strb = std::regex_replace(b.filename().string(), std::regex(b.filename().extension().string()), "");
-                auto inta = utils::numFromString<int>(stra).value_or(0);
-                auto intb = utils::numFromString<int>(strb).value_or(0);
+                auto inta = utils::numFromString<int>(stra).unwrapOr(0);
+                auto intb = utils::numFromString<int>(strb).unwrapOr(0);
                 return inta <= intb;
             }
         };
@@ -966,11 +974,11 @@ namespace mle_ui {
                 for (auto& filepath : aFileNumbericSortSet) {
                     if (filepath.extension() == ".json") {
                         //json val
-                        auto value = matjson::parse("{}");
+                        auto value = matjson::parse("{}").unwrapOrDefault();
                         auto error = std::string();
                         auto parse = matjson::parse(fs::read(filepath), error);
-                        if (parse.has_value()) {
-                            value = parse.value();
+                        if (parse.isOk()) {
+                            value = parse.unwrapOrDefault();
                             mle_leveltools::levelFromJson(value);
                             md_str.append(fmt::format(
                                 "\n - {}: {}",
@@ -1027,7 +1035,7 @@ namespace mle_ui {
         }
         void onPlayMusic(CCObject* toggleItemObj) {
             auto m_audioTrack = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_audioTrack")); if (not m_audioTrack) return;
-            int audioTrack = utils::numFromString<int>(m_audioTrack->getString().data()).value_or(m_level->m_audioTrack);
+            int audioTrack = utils::numFromString<int>(m_audioTrack->getString().data()).unwrapOr(m_level->m_audioTrack);
             auto toggleItem = typeinfo_cast<CCMenuItemToggler*>(toggleItemObj); if (not toggleItem) return;
             toggleItem->isOn() ?
                 GameManager::get()->fadeInMenuMusic() :
@@ -1037,6 +1045,7 @@ namespace mle_ui {
             AudiosListMDPopup::create()->show();
         }
         void onLevelEdit(CCObject*) {
+            m_level->m_levelType = GJLevelType::Editor;
             auto layer = LevelEditorLayer::create(
                 mle_leveltools::replaceSecretCoinsByUserOnesInLevel(m_level), 0
             );
@@ -1138,15 +1147,15 @@ namespace mle_ui {
             auto m_stars = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_stars"));
             auto m_requiredCoins = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_requiredCoins"));
             if (m_levelName) m_level->m_levelName = m_levelName->getString();
-            if (m_audioTrack) m_level->m_audioTrack = utils::numFromString<int>(m_audioTrack->getString().data()).value_or(m_level->m_audioTrack);
-            if (m_difficulty) m_level->m_difficulty = (GJDifficulty)utils::numFromString<int>(m_difficulty->getString().data()).value_or((int)m_level->m_difficulty);
-            if (m_stars) m_level->m_stars = utils::numFromString<int>(m_stars->getString().data()).value_or(m_level->m_stars.value());
-            if (m_requiredCoins) m_level->m_requiredCoins = utils::numFromString<int>(m_requiredCoins->getString().data()).value_or(m_level->m_requiredCoins);
+            if (m_audioTrack) m_level->m_audioTrack = utils::numFromString<int>(m_audioTrack->getString().data()).unwrapOr(m_level->m_audioTrack);
+            if (m_difficulty) m_level->m_difficulty = (GJDifficulty)utils::numFromString<int>(m_difficulty->getString().data()).unwrapOr((int)m_level->m_difficulty);
+            if (m_stars) m_level->m_stars = utils::numFromString<int>(m_stars->getString().data()).unwrapOr(m_level->m_stars.value());
+            if (m_requiredCoins) m_level->m_requiredCoins = utils::numFromString<int>(m_requiredCoins->getString().data()).unwrapOr(m_level->m_requiredCoins);
         }
         void textChanged(CCTextInputNode* p0) {
             //log::debug("{}({}) id: {}", __FUNCTION__, p0, p0->getID());
             if (p0->getID() == "m_difficulty") {
-                auto difficulty = utils::numFromString<int>(p0->getString().data()).value_or(0);
+                auto difficulty = utils::numFromString<int>(p0->getString().data()).unwrapOr(0);
                 GJDifficultySprite* difficultyPrev;
                 if (difficultyPrev = typeinfo_cast<GJDifficultySprite*>(this->getChildByIDRecursive("difficultyPrev")));
                 else {
@@ -1287,7 +1296,7 @@ namespace mle_ui {
             if (m_fileName) this->m_audio.m_fileName = m_fileName->getString().data();
             if (m_title) this->m_audio.m_title = m_title->getString().data();
             if (m_url) this->m_audio.m_url = m_url->getString().data();
-            if (m_artistID) this->m_audio.m_artistID = utils::numFromString<int>(m_artistID->getString().data()).value_or(this->m_audio.m_artistID);
+            if (m_artistID) this->m_audio.m_artistID = utils::numFromString<int>(m_artistID->getString().data()).unwrapOr(this->m_audio.m_artistID);
         }
         void textChanged(CCTextInputNode* p0) {
             //log::debug("{}({}) id: {}", __FUNCTION__, p0, p0->getID());
@@ -1540,7 +1549,7 @@ namespace mle_ui {
             auto level = typeinfo_cast<GJGameLevel*>(this->getChildByIDRecursive("level"));
             if (not level) return;
             auto m_levelID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_levelID"));
-            if (m_levelID) level->m_levelID = utils::numFromString<int>(m_levelID->getString().data()).value_or(level->m_levelID.value());
+            if (m_levelID) level->m_levelID = utils::numFromString<int>(m_levelID->getString().data()).unwrapOr(level->m_levelID.value());
         }
         void FLAlert_Clicked(FLAlertLayer* p0, bool p1) {
             auto __this = typeinfo_cast<CopyLevelPopup*>(p0);
@@ -1654,7 +1663,7 @@ namespace mle_ui {
         }
         void applyInputs() {
             auto m_songID = typeinfo_cast<CCTextInputNode*>(this->getChildByIDRecursive("m_songID"));
-            if (m_songID) m_audio.m_audioID = utils::numFromString<int>(m_songID->getString().data()).value_or(m_audio.m_audioID);
+            if (m_songID) m_audio.m_audioID = utils::numFromString<int>(m_songID->getString().data()).unwrapOr(m_audio.m_audioID);
         }
         void FLAlert_Clicked(FLAlertLayer* p0, bool p1) {
             if (not p1) return;

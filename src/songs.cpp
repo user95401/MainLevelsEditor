@@ -107,7 +107,8 @@ class $modify(SongsLayerExt, SongsLayer) {
 			auto menu = CCMenu::createWithItem(
 				CCMenuItemSpriteExtra::create(viewBtnSprite, this, menu_selector(SongsLayerExt::onView))
 			);
-			cocos::getChildOfType<CCMenuItemSpriteExtra>(menu, 0)->setTag(id);
+			menu->getChildByType<CCMenuItemSpriteExtra>(0)->setTag(id);
+			menu->getChildByType<CCMenuItemSpriteExtra>(0)->setTag(id);
 			menu->setLayoutOptions(
 				AnchorLayoutOptions::create()
 				->setAnchor(Anchor::Right)
@@ -157,7 +158,7 @@ class $modify(SongsLayerExt, SongsLayer) {
 		//songs_special_ids
 		for (auto strID : string::explode(",", SETTING(std::string, "songs_special_ids"))) {
 			auto id_num = utils::numFromString<int>(strID);
-			if (id_num.has_value()) addSongCell(id_num.value(), altBg, contentLayer);
+			if (id_num.isOk()) addSongCell(id_num.unwrapOrDefault(), altBg, contentLayer);
 		}
 		//practice
         if (SETTING(bool, "practice_music")) addSongCell(-1, altBg, contentLayer);
@@ -197,7 +198,7 @@ class $modify(CustomSongWidgetExt, CustomSongWidget) {
 			openedJustNowPop->setTag(this->m_customSongID);
 			if (this->m_isRobtopSong) openedJustNowPop->addChild(createDataNode("m_isRobtopSong"));
 			if (this->m_isMusicLibrary) openedJustNowPop->addChild(createDataNode("m_isMusicLibrary"));
-			if (m_songInfoObject->m_isUnkownSong) openedJustNowPop->addChild(createDataNode("m_isUnkownSong"));
+			if (m_songInfoObject->m_isUnknownSong) openedJustNowPop->addChild(createDataNode("m_isUnknownSong"));
 			openedJustNowPop->addChild(createDataNode("m_songID", "", m_songInfoObject->m_songID));
 			openedJustNowPop->addChild(createDataNode("m_songName", m_songInfoObject->m_songName.data()));
 			openedJustNowPop->addChild(createDataNode("m_artistName", m_songInfoObject->m_artistName.data()));

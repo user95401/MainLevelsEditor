@@ -63,31 +63,40 @@ class $modify(LevelPageExt, LevelPage) {
             CCMenuItemSpriteExtra* deleteLevel; {
                 deleteLevel = CCMenuItemSpriteExtra::create(mle_ui::deleteButtonSprite(), this, menu_selector(LevelPageExt::deleteLevel));
                 deleteLevel->setID("deleteLevel"_spr);
-                deleteLevel->setPosition(CCPoint(190, 30));
                 deleteLevel->m_baseScale = 0.8f;
                 deleteLevel->setScale(deleteLevel->m_baseScale);
             };
             CCMenuItemSpriteExtra* editLevel; {
                 editLevel = CCMenuItemSpriteExtra::create(mle_ui::settingsButtonSprite(), this, menu_selector(LevelPageExt::editLevel));
                 editLevel->setID("editLevel"_spr);
-                editLevel->setPosition(CCPoint(190, 0));
                 editLevel->m_baseScale = 0.8f;
                 editLevel->setScale(editLevel->m_baseScale);
             };
             if (auto levelMenu = getChildByIDRecursive("level-menu")) {
-                levelMenu->addChild(deleteLevel);
-                levelMenu->addChild(editLevel);
+                //levelMenu->addChild(deleteLevel);
+                //levelMenu->addChild(editLevel);
+                {
+                    levelMenu->addChild(editLevel);
+
+                    auto view = CCDirector::get()->getVisibleSize();
+                    auto viewCenter = view / 2;
+                    auto worldPos = viewCenter + CCPointMake((view.width / 2) - 68, 90);
+                    editLevel->setPosition(levelMenu->convertToNodeSpace(worldPos));
+                }
+                {
+                    levelMenu->addChild(deleteLevel);
+
+                    auto view = CCDirector::get()->getVisibleSize();
+                    auto viewCenter = view / 2;
+                    auto worldPos = viewCenter + CCPointMake((view.width / 2) - 68, 60);
+                    deleteLevel->setPosition(levelMenu->convertToNodeSpace(worldPos));
+                }
             };
         }
         return rtn;
     };
     $override void updateDynamicPage(GJGameLevel* p0) {
         LevelPage::updateDynamicPage(p0);
-        //my menu_for_level_page
-        if (auto pCCMenu = this->getChildByIDRecursive("menu_for_level_page"_spr)) {
-            pCCMenu->setVisible(p0->m_levelID >= 1);
-            pCCMenu->setZOrder(p0->m_levelID);
-        }
     }
 };
 

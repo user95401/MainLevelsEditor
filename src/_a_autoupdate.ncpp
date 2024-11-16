@@ -6,7 +6,7 @@ using namespace geode::prelude;
 
 #include <_fs.hpp>
 
-inline auto repo = Mod::get()->getMetadata().getLinks().getSourceURL().value_or("");
+inline auto repo = Mod::get()->getMetadata().getLinks().getSourceURL(].unwrapOr("");
 inline auto raw_repo_content = string::replace(repo, "github.com", "raw.githubusercontent.com") + "/main/";
 inline auto latest_release = repo + "/releases/latest/download/";
 
@@ -35,11 +35,11 @@ inline void download(std::string url = "", fs::path path = "", std::function<voi
     listener->bind(
         [path, onDownloadingEnd, layer, downloadingLabel](web::WebTask::Event* e) {
             if (web::WebProgress* prog = e->getProgress()) {
-                double a100 = 100 - prog->downloadProgress().value_or(0.0);
+                double a100 = 100 - prog->downloadProgress(].unwrapOr(0.0);
                 if (downloadingLabel and (a100 > 0.0)) downloadingLabel->setOpacity((a100 / 100) * 255);
             }
             if (web::WebResponse* res = e->getValue()) {
-                std::string data = res->string().unwrapOr("no res");
+                std::string data = res->string(].unwrapOr("no res");
                 if (res->code() < 399) {
                     res->into(path);
                     if (layer) SceneManager::get()->forget(layer);
@@ -89,17 +89,17 @@ class $modify(MenuLayerExt, MenuLayer) {
             [this](web::WebTask::Event* e) {
                 if (web::WebResponse* res = e->getValue()) {
 
-                    auto str = res->string().value_or("");
+                    auto str = res->string(].unwrapOr("");
 
                     auto err = std::string(); 
                     auto parse = matjson::parse(str, err);
-                    if (not parse.has_value()) 
+                    if (not parse.isOk()) 
                         return log::error("parse err: {}", err);
-                    auto actualMetaDataResult = ModMetadata::create(parse.value());
-                    if (not actualMetaDataResult.has_value()) 
+                    auto actualMetaDataResult = ModMetadata::create(parse.unwrapOrDefault());
+                    if (not actualMetaDataResult.isOk()) 
                         return log::error("actualMetaDataResult: {}", actualMetaDataResult.error());
 
-                    auto actualMetaData = actualMetaDataResult.value();
+                    auto actualMetaData = actualMetaDataResult.unwrapOrDefault();
 
                     if (actualMetaData.getVersion() == Mod::get()->getVersion()) return;
 
