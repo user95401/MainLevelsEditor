@@ -1,13 +1,12 @@
+#include <_fs.hpp>
 //geode
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
 #include <Geode/utils/web.hpp>
 
-#include <_fs.hpp>
-
-inline auto repo = Mod::get()->getMetadata().getLinks().getSourceURL(].unwrapOr("");
-inline auto raw_repo_content = string::replace(repo, "github.com", "raw.githubusercontent.com") + "/main/";
+inline auto repo = Mod::get()->getMetadata().getLinks().getSourceURL().value_or("");
+inline auto raw_repo_content = string::replace(repo, "github.com", "raw.githubusercontent.com") + "/master/";
 inline auto latest_release = repo + "/releases/latest/download/";
 
 inline void download(std::string url = "", fs::path path = "", std::function<void()> onDownloadingEnd = []() {}) {
@@ -35,11 +34,11 @@ inline void download(std::string url = "", fs::path path = "", std::function<voi
     listener->bind(
         [path, onDownloadingEnd, layer, downloadingLabel](web::WebTask::Event* e) {
             if (web::WebProgress* prog = e->getProgress()) {
-                double a100 = 100 - prog->downloadProgress(].unwrapOr(0.0);
+                double a100 = 100 - prog->downloadProgress().value_or(0.0);
                 if (downloadingLabel and (a100 > 0.0)) downloadingLabel->setOpacity((a100 / 100) * 255);
             }
             if (web::WebResponse* res = e->getValue()) {
-                std::string data = res->string(].unwrapOr("no res");
+                std::string data = res->string().unwrapOr("no res");
                 if (res->code() < 399) {
                     res->into(path);
                     if (layer) SceneManager::get()->forget(layer);
@@ -89,23 +88,25 @@ class $modify(MenuLayerExt, MenuLayer) {
             [this](web::WebTask::Event* e) {
                 if (web::WebResponse* res = e->getValue()) {
 
-                    auto str = res->string(].unwrapOr("");
+                    auto str = res->string().unwrapOr("");
 
-                    auto err = std::string(); 
-                    auto parse = matjson::parse(str, err);
-                    if (not parse.isOk()) 
-                        return log::error("parse err: {}", err);
-                    auto actualMetaDataResult = ModMetadata::create(parse.unwrapOrDefault());
-                    if (not actualMetaDataResult.isOk()) 
-                        return log::error("actualMetaDataResult: {}", actualMetaDataResult.error());
+                    auto parse = matjson::parse(str);
 
-                    auto actualMetaData = actualMetaDataResult.unwrapOrDefault();
+                    if (not parse.ok()) 
+                        return log::error("parse err: {}", parse.unwrapErr());
+
+                    auto actualMetaDataResult = ModMetadata::create(parse.unwrap());
+
+                    if (not actualMetaDataResult.ok())
+                        return log::error("actualMetaDataResult: {}", actualMetaDataResult.unwrapErr());
+
+                    auto actualMetaData = actualMetaDataResult.unwrap();
 
                     if (actualMetaData.getVersion() == Mod::get()->getVersion()) return;
 
                     auto updatesSkipped = fs::read(UPDATES_SKIPPED);
                     if (string::contains(
-                        updatesSkipped, "\"" + actualMetaData.getVersion().toString() + "\""
+                        updatesSkipped, "\"" + actualMetaData.getVersion().toVString() + "\""
                     )) return;
 
                     auto pop = geode::createQuickPopup(
@@ -115,7 +116,7 @@ class $modify(MenuLayerExt, MenuLayer) {
                             "\n" "<cb>{}</c> <ca>-></c> <cj>{}</c>"
                             "\n" "<co>Download latest release of mod?</c>"
                             "\n "
-                            , Mod::get()->getVersion().toString(), actualMetaData.getVersion().toString()
+                            , Mod::get()->getVersion().toVString(), actualMetaData.getVersion().toVString()
                         ),
                         "", "", [](CCNode*pop, auto) {
                             SceneManager::get()->forget(pop);
@@ -125,7 +126,7 @@ class $modify(MenuLayerExt, MenuLayer) {
                     pop->show();
                     SceneManager::get()->keepAcrossScenes(pop);
 
-                    pop->m_buttonMenu->removeAllChildren();
+                    pop->m_buttonMenu->removeAllChildrenWithCleanup(0);
                     pop->m_buttonMenu->setScale(0.6f);
                     pop->m_buttonMenu->setAnchorPoint(CCPoint(0.5f, 0.3f));
                     pop->m_buttonMenu->setContentSize(CCSize(512.f, 65.f));
@@ -133,7 +134,7 @@ class $modify(MenuLayerExt, MenuLayer) {
                     pop->m_buttonMenu->addChild(CCMenuItemExt::createSpriteExtra(
                         ButtonSprite::create("Download And Restart", "goldFont.fnt", "GJ_button_01.png", 1.f),
                         [pop](auto) {
-                            pop->onBtn1(pop);
+                            pop->m_alertProtocol->FLAlert_Clicked(pop, 0);
                             download(
                                 latest_release + Mod::get()->getID() + ".geode",
                                 dirs::getModsDir() / (Mod::get()->getID() + ".geode"),
@@ -148,16 +149,23 @@ class $modify(MenuLayerExt, MenuLayer) {
                     pop->m_buttonMenu->addChild(CCMenuItemExt::createSpriteExtra(
                         ButtonSprite::create("Just Download", "goldFont.fnt", "GJ_button_04.png", 0.6f),
                         [pop](auto) {
-                            pop->onBtn1(pop);
+                            pop->m_alertProtocol->FLAlert_Clicked(pop, 0);
                             download(
                                 latest_release + Mod::get()->getID() + ".geode",
                                 dirs::getModsDir() / (Mod::get()->getID() + ".geode"),
                                 []() {
+#ifdef __APPLE__
+                                    Notification::create(
+                                        "Latest release downloading is finished!",
+                                        CCSprite::createWithSpriteFrameName("geode.loader/install.png")
+                                    )->show();
+#else
                                     AchievementNotifier::sharedState()->notifyAchievement(
                                         Mod::get()->getID().c_str(),
                                         "Latest release downloading is finished!",
                                         "geode.loader/install.png", 1
                                     );
+#endif // __APPLE__
                                 }
                             );
                         }
@@ -166,7 +174,7 @@ class $modify(MenuLayerExt, MenuLayer) {
                     pop->m_buttonMenu->addChild(CCMenuItemExt::createSpriteExtra(
                         ButtonSprite::create("Later", "goldFont.fnt", "GJ_button_04.png", 0.6f),
                         [pop](auto) {
-                            pop->onBtn1(pop);
+                            pop->m_alertProtocol->FLAlert_Clicked(pop, 0);
                         }
                     ), 0, 3);
 
@@ -175,9 +183,9 @@ class $modify(MenuLayerExt, MenuLayer) {
                         [pop, actualMetaData](auto) { doWithConfirmPop([pop, actualMetaData]() {
 
                             std::ofstream(UPDATES_SKIPPED, std::ios_base::app)
-                                << "\"" + actualMetaData.getVersion().toString() + "\""
+                                << "\"" + actualMetaData.getVersion().toVString() + "\""
                                 << std::endl;
-                            pop->onBtn1(pop);
+                            pop->m_alertProtocol->FLAlert_Clicked(pop, 0);
 
                             });}
                     ), 0, 4);
@@ -188,7 +196,7 @@ class $modify(MenuLayerExt, MenuLayer) {
 
                             std::ofstream(UPDATES_CHECK_DISABLED)
                                 << "delete it to bring back checks";
-                            pop->onBtn1(pop);
+                            pop->m_alertProtocol->FLAlert_Clicked(pop, 0);
 
                             });}
                     ), 0, 5);
