@@ -53,7 +53,7 @@ class $modify(EditorUIExt, EditorUI) {
             CCMenuItemExt::assignCallback<CCMenuItemSpriteExtra>(
                 editSpecialButton, [this, editSpecialButton, org_pfnSelector, org_pListener](
                     CCMenuItemSpriteExtra* item) {
-                        if (not this->m_selectedObject) return;
+                        if (not this->m_selectedObject) return (org_pListener->*org_pfnSelector)(editSpecialButton);
                         if (not this->m_editorLayer->getChildByIDRecursive("IsMainLevelEditor")) {
                             return (org_pListener->*org_pfnSelector)(editSpecialButton);
                         }
