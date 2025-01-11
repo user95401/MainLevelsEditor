@@ -1,3 +1,6 @@
+#### Mod developer was banned on Geode for dumb reasons, but he still keeps his mods up-to-date. <br>See for working latest versions at [releases page](../../releases)!
+> Yes, u can't find it in geode servers, download it and install manually.
+
 # Main Levels Editor
 
 currently this mod getting rewrite and port to 2206 
