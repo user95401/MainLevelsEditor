@@ -1,11 +1,10 @@
 #include "_main.hpp"
-#include "_updater.hpp"
 
 void Loaded() {
 	//dirs
-	fs::create_directories(levels_meta_path);
-	fs::create_directories(audios_meta_path);
-	fs::create_directories(artists_meta_path);
+	fs::create_directories(levels_meta_path, fs::last_err_code);
+	fs::create_directories(audios_meta_path, fs::last_err_code);
+	fs::create_directories(artists_meta_path, fs::last_err_code);
 	//add info
 	std::ofstream(levels_meta_path / "_here is {id}.json meta files about names, stars and stuff") << "asd";
 	std::ofstream(levels_path / "_here u put {id}.txt level data files");
